@@ -14,3 +14,7 @@ export_credentials.cfg
 .mono/
 data_*/
 mono_crash.*.json
+
+# Claude working documents (temporary, per-task)
+research.md
+plan.md
