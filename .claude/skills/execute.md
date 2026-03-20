@@ -32,13 +32,7 @@ Implement the plan defined in `plan.md`, using `research.md` as technical refere
    Add ball scene with RigidBody3D physics (#<number>)
    ```
 
-5. **Clean up working files.** Before opening the PR, remove `research.md` and `plan.md` from the branch — these are working documents, not part of the codebase. Stage their deletion in a final commit.
-
-6. **Push and open a PR.** Push the branch and create a pull request using `gh pr create`:
-   - Title: short, descriptive, under 70 characters
-   - Body: reference the issue with `Closes #<number>`, include a summary of what was implemented, and a test plan for how to verify it in Godot
-
-7. **Report back.** Share the PR URL with the user and summarize what was implemented.
+5. **Open a PR.** Run the `/create-pr` skill to push the branch and create a pull request following the project's PR template.
 
 ## Code Standards
 
