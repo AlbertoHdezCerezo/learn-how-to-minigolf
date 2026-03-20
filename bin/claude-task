@@ -13,4 +13,6 @@ ISSUE_URL="$2"
 exec claude \
   --worktree "$BRANCH" \
   "Create a worktree for my given task. \
-   Start by running /research skill for this GitHub issue: $ISSUE_URL — Once research is complete, ask me to approve before moving on to /plan skill and then /execute skill. Use the claude skills from the root project folder (not the worktree)."
+   Start by running /research skill for this GitHub issue: $ISSUE_URL — Once research is complete, ask me to approve before moving on to /plan skill and then /execute skill. \
+   After execution is complete, run the /bitacora skill to log what was done. \
+   Use the claude skills from the root project folder (not the worktree)."
