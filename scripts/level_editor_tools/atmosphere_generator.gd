@@ -41,8 +41,7 @@ extends Node3D
 		fog_height_density = value
 		_update_atmosphere()
 
-@onready var _world_environment: WorldEnvironment = $WorldEnvironment
-@onready var _color_rect: ColorRect = $GradientBackground/GradientRect
+@onready var _atmosphere_display = $AtmosphereDisplay
 @onready var _ui = $AtmosphereUI
 
 var _atmosphere: Atmosphere
@@ -68,11 +67,7 @@ func _update_atmosphere() -> void:
 	_atmosphere.fog_density = fog_density
 	_atmosphere.fog_height_density = fog_height_density
 
-	var env: Environment = _world_environment.environment
-	if not env: return
-
-	var gradient_material := _color_rect.material as ShaderMaterial
-	_atmosphere.apply(gradient_material, env)
+	_atmosphere_display.atmosphere = _atmosphere
 
 	if _ui and not Engine.is_editor_hint():
 		_ui.sync(first_color, second_color, gradient_position, size, angle, fog_enabled, fog_density, fog_height_density)
