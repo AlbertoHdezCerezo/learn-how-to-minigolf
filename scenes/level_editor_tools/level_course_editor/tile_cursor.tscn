@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/level_editor_tools/level_course_editor/tile_cursor.gd" id="1_script"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_cursor"]
+size = Vector3(2, 2, 2)
+
+[node name="TileCursor" type="MeshInstance3D"]
+mesh = SubResource("BoxMesh_cursor")
+script = ExtResource("1_script")

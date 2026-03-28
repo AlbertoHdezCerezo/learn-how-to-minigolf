@@ -43,19 +43,31 @@ func _ready() -> void:
 	_save_button.pressed.connect(func(): save_requested.emit(_name_input.text.strip_edges()))
 
 
-func _connect_slider_and_input(slider: HSlider, input: SpinBox, sig: Signal) -> void:
-	slider.value_changed.connect(func(v: float):
-		if not _syncing:
-			_syncing = true
-			input.value = v
-			_syncing = false
-			sig.emit(v))
-	input.value_changed.connect(func(v: float):
-		if not _syncing:
-			_syncing = true
-			slider.value = v
-			_syncing = false
-			sig.emit(v))
+func bind(atmosphere: Atmosphere) -> void:
+	first_color_changed.connect(func(c: Color) -> void: atmosphere.first_color = c)
+	second_color_changed.connect(func(c: Color) -> void: atmosphere.second_color = c)
+	gradient_position_changed.connect(func(v: float) -> void: atmosphere.gradient_position = v)
+	size_changed.connect(func(v: float) -> void: atmosphere.size = v)
+	angle_changed.connect(func(v: float) -> void: atmosphere.angle = v)
+	fog_enabled_changed.connect(func(v: bool) -> void: atmosphere.fog_enabled = v)
+	fog_density_changed.connect(func(v: float) -> void: atmosphere.fog_density = v)
+	fog_height_density_changed.connect(func(v: float) -> void: atmosphere.fog_height_density = v)
+	save_requested.connect(func(name: String) -> void:
+		var error := atmosphere.save_to_file(name)
+		if error == OK:
+			print("Saved atmosphere: ", name)
+		else:
+			print("Failed to save atmosphere: ", error))
+	sync_from(atmosphere)
+
+
+func sync_from(atmosphere: Atmosphere) -> void:
+	if _syncing: return
+	sync(
+		atmosphere.first_color, atmosphere.second_color,
+		atmosphere.gradient_position, atmosphere.size, atmosphere.angle,
+		atmosphere.fog_enabled, atmosphere.fog_density, atmosphere.fog_height_density
+	)
 
 
 func sync(first_color: Color, second_color: Color, gradient_position: float, gradient_size: float, gradient_angle: float, fog: bool, density: float, height_density: float) -> void:
@@ -75,3 +87,18 @@ func sync(first_color: Color, second_color: Color, gradient_position: float, gra
 	_fog_height_slider.value = height_density
 	_fog_height_input.value = height_density
 	_syncing = false
+
+
+func _connect_slider_and_input(slider: HSlider, input: SpinBox, sig: Signal) -> void:
+	slider.value_changed.connect(func(v: float):
+		if not _syncing:
+			_syncing = true
+			input.value = v
+			_syncing = false
+			sig.emit(v))
+	input.value_changed.connect(func(v: float):
+		if not _syncing:
+			_syncing = true
+			slider.value = v
+			_syncing = false
+			sig.emit(v))

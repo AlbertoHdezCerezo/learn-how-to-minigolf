@@ -1,0 +1,113 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/level_editor_tools/level_editor_ui.gd" id="1_ui_script"]
+
+[node name="LevelEditorUI" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_ui_script")
+
+[node name="ToolPanel" type="PanelContainer" parent="."]
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 300.0
+offset_bottom = 350.0
+
+[node name="ToolPanelMargin" type="MarginContainer" parent="ToolPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="ToolPanelLayout" type="VBoxContainer" parent="ToolPanel/ToolPanelMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TilePaletteLabel" type="Label" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
+layout_mode = 2
+text = "Tiles"
+
+[node name="TileButtons" type="HBoxContainer" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="TilePaletteSeparator" type="HSeparator" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
+layout_mode = 2
+
+[node name="AtmosphereLabel" type="Label" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
+layout_mode = 2
+text = "Atmosphere"
+
+[node name="AtmosphereSelector" type="OptionButton" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="AtmosphereSeparator" type="HSeparator" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
+layout_mode = 2
+
+[node name="FloorControlLabel" type="Label" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
+layout_mode = 2
+text = "Floor Level"
+
+[node name="FloorControlRow" type="HBoxContainer" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
+layout_mode = 2
+
+[node name="FloorSpinBox" type="SpinBox" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout/FloorControlRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 10.0
+
+[node name="RotateButton" type="Button" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout/FloorControlRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Rotate (R)"
+
+[node name="FloorControlSeparator" type="HSeparator" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
+layout_mode = 2
+
+[node name="LevelNameInput" type="LineEdit" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Level name..."
+
+[node name="FileActionsRow" type="HBoxContainer" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
+layout_mode = 2
+
+[node name="SaveButton" type="Button" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout/FileActionsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Save"
+
+[node name="LoadButton" type="Button" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout/FileActionsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Load"
+
+[node name="ClearButton" type="Button" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout/FileActionsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Clear"
+
+[node name="KeyboardShortcutsHelp" type="Label" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
+layout_mode = 2
+text = "LMB: Place | RMB: Remove
+R: Rotate | [ ]: Floor +/-
+Scroll: Zoom | MMB: Pan"
+horizontal_alignment = 1
+
+[node name="LoadLevelDialog" type="FileDialog" parent="."]
+unique_name_in_owner = true
+title = "Open a File"
+size = Vector2i(600, 400)
+file_mode = 0
+access = 2
+filters = PackedStringArray("*.tres ; Level Resources")

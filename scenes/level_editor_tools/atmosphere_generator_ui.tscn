@@ -1,0 +1,206 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/level_editor_tools/atmosphere_generator_ui.gd" id="1_ui_script"]
+
+[node name="AtmosphereGeneratorUI" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_ui_script")
+
+[node name="SettingsPanel" type="PanelContainer" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -280.0
+offset_top = 10.0
+offset_bottom = 500.0
+grow_horizontal = 0
+
+[node name="SettingsPadding" type="MarginContainer" parent="SettingsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="SettingsList" type="VBoxContainer" parent="SettingsPanel/SettingsPadding"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Title" type="Label" parent="SettingsPanel/SettingsPadding/SettingsList"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Atmosphere"
+
+[node name="ColorSectionSeparator" type="HSeparator" parent="SettingsPanel/SettingsPadding/SettingsList"]
+layout_mode = 2
+
+[node name="FirstColorLabel" type="Label" parent="SettingsPanel/SettingsPadding/SettingsList"]
+layout_mode = 2
+text = "First Color"
+
+[node name="FirstColorPicker" type="ColorPickerButton" parent="SettingsPanel/SettingsPadding/SettingsList"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+color = Color(0.18, 0.1, 0.35, 1)
+
+[node name="SecondColorLabel" type="Label" parent="SettingsPanel/SettingsPadding/SettingsList"]
+layout_mode = 2
+text = "Second Color"
+
+[node name="SecondColorPicker" type="ColorPickerButton" parent="SettingsPanel/SettingsPadding/SettingsList"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+color = Color(0.5, 0.1, 0.7, 1)
+
+[node name="GradientSectionSeparator" type="HSeparator" parent="SettingsPanel/SettingsPadding/SettingsList"]
+layout_mode = 2
+
+[node name="GradientPositionRow" type="HBoxContainer" parent="SettingsPanel/SettingsPadding/SettingsList"]
+layout_mode = 2
+
+[node name="GradientPositionLabel" type="Label" parent="SettingsPanel/SettingsPadding/SettingsList/GradientPositionRow"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "Position"
+
+[node name="GradientPositionSlider" type="HSlider" parent="SettingsPanel/SettingsPadding/SettingsList/GradientPositionRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = -0.5
+max_value = 0.5
+step = 0.01
+
+[node name="GradientPositionInput" type="SpinBox" parent="SettingsPanel/SettingsPadding/SettingsList/GradientPositionRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+min_value = -0.5
+max_value = 0.5
+step = 0.01
+
+[node name="GradientSizeRow" type="HBoxContainer" parent="SettingsPanel/SettingsPadding/SettingsList"]
+layout_mode = 2
+
+[node name="GradientSizeLabel" type="Label" parent="SettingsPanel/SettingsPadding/SettingsList/GradientSizeRow"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "Size"
+
+[node name="GradientSizeSlider" type="HSlider" parent="SettingsPanel/SettingsPadding/SettingsList/GradientSizeRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.5
+max_value = 2.0
+step = 0.01
+value = 0.5
+
+[node name="GradientSizeInput" type="SpinBox" parent="SettingsPanel/SettingsPadding/SettingsList/GradientSizeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+min_value = 0.5
+max_value = 2.0
+step = 0.01
+value = 0.5
+
+[node name="GradientAngleRow" type="HBoxContainer" parent="SettingsPanel/SettingsPadding/SettingsList"]
+layout_mode = 2
+
+[node name="GradientAngleLabel" type="Label" parent="SettingsPanel/SettingsPadding/SettingsList/GradientAngleRow"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "Angle"
+
+[node name="GradientAngleSlider" type="HSlider" parent="SettingsPanel/SettingsPadding/SettingsList/GradientAngleRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 360.0
+step = 0.1
+value = 90.0
+
+[node name="GradientAngleInput" type="SpinBox" parent="SettingsPanel/SettingsPadding/SettingsList/GradientAngleRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+max_value = 360.0
+step = 0.1
+value = 90.0
+
+[node name="FogSectionSeparator" type="HSeparator" parent="SettingsPanel/SettingsPadding/SettingsList"]
+layout_mode = 2
+
+[node name="FogEnabledCheckbox" type="CheckBox" parent="SettingsPanel/SettingsPadding/SettingsList"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Fog Enabled"
+
+[node name="FogDensityRow" type="HBoxContainer" parent="SettingsPanel/SettingsPadding/SettingsList"]
+layout_mode = 2
+
+[node name="FogDensityLabel" type="Label" parent="SettingsPanel/SettingsPadding/SettingsList/FogDensityRow"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "Density"
+
+[node name="FogDensitySlider" type="HSlider" parent="SettingsPanel/SettingsPadding/SettingsList/FogDensityRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.001
+value = 0.02
+
+[node name="FogDensityInput" type="SpinBox" parent="SettingsPanel/SettingsPadding/SettingsList/FogDensityRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+max_value = 1.0
+step = 0.001
+value = 0.02
+
+[node name="FogHeightDensityRow" type="HBoxContainer" parent="SettingsPanel/SettingsPadding/SettingsList"]
+layout_mode = 2
+
+[node name="FogHeightDensityLabel" type="Label" parent="SettingsPanel/SettingsPadding/SettingsList/FogHeightDensityRow"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "Height"
+
+[node name="FogHeightDensitySlider" type="HSlider" parent="SettingsPanel/SettingsPadding/SettingsList/FogHeightDensityRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 10.0
+step = 0.1
+value = 2.0
+
+[node name="FogHeightDensityInput" type="SpinBox" parent="SettingsPanel/SettingsPadding/SettingsList/FogHeightDensityRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+max_value = 10.0
+step = 0.1
+value = 2.0
+
+[node name="SaveSectionSeparator" type="HSeparator" parent="SettingsPanel/SettingsPadding/SettingsList"]
+layout_mode = 2
+
+[node name="ResourceNameLabel" type="Label" parent="SettingsPanel/SettingsPadding/SettingsList"]
+layout_mode = 2
+text = "Resource Name"
+
+[node name="ResourceNameInput" type="LineEdit" parent="SettingsPanel/SettingsPadding/SettingsList"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+placeholder_text = "my_atmosphere"
+
+[node name="SaveResourceButton" type="Button" parent="SettingsPanel/SettingsPadding/SettingsList"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Save Atmosphere Resource"

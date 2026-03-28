@@ -70,10 +70,12 @@ func _update_atmosphere() -> void:
 	_atmosphere_display.atmosphere = _atmosphere
 
 	if _ui and not Engine.is_editor_hint():
-		_ui.sync(first_color, second_color, gradient_position, size, angle, fog_enabled, fog_density, fog_height_density)
+		_ui.sync_from(_atmosphere)
 
 
 func _connect_ui() -> void:
+	_ui.bind(_atmosphere)
+	# Also wire UI changes back through the export setters for @tool support
 	_ui.first_color_changed.connect(func(c: Color): first_color = c)
 	_ui.second_color_changed.connect(func(c: Color): second_color = c)
 	_ui.gradient_position_changed.connect(func(v: float): gradient_position = v)
@@ -82,13 +84,3 @@ func _connect_ui() -> void:
 	_ui.fog_enabled_changed.connect(func(v: bool): fog_enabled = v)
 	_ui.fog_density_changed.connect(func(v: float): fog_density = v)
 	_ui.fog_height_density_changed.connect(func(v: float): fog_height_density = v)
-	_ui.save_requested.connect(_save_resource)
-	_ui.sync(first_color, second_color, gradient_position, size, angle, fog_enabled, fog_density, fog_height_density)
-
-
-func _save_resource(resource_name: String) -> void:
-	var error := _atmosphere.save_to_file(resource_name)
-	if error == OK:
-		print("Saved atmosphere resource: ", resource_name)
-	else:
-		print("Failed to save atmosphere resource: ", error)
