@@ -1,0 +1,32 @@
+[gd_resource type="MeshLibrary" format=3]
+
+[sub_resource type="StandardMaterial3D" id="Material_cube"]
+albedo_color = Color(0.85, 0.85, 0.85, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_cube"]
+material = SubResource("Material_cube")
+size = Vector3(2, 2, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape_cube"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="StandardMaterial3D" id="Material_ramp"]
+albedo_color = Color(0.85, 0.85, 0.85, 1)
+
+[sub_resource type="PrismMesh" id="PrismMesh_ramp"]
+material = SubResource("Material_ramp")
+left_to_right = 0.0
+size = Vector3(2, 2, 2)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexShape_ramp"]
+points = PackedVector3Array(-1, -1, -1, -1, -1, 1, 1, -1, -1, 1, -1, 1, -1, 1, -1, -1, 1, 1)
+
+[resource]
+item/0/name = "FullCube"
+item/0/mesh = SubResource("BoxMesh_cube")
+item/0/mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+item/0/shapes = [SubResource("BoxShape_cube"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)]
+item/1/name = "Ramp"
+item/1/mesh = SubResource("PrismMesh_ramp")
+item/1/mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+item/1/shapes = [SubResource("ConvexShape_ramp"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)]
