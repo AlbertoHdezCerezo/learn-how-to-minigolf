@@ -99,3 +99,57 @@ Extracted `AtmosphereDisplay` (gradient background + world environment + scene l
 - **SpinBox + HSlider pairs** make a good editor UX — sliders for quick exploration, SpinBoxes for precise values. They need a `_syncing` flag to avoid infinite update loops.
 
 ---
+
+## feat: Level Editor
+
+> Date: 2026-03-28
+> Issue: #5 — https://github.com/AlbertoHdezCerezo/learn-how-to-minigolf/issues/5
+> PR: #6 — https://github.com/AlbertoHdezCerezo/learn-how-to-minigolf/pull/6
+> Branch: feat-level-editor
+
+### What we did
+
+Built a runtime level editor that lets you place cube and ramp tiles on a 3D grid at different heights, rotate them, and save/load the result as `.tres` resources. The editor includes live atmosphere and camera controls, giving an immediate preview of how levels will look in-game.
+
+### Why
+
+This is the most fundamental tool for the game — without levels, there's no game. The issue asked for a simple grid editor with a palette of geometric elements (cubes, ramps) that could be placed to build minigolf course skeletons. We wanted fast iteration: click to place, right-click to remove, scroll to zoom, and save when done.
+
+### How we implemented it
+
+#### Architecture: scenes as building blocks
+
+The biggest design decision was decomposing the editor into small, reusable scenes that each own their logic and expose a `bind()` method for wiring. This evolved throughout the session — we started with everything inline in the level editor, then progressively extracted:
+
+- **`LevelCourseEditor`** — owns the GridMap, tile cursor, floor plane, and all placement/removal logic. Knows how to save and load levels. The level editor just forwards input events to it.
+- **`GameplayCamera`** — a `Node3D` arm with a `Camera3D` child. Exposes `orbit_angle`, `pitch`, `orthographic_size`, and `distance` as exports. Used in both the level editor and atmosphere generator.
+- **`TileCursor`** — semi-transparent preview mesh that follows the mouse. Lives under `level_course_editor/` namespace. Stores a rotation angle (in degrees) and applies it as a simple `Basis` rotation.
+- **UI scenes** — `LevelEditorUI`, `CameraControlUI`, `AtmosphereGeneratorUI` are each their own `.tscn` with a `bind()` method. The camera UI binds to a `GameplayCamera`, the atmosphere UI binds to an `Atmosphere` resource, the editor UI binds to a `LevelCourseEditor`.
+
+The final `LevelEditor` scene is pure orchestration — it instances all the pieces and calls `bind()` on each UI.
+
+#### GridMap for the grid
+
+We chose Godot's built-in `GridMap` over a custom grid system. It handles snapping, multi-height placement, collision generation, and coordinate conversion out of the box. The `MeshLibrary` resource (`tile_library.tres`) holds the cube and ramp meshes with their collision shapes. Initially we built the library programmatically with a `TileLibraryBuilder` class, but later replaced it with a proper `.tres` resource loaded via `@export` — much cleaner and easier to extend.
+
+#### Raycast utilities
+
+Extracted generic raycasting into `scripts/utils/`:
+- **`Raycast`** — static helper that converts 2D screen coordinates to a 3D physics raycast using a camera. One method, universally useful.
+- **`GridRaycast3D`** — builds on `Raycast` to map hits to GridMap cells. It distinguishes between hitting the floor plane (empty space, uses current floor level) and hitting an existing tile (offsets along the surface normal to find the adjacent empty cell for placement, or inward for removal).
+
+#### The BG_CANVAS + CanvasLayer trap
+
+We hit a frustrating bug early on: the tile placement cursor wasn't working and the UI wasn't visible. The root cause was `AtmosphereDisplay`'s `GradientRect` — a full-screen `ColorRect` on a `CanvasLayer` that defaulted to `MOUSE_FILTER_STOP`, silently consuming all mouse events before they reached `_unhandled_input()`. The fix was one line: `mouse_filter = 2` (IGNORE). But it took several rounds of debugging to find, because the visual rendering looked fine — it was only the input that was blocked.
+
+#### Rotation: angles over indices
+
+GridMap uses an opaque 0-23 index system for orthogonal rotations. We initially pre-computed a lookup table of Y-axis rotation indices, but this was confusing and leaked implementation details into the cursor and UI. We refactored so the `TileCursor` and `LevelCourseEditor` just store a rotation angle in degrees (0, 90, 180, 270). The conversion to GridMap's orientation index happens once, at the moment of tile placement, via `get_orthogonal_index_from_basis()`.
+
+### Key takeaways
+
+- **The `bind()` pattern for UI scenes is powerful** — each UI scene is self-contained with its signals and controls, and `bind()` wires everything to the target in one call. This makes it trivial to reuse the same UI in different contexts (e.g. `AtmosphereGeneratorUI` works in both the atmosphere generator and the level editor).
+- **`MOUSE_FILTER_STOP` on background elements silently eats input** — any full-screen `Control` node (like a gradient background) must have `mouse_filter = MOUSE_FILTER_IGNORE`, otherwise it blocks all mouse events from reaching 3D input handlers. This is easy to forget and hard to debug because rendering looks normal.
+- **Start with a `.tres` MeshLibrary, not code-generated meshes** — programmatic mesh building was a detour. A proper resource file is easier to inspect, edit in the Godot editor, and extend with new tiles later.
+
+---
