@@ -97,12 +97,14 @@ max_value = 0.5
 step = 0.01
 value = 0.5
 
-[node name="GradientPositionValue" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientPositionRow"]
+[node name="GradientPositionInput" type="SpinBox" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientPositionRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(45, 0)
+custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
-text = "0.00"
-horizontal_alignment = 2
+min_value = -0.5
+max_value = 0.5
+step = 0.01
+value = 0.5
 
 [node name="GradientSizeRow" type="HBoxContainer" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 layout_mode = 2
@@ -121,12 +123,14 @@ max_value = 2.0
 step = 0.01
 value = 0.53
 
-[node name="GradientSizeValue" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientSizeRow"]
+[node name="GradientSizeInput" type="SpinBox" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientSizeRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(45, 0)
+custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
-text = "0.53"
-horizontal_alignment = 2
+min_value = 0.5
+max_value = 2.0
+step = 0.01
+value = 0.53
 
 [node name="GradientAngleRow" type="HBoxContainer" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 layout_mode = 2
@@ -144,12 +148,13 @@ max_value = 360.0
 step = 0.1
 value = 90.0
 
-[node name="GradientAngleValue" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientAngleRow"]
+[node name="GradientAngleInput" type="SpinBox" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientAngleRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(45, 0)
+custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
-text = "90.0"
-horizontal_alignment = 2
+max_value = 360.0
+step = 0.1
+value = 90.0
 
 [node name="FogSectionSeparator" type="HSeparator" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 layout_mode = 2
@@ -175,12 +180,13 @@ max_value = 1.0
 step = 0.001
 value = 0.02
 
-[node name="FogDensityValue" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/FogDensityRow"]
+[node name="FogDensityInput" type="SpinBox" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/FogDensityRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(45, 0)
+custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
-text = "0.020"
-horizontal_alignment = 2
+max_value = 1.0
+step = 0.001
+value = 0.02
 
 [node name="FogHeightDensityRow" type="HBoxContainer" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 layout_mode = 2
@@ -198,12 +204,13 @@ max_value = 10.0
 step = 0.1
 value = 2.0
 
-[node name="FogHeightDensityValue" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/FogHeightDensityRow"]
+[node name="FogHeightDensityInput" type="SpinBox" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/FogHeightDensityRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(45, 0)
+custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
-text = "2.0"
-horizontal_alignment = 2
+max_value = 10.0
+step = 0.1
+value = 2.0
 
 [node name="SaveSectionSeparator" type="HSeparator" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 layout_mode = 2
