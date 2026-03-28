@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/level_editor_tools/tile_mesh_generator.gd" id="1_script"]
+
+[node name="TileMeshGenerator" type="Node3D"]
+script = ExtResource("1_script")
