@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://cy7haimmfiams"]
 
 [ext_resource type="Script" uid="uid://xdjuryp76on4" path="res://scripts/level_editor_tools/atmosphere_generator.gd" id="1_script"]
-[ext_resource type="Shader" uid="uid://b5r8u5fl8wflw" path="res://shaders/sky_gradient.gdshader" id="2_shader"]
 [ext_resource type="Script" uid="uid://b3jmjtnx46tvj" path="res://scripts/level_editor_tools/atmosphere_generator_ui.gd" id="3_ui_script"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/atmosphere_display.tscn" id="4_atmosphere_display"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_1"]
 size = Vector3(2.78, 5, 1.26)
@@ -10,61 +10,27 @@ size = Vector3(2.78, 5, 1.26)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.7, 0.7, 0.7, 1)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
-shader = ExtResource("2_shader")
-shader_parameter/first_color = Color(0.18, 0.1, 0.35, 1)
-shader_parameter/second_color = Color(0.5, 0.1, 0.7, 1)
-shader_parameter/position = 0.0
-shader_parameter/size = 0.53
-shader_parameter/angle = 90.0
-
-[sub_resource type="Environment" id="Environment_1"]
-background_mode = 3
-ambient_light_source = 2
-ambient_light_color = Color(0.5, 0.5, 0.5, 1)
-fog_enabled = true
-fog_light_color = Color(0.5, 0.1, 0.7, 1)
-fog_density = 0.02
-fog_sky_affect = 0.0
-fog_height_density = 2.0
-
-[node name="AtmosphereGenerator" type="Node3D" unique_id=1544494461]
+[node name="AtmosphereGenerator" type="Node3D"]
 script = ExtResource("1_script")
 size = 0.53
 
-[node name="ReferencePlatform" type="MeshInstance3D" parent="." unique_id=1398368320]
+[node name="AtmosphereDisplay" parent="." instance=ExtResource("4_atmosphere_display")]
+
+[node name="ReferencePlatform" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.5, 0)
 mesh = SubResource("BoxMesh_1")
 surface_material_override/0 = SubResource("StandardMaterial3D_1")
 
-[node name="GradientBackground" type="CanvasLayer" parent="." unique_id=1220427179]
-layer = -1
-
-[node name="GradientRect" type="ColorRect" parent="GradientBackground" unique_id=2052033868]
-material = SubResource("ShaderMaterial_1")
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=233476747]
-environment = SubResource("Environment_1")
-
-[node name="SceneLight" type="DirectionalLight3D" parent="." unique_id=297845961]
-transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 0, 0)
-shadow_enabled = true
-
-[node name="PreviewCamera" type="Camera3D" parent="." unique_id=1177184180]
+[node name="PreviewCamera" type="Camera3D" parent="."]
 transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 5, 7.07107, 5)
 projection = 1
 size = 10.0
 
-[node name="AtmosphereUI" type="CanvasLayer" parent="." unique_id=106309857]
+[node name="AtmosphereUI" type="CanvasLayer" parent="."]
 layer = 10
 script = ExtResource("3_ui_script")
 
-[node name="SettingsPanel" type="PanelContainer" parent="AtmosphereUI" unique_id=492576106]
+[node name="SettingsPanel" type="PanelContainer" parent="AtmosphereUI"]
 anchors_preset = 11
 anchor_left = 1.0
 anchor_right = 1.0
@@ -72,57 +38,57 @@ anchor_bottom = 1.0
 offset_left = -280.0
 grow_horizontal = 0
 
-[node name="SettingsPadding" type="MarginContainer" parent="AtmosphereUI/SettingsPanel" unique_id=1867979466]
+[node name="SettingsPadding" type="MarginContainer" parent="AtmosphereUI/SettingsPanel"]
 layout_mode = 2
 theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 12
 
-[node name="SettingsList" type="VBoxContainer" parent="AtmosphereUI/SettingsPanel/SettingsPadding" unique_id=2050268191]
+[node name="SettingsList" type="VBoxContainer" parent="AtmosphereUI/SettingsPanel/SettingsPadding"]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="Title" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList" unique_id=895075895]
+[node name="Title" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Atmosphere Generator"
 
-[node name="ColorSectionSeparator" type="HSeparator" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList" unique_id=1706586442]
+[node name="ColorSectionSeparator" type="HSeparator" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 layout_mode = 2
 
-[node name="FirstColorLabel" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList" unique_id=1085585339]
+[node name="FirstColorLabel" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 layout_mode = 2
 text = "First Color"
 
-[node name="FirstColorPicker" type="ColorPickerButton" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList" unique_id=1492395878]
+[node name="FirstColorPicker" type="ColorPickerButton" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 color = Color(0.18, 0.1, 0.35, 1)
 
-[node name="SecondColorLabel" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList" unique_id=2116019334]
+[node name="SecondColorLabel" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 layout_mode = 2
 text = "Second Color"
 
-[node name="SecondColorPicker" type="ColorPickerButton" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList" unique_id=81492537]
+[node name="SecondColorPicker" type="ColorPickerButton" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 color = Color(0.5, 0.1, 0.7, 1)
 
-[node name="GradientSectionSeparator" type="HSeparator" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList" unique_id=86875855]
+[node name="GradientSectionSeparator" type="HSeparator" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 layout_mode = 2
 
-[node name="GradientPositionRow" type="HBoxContainer" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList" unique_id=682011624]
+[node name="GradientPositionRow" type="HBoxContainer" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 layout_mode = 2
 
-[node name="GradientPositionLabel" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientPositionRow" unique_id=928397315]
+[node name="GradientPositionLabel" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientPositionRow"]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 text = "Position"
 
-[node name="GradientPositionSlider" type="HSlider" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientPositionRow" unique_id=1476115575]
+[node name="GradientPositionSlider" type="HSlider" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientPositionRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -131,22 +97,22 @@ max_value = 0.5
 step = 0.01
 value = 0.5
 
-[node name="GradientPositionValue" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientPositionRow" unique_id=1004690984]
+[node name="GradientPositionValue" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientPositionRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(45, 0)
 layout_mode = 2
 text = "0.00"
 horizontal_alignment = 2
 
-[node name="GradientSizeRow" type="HBoxContainer" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList" unique_id=1415027932]
+[node name="GradientSizeRow" type="HBoxContainer" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 layout_mode = 2
 
-[node name="GradientSizeLabel" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientSizeRow" unique_id=2007059974]
+[node name="GradientSizeLabel" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientSizeRow"]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 text = "Size"
 
-[node name="GradientSizeSlider" type="HSlider" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientSizeRow" unique_id=1558065230]
+[node name="GradientSizeSlider" type="HSlider" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientSizeRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -155,22 +121,22 @@ max_value = 2.0
 step = 0.01
 value = 0.53
 
-[node name="GradientSizeValue" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientSizeRow" unique_id=1221643168]
+[node name="GradientSizeValue" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientSizeRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(45, 0)
 layout_mode = 2
 text = "0.53"
 horizontal_alignment = 2
 
-[node name="GradientAngleRow" type="HBoxContainer" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList" unique_id=1536700476]
+[node name="GradientAngleRow" type="HBoxContainer" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 layout_mode = 2
 
-[node name="GradientAngleLabel" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientAngleRow" unique_id=1992119644]
+[node name="GradientAngleLabel" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientAngleRow"]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 text = "Angle"
 
-[node name="GradientAngleSlider" type="HSlider" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientAngleRow" unique_id=1635283095]
+[node name="GradientAngleSlider" type="HSlider" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientAngleRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -178,30 +144,30 @@ max_value = 360.0
 step = 0.1
 value = 90.0
 
-[node name="GradientAngleValue" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientAngleRow" unique_id=1300821267]
+[node name="GradientAngleValue" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/GradientAngleRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(45, 0)
 layout_mode = 2
 text = "90.0"
 horizontal_alignment = 2
 
-[node name="FogSectionSeparator" type="HSeparator" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList" unique_id=859186690]
+[node name="FogSectionSeparator" type="HSeparator" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 layout_mode = 2
 
-[node name="FogEnabledCheckbox" type="CheckBox" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList" unique_id=876146781]
+[node name="FogEnabledCheckbox" type="CheckBox" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Fog Enabled"
 
-[node name="FogDensityRow" type="HBoxContainer" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList" unique_id=354352395]
+[node name="FogDensityRow" type="HBoxContainer" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 layout_mode = 2
 
-[node name="FogDensityLabel" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/FogDensityRow" unique_id=174342346]
+[node name="FogDensityLabel" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/FogDensityRow"]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 text = "Density"
 
-[node name="FogDensitySlider" type="HSlider" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/FogDensityRow" unique_id=1267453898]
+[node name="FogDensitySlider" type="HSlider" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/FogDensityRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -209,22 +175,22 @@ max_value = 1.0
 step = 0.001
 value = 0.02
 
-[node name="FogDensityValue" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/FogDensityRow" unique_id=12959359]
+[node name="FogDensityValue" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/FogDensityRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(45, 0)
 layout_mode = 2
 text = "0.020"
 horizontal_alignment = 2
 
-[node name="FogHeightDensityRow" type="HBoxContainer" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList" unique_id=1505408126]
+[node name="FogHeightDensityRow" type="HBoxContainer" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 layout_mode = 2
 
-[node name="FogHeightDensityLabel" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/FogHeightDensityRow" unique_id=1518033123]
+[node name="FogHeightDensityLabel" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/FogHeightDensityRow"]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 text = "Height"
 
-[node name="FogHeightDensitySlider" type="HSlider" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/FogHeightDensityRow" unique_id=1089100863]
+[node name="FogHeightDensitySlider" type="HSlider" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/FogHeightDensityRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -232,27 +198,27 @@ max_value = 10.0
 step = 0.1
 value = 2.0
 
-[node name="FogHeightDensityValue" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/FogHeightDensityRow" unique_id=1803853327]
+[node name="FogHeightDensityValue" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList/FogHeightDensityRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(45, 0)
 layout_mode = 2
 text = "2.0"
 horizontal_alignment = 2
 
-[node name="SaveSectionSeparator" type="HSeparator" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList" unique_id=1056822082]
+[node name="SaveSectionSeparator" type="HSeparator" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 layout_mode = 2
 
-[node name="ResourceNameLabel" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList" unique_id=1166077246]
+[node name="ResourceNameLabel" type="Label" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 layout_mode = 2
 text = "Resource Name"
 
-[node name="ResourceNameInput" type="LineEdit" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList" unique_id=1278361387]
+[node name="ResourceNameInput" type="LineEdit" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
 placeholder_text = "my_atmosphere"
 
-[node name="SaveResourceButton" type="Button" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList" unique_id=753779154]
+[node name="SaveResourceButton" type="Button" parent="AtmosphereUI/SettingsPanel/SettingsPadding/SettingsList"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Save Atmosphere Resource"

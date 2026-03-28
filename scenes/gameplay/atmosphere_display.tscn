@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/atmosphere_display.gd" id="1_script"]
+[ext_resource type="Shader" uid="uid://b5r8u5fl8wflw" path="res://shaders/sky_gradient.gdshader" id="2_shader"]
+[ext_resource type="Resource" path="res://resources/default_atmosphere.tres" id="3_default_atmosphere"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
+shader = ExtResource("2_shader")
+shader_parameter/first_color = Color(0.18, 0.1, 0.35, 1)
+shader_parameter/second_color = Color(0.5, 0.1, 0.7, 1)
+shader_parameter/position = 0.0
+shader_parameter/size = 0.5
+shader_parameter/angle = 90.0
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 3
+ambient_light_source = 2
+ambient_light_color = Color(0.5, 0.5, 0.5, 1)
+fog_enabled = true
+fog_light_color = Color(0.5, 0.1, 0.7, 1)
+fog_density = 0.02
+fog_sky_affect = 0.0
+fog_height_density = 2.0
+
+[node name="AtmosphereDisplay" type="Node3D"]
+script = ExtResource("1_script")
+atmosphere = ExtResource("3_default_atmosphere")
+
+[node name="GradientBackground" type="CanvasLayer" parent="."]
+layer = -1
+
+[node name="GradientRect" type="ColorRect" parent="GradientBackground"]
+material = SubResource("ShaderMaterial_1")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="SceneLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 0, 0)
+shadow_enabled = true
