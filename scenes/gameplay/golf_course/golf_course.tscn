@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/gameplay/golf_course.gd" id="1_script"]
-[ext_resource type="PackedScene" path="res://scenes/gameplay/atmosphere_display.tscn" id="2_atmosphere_display"]
+[ext_resource type="Script" path="res://scenes/gameplay/golf_course/golf_course.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/atmosphere_display/atmosphere_display.tscn" id="2_atmosphere_display"]
 [ext_resource type="Resource" path="res://resources/default_atmosphere.tres" id="3_default_atmosphere"]
 
 [node name="GolfCourse" type="Node3D"]

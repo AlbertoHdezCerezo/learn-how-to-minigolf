@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/level_editor_tools/atmosphere_generator_ui.gd" id="1_ui_script"]
+[ext_resource type="Script" path="res://scenes/level_editor_tools/atmosphere_generator/atmosphere_generator_ui/atmosphere_generator_ui.gd" id="1_ui_script"]
 
 [node name="AtmosphereGeneratorUI" type="CanvasLayer"]
 layer = 10
