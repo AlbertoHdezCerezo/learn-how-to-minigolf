@@ -163,52 +163,83 @@ GridMap uses an opaque 0-23 index system for orthogonal rotations. We initially 
 
 ### What we did
 
-Implemented the core gameplay mechanic: a golf ball that the player controls via touch drag-and-drop. The ball shoots in the opposite direction of the drag (slingshot style), with a visual indicator showing shot direction (arrow) and power (a circumference that fills as you drag further). A sandbox scene lets you test everything immediately.
+Implemented the core gameplay mechanic: a golf ball controlled via touch drag-and-drop, with a slingshot aiming system, visual indicators (arrow + power circumference), and a sandbox scene for testing. Along the way, we built several reusable utilities and established project conventions.
 
 ### Why
 
-This is the heart of the game — without ball mechanics, there's no minigolf. The issue asked for the fundamental interaction loop: touch, aim, release, watch the ball roll, wait for it to stop, repeat. Getting this right sets the foundation for everything that follows: levels, scoring, course design.
+This is the heart of the game — without ball mechanics, there's no minigolf. The issue asked for the fundamental interaction loop: touch, aim, release, watch the ball roll, wait for it to stop, repeat.
 
 ### How we implemented it
 
-#### RigidBody3D for the ball
+#### Architecture: separation of concerns
 
-The ball is a `RigidBody3D` with a `SphereShape3D` collision and a `SphereMesh` visual. We chose RigidBody3D over CharacterBody3D because the ball needs to respond naturally to physics — gravity, friction, bouncing off walls — without us manually coding every interaction. The shot is applied as a single `apply_central_impulse()` call, which is the correct Godot method for a one-time hit (not a continuous force).
+The biggest evolution during this session was progressively separating responsibilities. We started with everything in a single Ball script, then extracted pieces as the design became clearer:
 
-The physics material sets friction (0.7) and bounce (0.3) on the ball, with the platform having higher friction (0.8) and `rough = true`. The project uses Jolt Physics, which handles sphere friction better than Godot's default engine. Additional `linear_damp` (1.0) and `angular_damp` (1.5) help the ball decelerate and stop naturally.
+- **Ball** (`RigidBody3D`) — Pure physics: applies impulse, detects when it stops via velocity threshold, manages its own state machine (IDLE → MOVING → RECOVERING_FROM_MOVEMENT).
+- **ClubController** (`Node`) — Input handling: touch drag detection, direction/power calculation, drag origin indicator. Has its own state machine (IDLE → AIMING → READY_TO_SHOT → SHOOTING → BLOCKED).
+- **BallUI** (`Node3D`) — Visual feedback: procedural arrow and power circumference drawn with `ImmediateMesh` via `GeometryDrawer3D`.
 
-#### State machine: IDLE → AIMING → MOVING
+The Ball and ClubController communicate through state machine signals. When the ClubController enters SHOOTING, the Ball listens and transitions to MOVING. When the Ball finishes recovering, it calls `_club.enable()` to unblock input. Direction and power are exposed as properties on ClubController — no data passed through signals.
 
-The ball script uses a simple three-state machine:
-- **IDLE**: waiting for touch input
-- **AIMING**: player is dragging, UI shows direction and power
-- **MOVING**: ball is in motion, all input is blocked
+#### State machine utility
 
-The transition from MOVING back to IDLE uses a velocity threshold check (`linear_velocity.length() < 0.08`) that must hold for 20 consecutive physics frames. We deliberately avoided Godot's `sleeping` property for this — research uncovered known bugs where `sleeping` doesn't zero the velocity and can oscillate between frames. The consecutive-frame counter prevents false positives from momentary slowdowns (like the apex of a hill).
+We built a reusable `StateMachine` / `StateMachineState` system under `scripts/utils/`. Key design decisions:
 
-#### Touch input and slingshot aiming
+- **Integer-based states** using GDScript enums — `enum State { IDLE, AIMING, READY_TO_SHOT, SHOOTING, BLOCKED }` — instead of string names. The state machine auto-discovers the enum from the owner via `get_script().get_script_constant_map()` for readable error messages.
+- **Validated transitions** — each state declares which states it can transition to. Invalid transitions log a descriptive error (`"cannot transit from IDLE to BLOCKED. Allowed: [AIMING]"`).
+- **`entering_state` / `entered_state` signals** on each state, with the `from_state` as parameter. This lets external code react differently depending on where the transition came from (e.g., only show the drag indicator when entering AIMING from IDLE, not from READY_TO_SHOT).
+- **`on_enter` callbacks** — passed when registering states, receive `from_state` too. This keeps transition logic declarative and colocated with state registration.
 
-Input is handled via `InputEventScreenTouch` (finger down/up) and `InputEventScreenDrag` (finger moving). The drag vector is converted from 2D screen space to 3D world space using the camera's basis — the camera's X axis maps to screen-right, and the camera's Y axis maps to screen-up. We project this onto the horizontal plane (zero out Y) and negate it for the slingshot effect: dragging backward shoots the ball forward.
+The pattern is: `sm.add_state(State.AIMING, [State.IDLE, State.READY_TO_SHOT], func(from: int): ...)`.
 
-A minimum drag distance (25 pixels) acts as the cancellation threshold — if you release before reaching it, the shot cancels and the UI disappears. A maximum drag distance (300 pixels) caps the power at 1.0, matching the issue's requirement that "when the circumference is completed, the power is not higher."
+Self-transitions are supported — `READY_TO_SHOT → READY_TO_SHOT` is used for continuous aim updates during drag.
 
-#### BallUI: procedural arrow and power circle
+#### GeometryDrawer3D: procedural shapes made readable
 
-The `BallUI` scene uses `ImmediateMesh` to draw both the directional arrow and the power circumference procedurally each frame. We considered using a `Decal` for the power circle (it projects nicely onto terrain), but switched to ImmediateMesh because the issue describes a circumference that *gradually draws* as power increases — a partial arc from 0° to 360° — which is much easier to do with vertex-by-vertex procedural geometry.
+The raw `ImmediateMesh` vertex code was hard to follow, so we extracted it into `GeometryDrawer3D` with static methods: `arrow()`, `arc()`, `ring()`, and a `draw()` wrapper that encapsulates `clear_surfaces()`/`surface_begin()`/`surface_end()`.
 
-The arrow is a rectangular body with a triangular arrowhead (8 triangles total). The power circle is a thin ring built from quad segments, where the number of segments scales with power — at 50% power, you see half the circle.
+Usage reads like a drawing DSL:
+```gdscript
+GeometryDrawer3D.draw(mesh, material, func():
+    GeometryDrawer3D.arrow(mesh, direction, origin, length, ...)
+    GeometryDrawer3D.arc(mesh, radius, thickness, start_angle, sweep, ...)
+)
+```
 
-BallUI has `top_level = true` so it doesn't inherit the ball's rotation (a RigidBody3D spins as it rolls), and syncs its position to the ball every frame in `_process()`. The material is unshaded with alpha transparency and `no_depth_test = true` so it always renders on top.
+#### ScreenToWorld: camera basis mapping
 
-#### Sandbox scene
+The screen-to-world direction conversion was extracted into `ScreenToWorld.direction_on_ground()`. It uses the camera's basis vectors to map 2D pixel drag into a 3D ground-plane direction — no raycasting needed for an orthographic camera.
 
-The test scene instances the existing `AtmosphereDisplay` and `GameplayCamera` scenes (reusing what was built for the level editor), adds a flat platform with boundary walls, and drops the ball on top. The walls have bounce (0.5) so the ball rebounds off them, making it easy to test repeated shots without the ball falling off.
+#### Animations: from Tweens to AnimationPlayer
+
+We started with Tween-based scale animations for show/hide, then migrated them to `AnimationPlayer` nodes so they can be previewed and tweaked in Godot's animation editor. For the BallUI, we added a placeholder mesh (disc + cone) visible only in the editor (`@tool` + `Engine.is_editor_hint()` check) so the scale animations have something to display during preview.
+
+The drag origin indicator is a `Panel` with a `StyleBoxFlat` (full corner radius = circle) — no GDScript drawing code, fully configurable in the inspector.
+
+#### Shaders: unlit and fog-free
+
+We discovered that `StandardMaterial3D` with `SHADING_MODE_UNSHADED` still gets affected by Godot's fog. The only way to fully bypass fog is a `ShaderMaterial` with `render_mode fog_disabled`. We created two shared shaders:
+- `shaders/unlit.gdshader` — for the ball mesh (opaque, no fog)
+- `shaders/unlit_overlay.gdshader` — for indicators (transparent, no fog, no depth test, double-sided)
+
+#### Project conventions
+
+We formalized four conventions in `.claude/skills/conventions.md`:
+1. **Scene file structure** — each scene gets its own folder with `.tscn` and `.gd` colocated
+2. **Shaders in `shaders/`** — never inline shader code in scripts or `.tscn` files
+3. **No unused code** — every method must have a caller
+4. **Single-line if statements** — when the body is one statement
+
+We also reorganized the entire project to follow convention #1.
 
 ### Key takeaways
 
-- **Velocity threshold + frame counter is more reliable than `sleeping` for stop detection** — Godot's `sleeping` state has known bugs with non-zero residual velocity and frame-to-frame oscillation. A simple counter that requires N consecutive frames below a speed threshold is robust and predictable.
-- **`ImmediateMesh` is great for simple dynamic indicators** — for a handful of triangles that change every frame (like an aim arrow), rebuilding the mesh from scratch is simpler and more flexible than managing static meshes or shaders. The API is straightforward: `surface_begin()`, add vertices, `surface_end()`.
-- **`top_level = true` is the cleanest way to decouple child transforms** — rather than counter-rotating or using a separate node tree, setting `top_level` on BallUI means it exists in world space and just follows the ball's position. No rotation inheritance, no transform math.
-- **Camera basis gives you screen-to-world mapping for free** — for an orthographic camera, the basis X and Y vectors directly tell you how screen pixels map to world directions. No raycasting or plane intersection needed.
+- **State machines formalize what's already there** — we started with an enum + `_state` variable and manual checks. Converting to a proper `StateMachine` with declared transitions caught implicit assumptions and made the flow explicit. The `from_state` parameter on enter callbacks was the key insight — it lets one state behave differently depending on its origin.
+- **Separate input from physics from visuals** — the Ball/ClubController/BallUI split emerged naturally as we iterated. Each piece became simpler once it stopped doing the others' jobs. The state machine signals replaced all custom signals (`shot_fired`, `aiming_cancelled`, etc.).
+- **`ImmediateMesh` procedural drawing is powerful but needs abstraction** — raw vertex code is unreadable. Wrapping it in a geometry utility with named methods (`arrow`, `arc`, `ring`) made the drawing code declarative and the math reusable.
+- **`StandardMaterial3D` unshaded still gets fogged** — this was surprising. Only a `ShaderMaterial` with `render_mode fog_disabled` truly bypasses fog in Godot 4.
+- **`.tscn` format: all `sub_resource` blocks must come before `[node]` blocks** — placing a sub_resource between nodes corrupts the file silently. This bit us multiple times when editing scenes by hand.
+- **Particles can't replicate geometric shapes** — we tried replacing the expanding ring effect with `CPUParticles3D` but individual particles can't form a continuous circumference. The `ImmediateMesh` approach is the right tool for clean geometric outlines.
+- **`get_script().get_script_constant_map()`** lets you introspect a script's enums and constants at runtime — useful for auto-discovering state names without manual registration.
 
 ---
