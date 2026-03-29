@@ -1,0 +1,92 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scenes/gameplay/ball/ball_ui/ball_ui.gd" id="1_script"]
+[ext_resource type="Shader" path="res://shaders/unlit_overlay.gdshader" id="2_shader"]
+
+[sub_resource type="ImmediateMesh" id="ImmediateMesh_ui"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ui"]
+shader = ExtResource("2_shader")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_disc"]
+top_radius = 0.4
+bottom_radius = 0.4
+height = 0.01
+radial_segments = 32
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_arrow"]
+top_radius = 0.0
+bottom_radius = 0.08
+height = 0.5
+radial_segments = 8
+
+[sub_resource type="StandardMaterial3D" id="Material_placeholder"]
+shading_mode = 0
+albedo_color = Color(1, 1, 1, 0.3)
+transparency = 1
+
+[sub_resource type="Animation" id="Animation_show"]
+resource_name = "show"
+length = 0.25
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.18, 0.25),
+"transitions": PackedFloat32Array(0.3, 1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(1.25, 1.25, 1.25), Vector3(1, 1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_hide"]
+resource_name = "hide"
+length = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.04, 0.1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector3(1, 1, 1), Vector3(1.15, 1.15, 1.15), Vector3(0, 0, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_1"]
+_data = {
+"hide": SubResource("Animation_hide"),
+"show": SubResource("Animation_show")
+}
+
+[node name="BallUI" type="Node3D"]
+top_level = true
+script = ExtResource("1_script")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+mesh = SubResource("ImmediateMesh_ui")
+material_override = SubResource("ShaderMaterial_ui")
+
+[node name="Placeholder" type="Node3D" parent="."]
+
+[node name="Disc" type="MeshInstance3D" parent="Placeholder"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 0)
+cast_shadow = 0
+mesh = SubResource("CylinderMesh_disc")
+surface_material_override/0 = SubResource("Material_placeholder")
+
+[node name="Arrow" type="MeshInstance3D" parent="Placeholder"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0.02, -0.65)
+cast_shadow = 0
+mesh = SubResource("CylinderMesh_arrow")
+surface_material_override/0 = SubResource("Material_placeholder")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_1")
+}

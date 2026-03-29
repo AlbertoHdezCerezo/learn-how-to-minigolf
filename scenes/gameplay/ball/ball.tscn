@@ -1,0 +1,58 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scenes/gameplay/ball/ball.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/ball/ball_ui/ball_ui.tscn" id="2_ball_ui"]
+[ext_resource type="Script" path="res://scenes/gameplay/ball/ball_ready_effect.gd" id="4_ready_effect"]
+[ext_resource type="Shader" path="res://shaders/unlit.gdshader" id="5_shader"]
+[ext_resource type="Shader" path="res://shaders/unlit_overlay.gdshader" id="6_overlay_shader"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/ball/club_controller/club_controller.tscn" id="7_club_controller"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ball"]
+friction = 0.7
+bounce = 0.3
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_ball"]
+radius = 0.15
+
+[sub_resource type="SphereMesh" id="SphereMesh_ball"]
+radius = 0.15
+height = 0.3
+
+[sub_resource type="ShaderMaterial" id="Material_ball"]
+shader = ExtResource("5_shader")
+
+[sub_resource type="ImmediateMesh" id="ImmediateMesh_ready"]
+
+[sub_resource type="ShaderMaterial" id="Material_ready"]
+shader = ExtResource("6_overlay_shader")
+shader_parameter/albedo = Color(1, 1, 1, 0.85)
+
+[node name="Ball" type="RigidBody3D"]
+mass = 0.045
+physics_material_override = SubResource("PhysicsMaterial_ball")
+linear_damp = 1.0
+angular_damp = 1.5
+continuous_cd = true
+can_sleep = true
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_ball")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+mesh = SubResource("SphereMesh_ball")
+surface_material_override/0 = SubResource("Material_ball")
+
+[node name="BallUI" parent="." instance=ExtResource("2_ball_ui")]
+
+[node name="BallReadyEffect" type="Node3D" parent="."]
+top_level = true
+script = ExtResource("4_ready_effect")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="BallReadyEffect"]
+cast_shadow = 0
+mesh = SubResource("ImmediateMesh_ready")
+material_override = SubResource("Material_ready")
+
+[node name="ClubController" parent="." instance=ExtResource("7_club_controller")]

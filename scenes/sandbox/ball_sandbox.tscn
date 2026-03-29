@@ -1,8 +1,8 @@
 [gd_scene load_steps=14 format=3]
 
-[ext_resource type="PackedScene" path="res://scenes/gameplay/atmosphere_display.tscn" id="1_atmosphere"]
-[ext_resource type="PackedScene" path="res://scenes/gameplay/gameplay_camera.tscn" id="2_camera"]
-[ext_resource type="PackedScene" path="res://scenes/gameplay/ball.tscn" id="3_ball"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/atmosphere_display/atmosphere_display.tscn" id="1_atmosphere"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/gameplay_camera/gameplay_camera.tscn" id="2_camera"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/ball/ball.tscn" id="3_ball"]
 
 [sub_resource type="BoxMesh" id="platform_mesh"]
 size = Vector3(10, 0.5, 10)
