@@ -14,6 +14,7 @@ Implement the plan defined in `plan.md`, using `research.md` as technical refere
    - `plan.md` — the step-by-step implementation plan
    - `research.md` — the technical research and recommended approach
    - `GAME_DESIGN.md` — the game design document for overall alignment
+   - `.claude/skills/conventions.md` — the project conventions that all implementation must follow
    - The relevant GitHub issue (use `gh issue view <number>` if needed)
 
 2. **Create a feature branch.** Branch from `main` with a descriptive name based on the issue:
@@ -25,6 +26,7 @@ Implement the plan defined in `plan.md`, using `research.md` as technical refere
    - Create or modify files as specified in each step
    - After completing each step, verify it makes sense before moving to the next
    - Use Godot 4.x syntax and conventions as defined in `CLAUDE.md`
+   - Follow all project conventions defined in `.claude/skills/conventions.md`
    - Keep code clean and consistent with the existing codebase
 
 4. **Commit progressively.** Make a commit after each logical step or group of related changes. Write clear commit messages that reference the issue number:
