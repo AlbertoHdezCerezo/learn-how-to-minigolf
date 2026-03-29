@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://c2rf38bhh3jc8"]
+
+[ext_resource type="Script" uid="uid://cb1u22pw8a4mr" path="res://scenes/level_editor_tools/level_editor/level_editor.gd" id="1_editor"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/atmosphere_display/atmosphere_display.tscn" id="2_atmosphere_display"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/gameplay_camera/gameplay_camera.tscn" id="3_gameplay_camera"]
+[ext_resource type="PackedScene" path="res://scenes/level_editor_tools/level_course_editor/level_course_editor.tscn" id="4_course_editor"]
+[ext_resource type="PackedScene" path="res://scenes/level_editor_tools/level_editor/level_editor_ui/level_editor_ui.tscn" id="5_editor_ui"]
+[ext_resource type="PackedScene" path="res://scenes/level_editor_tools/camera_control_ui/camera_control_ui.tscn" id="6_camera_ui"]
+[ext_resource type="PackedScene" path="res://scenes/level_editor_tools/atmosphere_generator/atmosphere_generator_ui/atmosphere_generator_ui.tscn" id="7_atmosphere_ui"]
+
+[node name="LevelEditor" type="Node3D" unique_id=1546392752]
+script = ExtResource("1_editor")
+
+[node name="AtmosphereDisplay" parent="." instance=ExtResource("2_atmosphere_display")]
+
+[node name="GameplayCamera" parent="." instance=ExtResource("3_gameplay_camera")]
+distance = 50.0
+orbit_angle = 45.0
+pitch = 45.0
+orthographic_size = 80.0
+
+[node name="LevelCourseEditor" parent="." instance=ExtResource("4_course_editor")]
+
+[node name="EditorUI" parent="." instance=ExtResource("5_editor_ui")]
+
+[node name="CameraControlUI" parent="." instance=ExtResource("6_camera_ui")]
+
+[node name="AtmosphereUI" parent="." instance=ExtResource("7_atmosphere_ui")]
+
+[node name="SettingsPanel" parent="AtmosphereUI" index="0"]
+offset_top = 210.0
+offset_bottom = 700.0

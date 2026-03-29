@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dakpuyt706ll7"]
 
-[ext_resource type="Script" uid="uid://dor4rbsqaxqer" path="res://scripts/level_editor_tools/level_course_editor.gd" id="1_script"]
-[ext_resource type="PackedScene" path="res://scenes/level_editor_tools/level_course_editor/tile_cursor.tscn" id="2_tile_cursor"]
+[ext_resource type="Script" uid="uid://dor4rbsqaxqer" path="res://scenes/level_editor_tools/level_course_editor/level_course_editor.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/level_editor_tools/level_course_editor/tile_cursor/tile_cursor.tscn" id="2_tile_cursor"]
 [ext_resource type="MeshLibrary" path="res://resources/mesh_libraries/tile_library.tres" id="3_tile_library"]
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundary_floor"]
