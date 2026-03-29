@@ -1,0 +1,37 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/ball.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/ball_ui.tscn" id="2_ball_ui"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ball"]
+friction = 0.7
+bounce = 0.3
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_ball"]
+radius = 0.15
+
+[sub_resource type="SphereMesh" id="SphereMesh_ball"]
+radius = 0.15
+height = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Material_ball"]
+albedo_color = Color(1, 1, 1, 1)
+
+[node name="Ball" type="RigidBody3D"]
+mass = 0.045
+physics_material_override = SubResource("PhysicsMaterial_ball")
+linear_damp = 1.0
+angular_damp = 1.5
+continuous_cd = true
+can_sleep = true
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_ball")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+mesh = SubResource("SphereMesh_ball")
+surface_material_override/0 = SubResource("Material_ball")
+
+[node name="BallUI" parent="." instance=ExtResource("2_ball_ui")]
