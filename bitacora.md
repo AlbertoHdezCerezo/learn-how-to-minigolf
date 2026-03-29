@@ -153,3 +153,62 @@ GridMap uses an opaque 0-23 index system for orthogonal rotations. We initially 
 - **Start with a `.tres` MeshLibrary, not code-generated meshes** — programmatic mesh building was a detour. A proper resource file is easier to inspect, edit in the Godot editor, and extend with new tiles later.
 
 ---
+
+## feat: Ball Game Mechanics
+
+> Date: 2026-03-29
+> Issue: #7 — https://github.com/AlbertoHdezCerezo/learn-how-to-minigolf/issues/7
+> PR: #9 — https://github.com/AlbertoHdezCerezo/learn-how-to-minigolf/pull/9
+> Branch: feat-ball-mechanics
+
+### What we did
+
+Implemented the core gameplay mechanic: a golf ball that the player controls via touch drag-and-drop. The ball shoots in the opposite direction of the drag (slingshot style), with a visual indicator showing shot direction (arrow) and power (a circumference that fills as you drag further). A sandbox scene lets you test everything immediately.
+
+### Why
+
+This is the heart of the game — without ball mechanics, there's no minigolf. The issue asked for the fundamental interaction loop: touch, aim, release, watch the ball roll, wait for it to stop, repeat. Getting this right sets the foundation for everything that follows: levels, scoring, course design.
+
+### How we implemented it
+
+#### RigidBody3D for the ball
+
+The ball is a `RigidBody3D` with a `SphereShape3D` collision and a `SphereMesh` visual. We chose RigidBody3D over CharacterBody3D because the ball needs to respond naturally to physics — gravity, friction, bouncing off walls — without us manually coding every interaction. The shot is applied as a single `apply_central_impulse()` call, which is the correct Godot method for a one-time hit (not a continuous force).
+
+The physics material sets friction (0.7) and bounce (0.3) on the ball, with the platform having higher friction (0.8) and `rough = true`. The project uses Jolt Physics, which handles sphere friction better than Godot's default engine. Additional `linear_damp` (1.0) and `angular_damp` (1.5) help the ball decelerate and stop naturally.
+
+#### State machine: IDLE → AIMING → MOVING
+
+The ball script uses a simple three-state machine:
+- **IDLE**: waiting for touch input
+- **AIMING**: player is dragging, UI shows direction and power
+- **MOVING**: ball is in motion, all input is blocked
+
+The transition from MOVING back to IDLE uses a velocity threshold check (`linear_velocity.length() < 0.08`) that must hold for 20 consecutive physics frames. We deliberately avoided Godot's `sleeping` property for this — research uncovered known bugs where `sleeping` doesn't zero the velocity and can oscillate between frames. The consecutive-frame counter prevents false positives from momentary slowdowns (like the apex of a hill).
+
+#### Touch input and slingshot aiming
+
+Input is handled via `InputEventScreenTouch` (finger down/up) and `InputEventScreenDrag` (finger moving). The drag vector is converted from 2D screen space to 3D world space using the camera's basis — the camera's X axis maps to screen-right, and the camera's Y axis maps to screen-up. We project this onto the horizontal plane (zero out Y) and negate it for the slingshot effect: dragging backward shoots the ball forward.
+
+A minimum drag distance (25 pixels) acts as the cancellation threshold — if you release before reaching it, the shot cancels and the UI disappears. A maximum drag distance (300 pixels) caps the power at 1.0, matching the issue's requirement that "when the circumference is completed, the power is not higher."
+
+#### BallUI: procedural arrow and power circle
+
+The `BallUI` scene uses `ImmediateMesh` to draw both the directional arrow and the power circumference procedurally each frame. We considered using a `Decal` for the power circle (it projects nicely onto terrain), but switched to ImmediateMesh because the issue describes a circumference that *gradually draws* as power increases — a partial arc from 0° to 360° — which is much easier to do with vertex-by-vertex procedural geometry.
+
+The arrow is a rectangular body with a triangular arrowhead (8 triangles total). The power circle is a thin ring built from quad segments, where the number of segments scales with power — at 50% power, you see half the circle.
+
+BallUI has `top_level = true` so it doesn't inherit the ball's rotation (a RigidBody3D spins as it rolls), and syncs its position to the ball every frame in `_process()`. The material is unshaded with alpha transparency and `no_depth_test = true` so it always renders on top.
+
+#### Sandbox scene
+
+The test scene instances the existing `AtmosphereDisplay` and `GameplayCamera` scenes (reusing what was built for the level editor), adds a flat platform with boundary walls, and drops the ball on top. The walls have bounce (0.5) so the ball rebounds off them, making it easy to test repeated shots without the ball falling off.
+
+### Key takeaways
+
+- **Velocity threshold + frame counter is more reliable than `sleeping` for stop detection** — Godot's `sleeping` state has known bugs with non-zero residual velocity and frame-to-frame oscillation. A simple counter that requires N consecutive frames below a speed threshold is robust and predictable.
+- **`ImmediateMesh` is great for simple dynamic indicators** — for a handful of triangles that change every frame (like an aim arrow), rebuilding the mesh from scratch is simpler and more flexible than managing static meshes or shaders. The API is straightforward: `surface_begin()`, add vertices, `surface_end()`.
+- **`top_level = true` is the cleanest way to decouple child transforms** — rather than counter-rotating or using a separate node tree, setting `top_level` on BallUI means it exists in world space and just follows the ball's position. No rotation inheritance, no transform math.
+- **Camera basis gives you screen-to-world mapping for free** — for an orthographic camera, the basis X and Y vectors directly tell you how screen pixels map to world directions. No raycasting or plane intersection needed.
+
+---
