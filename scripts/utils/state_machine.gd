@@ -29,9 +29,15 @@ var _enum: Dictionary = {}
 ## [param owner] The object that defines the State enum. The enum is
 ## discovered via get_script().get_script_constant_map()["State"].
 func _init(owner: Object = null) -> void:
-	if owner and owner.get_script():
-		var constants: Dictionary = owner.get_script().get_script_constant_map()
-		if "State" in constants: _enum = constants["State"]
+	if owner == null: return
+	if not owner.get_script():
+		push_error("StateMachine: owner '%s' has no script attached." % owner)
+		return
+	var constants: Dictionary = owner.get_script().get_script_constant_map()
+	if "State" not in constants:
+		push_error("StateMachine: owner script '%s' does not define an enum 'State'." % owner.get_script().resource_path)
+		return
+	_enum = constants["State"]
 
 
 ## Registers a state. Must be called before [method start].
