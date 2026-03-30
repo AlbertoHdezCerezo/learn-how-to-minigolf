@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scenes/gameplay/golf_course/golf_course.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/gameplay/atmosphere_display/atmosphere_display.tscn" id="2_atmosphere_display"]
 [ext_resource type="Resource" path="res://resources/default_atmosphere.tres" id="3_default_atmosphere"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/gameplay_camera/gameplay_camera.tscn" id="4_gameplay_camera"]
 
 [node name="GolfCourse" type="Node3D"]
 script = ExtResource("1_script")
@@ -10,7 +11,4 @@ atmosphere = ExtResource("3_default_atmosphere")
 
 [node name="AtmosphereDisplay" parent="." instance=ExtResource("2_atmosphere_display")]
 
-[node name="GameplayCamera" type="Camera3D" parent="."]
-transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 5, 7.07107, 5)
-projection = 1
-size = 10.0
+[node name="GameplayCamera" parent="." instance=ExtResource("4_gameplay_camera")]
