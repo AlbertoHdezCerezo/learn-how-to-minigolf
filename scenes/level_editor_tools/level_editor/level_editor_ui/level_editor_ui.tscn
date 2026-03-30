@@ -61,7 +61,7 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-max_value = 10.0
+max_value = 30.0
 
 [node name="RotateButton" type="Button" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout/FloorControlRow"]
 unique_name_in_owner = true
