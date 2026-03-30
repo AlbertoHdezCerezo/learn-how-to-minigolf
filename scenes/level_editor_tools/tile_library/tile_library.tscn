@@ -107,7 +107,9 @@ depth = 0.5
 material = SubResource("wall_mat")
 
 ; ── RoundedWall (ID 5) ─────────────────────────────────────────
-; Flat tile with a half-cylinder wall along the north edge
+; Like Corner but with a quarter-circle cut instead of a diagonal.
+; Base cube + cylinder on top, then subtract a box to keep only
+; the quarter-circle in the NE corner area.
 [node name="RoundedWall" type="CSGCombiner3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 0)
 
@@ -120,25 +122,39 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.005, 0)
 size = Vector3(2.002, 0.01, 2.002)
 material = SubResource("floor_mat")
 
-[node name="CurvedWall" type="CSGCylinder3D" parent="RoundedWall"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, 1.25, -0.85)
-radius = 0.3
-height = 2
-sides = 12
+[node name="CylinderFull" type="CSGCylinder3D" parent="RoundedWall"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 1.25, 1)
+radius = 2.0
+height = 0.5
+sides = 24
 material = SubResource("wall_mat")
 
-[node name="CurvedWallCutter" type="CSGBox3D" parent="RoundedWall"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -1.3)
+[node name="CutWest" type="CSGBox3D" parent="RoundedWall"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.25, 0)
 operation = 2
-size = Vector3(2.5, 0.6, 0.6)
+size = Vector3(2, 0.6, 4)
+
+[node name="CutSouth" type="CSGBox3D" parent="RoundedWall"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 2)
+operation = 2
+size = Vector3(4, 0.6, 2)
 
 ; ── Ramp (ID 6) ────────────────────────────────────────────────
-; Same 2×2×2 cell — triangular prism: high at -X, low at +X
+; Full 2×2×2 cube with the top cut diagonally: high at -X, low at +X.
+; A rotated box subtracts everything above the slope line.
 [node name="Ramp" type="CSGCombiner3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0, 0)
 
-[node name="RampBody" type="CSGPolygon3D" parent="Ramp"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1)
-polygon = PackedVector2Array(-1, -1, 1, -1, -1, 1)
-depth = 2.0
+[node name="Body" type="CSGBox3D" parent="Ramp"]
+size = Vector3(2, 2, 2)
+material = SubResource("wall_mat")
+
+[node name="SlopeCutter" type="CSGBox3D" parent="Ramp"]
+transform = Transform3D(0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 0, 0, 1, -1.414214, 1.414214, 0)
+operation = 2
+size = Vector3(4, 4, 2.2)
+
+[node name="SlopeTop" type="CSGBox3D" parent="Ramp"]
+transform = Transform3D(0.707107, -0.707107, 0, 0.707107, 0.707107, 0, 0, 0, 1, 0, 0.007, 0)
+size = Vector3(2.83, 0.01, 2.002)
 material = SubResource("floor_mat")
