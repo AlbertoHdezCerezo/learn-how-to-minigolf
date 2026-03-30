@@ -21,6 +21,7 @@ const TILE_IDS := {
 	"Corner": 4,
 	"RoundedWall": 5,
 	"Ramp": 6,
+	"ConcaveCurve": 7,
 }
 
 
@@ -76,8 +77,8 @@ func _get_shapes(tile_name: String) -> Array:
 				Vector3(-HALF.x, top, -HALF.z), Vector3(HALF.x, top, -HALF.z), Vector3(HALF.x, top, HALF.z),
 			])
 			return _box_shape(CELL) + [prism, Transform3D.IDENTITY]
-		"RoundedWall":
-			return _box_shape(CELL) + _wall_shape_north()
+		"RoundedWall", "ConcaveCurve":
+			return _box_shape(CELL) + _wall_shape_north() + _wall_shape_east()
 		"Ramp":
 			var shape := ConvexPolygonShape3D.new()
 			var h := HALF

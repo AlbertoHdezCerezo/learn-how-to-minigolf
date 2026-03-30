@@ -158,3 +158,32 @@ size = Vector3(4, 4, 2.2)
 transform = Transform3D(0.707107, -0.707107, 0, 0.707107, 0.707107, 0, 0, 0, 1, 0, 0.007, 0)
 size = Vector3(2.83, 0.01, 2.002)
 material = SubResource("floor_mat")
+
+; ── ConcaveCurve (ID 7) ───────────────────────────────────────
+; Like RoundedWall but the curve goes inward (concave).
+; Full block on top of the base, with a quarter-circle scooped
+; out from the NE corner. The remaining wall forms an L with a
+; curved inner edge from NW to SE.
+[node name="ConcaveCurve" type="CSGCombiner3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, 0)
+
+[node name="Body" type="CSGBox3D" parent="ConcaveCurve"]
+size = Vector3(2, 2, 2)
+material = SubResource("wall_mat")
+
+[node name="FloorTop" type="CSGBox3D" parent="ConcaveCurve"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.005, 0)
+size = Vector3(2.002, 0.01, 2.002)
+material = SubResource("floor_mat")
+
+[node name="WallBlock" type="CSGBox3D" parent="ConcaveCurve"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+size = Vector3(2, 0.5, 2)
+material = SubResource("wall_mat")
+
+[node name="ConcaveCut" type="CSGCylinder3D" parent="ConcaveCurve"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1.25, -1)
+operation = 2
+radius = 2.0
+height = 0.6
+sides = 24
