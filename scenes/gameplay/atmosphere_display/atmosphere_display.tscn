@@ -15,7 +15,8 @@ shader_parameter/angle = 90.0
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 3
 ambient_light_source = 2
-ambient_light_color = Color(0.5, 0.5, 0.5, 1)
+ambient_light_color = Color(0.6, 0.6, 0.6, 1)
+ambient_light_energy = 0.6
 fog_enabled = true
 fog_light_color = Color(0.5, 0.1, 0.7, 1)
 fog_density = 0.02
@@ -42,5 +43,6 @@ mouse_filter = 2
 environment = SubResource("Environment_1")
 
 [node name="SceneLight" type="DirectionalLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 0, 0)
+transform = Transform3D(0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, -0.75, 0.433013, 0, 0, 0)
+light_energy = 0.9
 shadow_enabled = true
