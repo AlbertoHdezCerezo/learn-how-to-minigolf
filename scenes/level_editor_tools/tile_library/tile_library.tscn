@@ -8,6 +8,21 @@ albedo_color = Color(0.30, 0.62, 0.58, 1)
 [sub_resource type="StandardMaterial3D" id="wall_mat"]
 albedo_color = Color(0.12, 0.30, 0.28, 1)
 
+[sub_resource type="BoxShape3D" id="box_2x2x2"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="BoxShape3D" id="wall_north"]
+size = Vector3(2, 0.5, 0.3)
+
+[sub_resource type="BoxShape3D" id="wall_east"]
+size = Vector3(0.3, 0.5, 2)
+
+[sub_resource type="ConvexPolygonShape3D" id="ramp_shape"]
+points = PackedVector3Array(-1, -1, -1, -1, -1, 1, 1, -1, -1, 1, -1, 1, -1, 1, -1, -1, 1, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="corner_prism"]
+points = PackedVector3Array(-1, 1, -1, 1, 1, -1, 1, 1, 1, -1, 1.5, -1, 1, 1.5, -1, 1, 1.5, 1)
+
 [node name="TileLibrary" type="Node3D"]
 script = ExtResource("1_script")
 
@@ -23,6 +38,11 @@ material = SubResource("wall_mat")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.005, 0)
 size = Vector3(2.002, 0.01, 2.002)
 material = SubResource("floor_mat")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Flat"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Flat/StaticBody3D"]
+shape = SubResource("box_2x2x2")
 
 ; ── Hole (ID 1) ─────────────────────────────────────────────────
 [node name="Hole" type="CSGCombiner3D" parent="."]
@@ -45,6 +65,11 @@ height = 0.35
 sides = 16
 material = SubResource("wall_mat")
 
+[node name="StaticBody3D" type="StaticBody3D" parent="Hole"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hole/StaticBody3D"]
+shape = SubResource("box_2x2x2")
+
 ; ── WallSingle (ID 2) ──────────────────────────────────────────
 [node name="WallSingle" type="CSGCombiner3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 0)
@@ -62,6 +87,15 @@ material = SubResource("floor_mat")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -0.85)
 size = Vector3(2, 0.5, 0.3)
 material = SubResource("wall_mat")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="WallSingle"]
+
+[node name="Base" type="CollisionShape3D" parent="WallSingle/StaticBody3D"]
+shape = SubResource("box_2x2x2")
+
+[node name="Wall" type="CollisionShape3D" parent="WallSingle/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -0.85)
+shape = SubResource("wall_north")
 
 ; ── WallCorner (ID 3) ──────────────────────────────────────────
 [node name="WallCorner" type="CSGCombiner3D" parent="."]
@@ -86,6 +120,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, 1.25, 0)
 size = Vector3(0.3, 0.5, 2)
 material = SubResource("wall_mat")
 
+[node name="StaticBody3D" type="StaticBody3D" parent="WallCorner"]
+
+[node name="Base" type="CollisionShape3D" parent="WallCorner/StaticBody3D"]
+shape = SubResource("box_2x2x2")
+
+[node name="NorthWall" type="CollisionShape3D" parent="WallCorner/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -0.85)
+shape = SubResource("wall_north")
+
+[node name="EastWall" type="CollisionShape3D" parent="WallCorner/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, 1.25, 0)
+shape = SubResource("wall_east")
+
 ; ── Corner (ID 4) ──────────────────────────────────────────────
 ; Base cube + triangular wedge on top (NW → NE → SE diagonal)
 [node name="Corner" type="CSGCombiner3D" parent="."]
@@ -106,10 +153,16 @@ polygon = PackedVector2Array(-1, 1, 1, 1, 1, -1)
 depth = 0.5
 material = SubResource("wall_mat")
 
+[node name="StaticBody3D" type="StaticBody3D" parent="Corner"]
+
+[node name="Base" type="CollisionShape3D" parent="Corner/StaticBody3D"]
+shape = SubResource("box_2x2x2")
+
+[node name="Prism" type="CollisionShape3D" parent="Corner/StaticBody3D"]
+shape = SubResource("corner_prism")
+
 ; ── RoundedWall (ID 5) ─────────────────────────────────────────
-; Like Corner but with a quarter-circle cut instead of a diagonal.
-; Base cube + cylinder on top, then subtract a box to keep only
-; the quarter-circle in the NE corner area.
+; Like Corner but with a quarter-circle instead of a diagonal.
 [node name="RoundedWall" type="CSGCombiner3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 0)
 
@@ -139,9 +192,21 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 2)
 operation = 2
 size = Vector3(4, 0.6, 2)
 
+[node name="StaticBody3D" type="StaticBody3D" parent="RoundedWall"]
+
+[node name="Base" type="CollisionShape3D" parent="RoundedWall/StaticBody3D"]
+shape = SubResource("box_2x2x2")
+
+[node name="NorthWall" type="CollisionShape3D" parent="RoundedWall/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -0.85)
+shape = SubResource("wall_north")
+
+[node name="EastWall" type="CollisionShape3D" parent="RoundedWall/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, 1.25, 0)
+shape = SubResource("wall_east")
+
 ; ── Ramp (ID 6) ────────────────────────────────────────────────
 ; Full 2×2×2 cube with the top cut diagonally: high at -X, low at +X.
-; A rotated box subtracts everything above the slope line.
 [node name="Ramp" type="CSGCombiner3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0, 0)
 
@@ -159,11 +224,13 @@ transform = Transform3D(0.707107, -0.707107, 0, 0.707107, 0.707107, 0, 0, 0, 1, 
 size = Vector3(2.83, 0.01, 2.002)
 material = SubResource("floor_mat")
 
+[node name="StaticBody3D" type="StaticBody3D" parent="Ramp"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ramp/StaticBody3D"]
+shape = SubResource("ramp_shape")
+
 ; ── ConcaveCurve (ID 7) ───────────────────────────────────────
-; Like RoundedWall but the curve goes inward (concave).
-; Full block on top of the base, with a quarter-circle scooped
-; out from the NE corner. The remaining wall forms an L with a
-; curved inner edge from NW to SE.
+; Full block on top with a quarter-circle scooped from NE corner.
 [node name="ConcaveCurve" type="CSGCombiner3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, 0)
 
@@ -187,3 +254,16 @@ operation = 2
 radius = 2.0
 height = 0.6
 sides = 24
+
+[node name="StaticBody3D" type="StaticBody3D" parent="ConcaveCurve"]
+
+[node name="Base" type="CollisionShape3D" parent="ConcaveCurve/StaticBody3D"]
+shape = SubResource("box_2x2x2")
+
+[node name="NorthWall" type="CollisionShape3D" parent="ConcaveCurve/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -0.85)
+shape = SubResource("wall_north")
+
+[node name="EastWall" type="CollisionShape3D" parent="ConcaveCurve/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, 1.25, 0)
+shape = SubResource("wall_east")
