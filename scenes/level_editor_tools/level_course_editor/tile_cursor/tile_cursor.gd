@@ -23,6 +23,7 @@ func set_tile_mesh(item_id: int) -> void:
 
 func set_rotation_angle(angle: float) -> void:
 	_rotation_angle = angle
+	if visible: basis = Basis(Vector3.UP, deg_to_rad(_rotation_angle))
 
 
 func move_to(grid_pos: Vector3i) -> void:

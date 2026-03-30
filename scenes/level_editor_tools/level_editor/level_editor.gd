@@ -42,11 +42,20 @@ func _unhandled_input(event: InputEvent) -> void:
 		_handle_mouse_button(event)
 	elif event is InputEventMouseMotion:
 		_handle_mouse_motion(event)
+	elif event is InputEventPanGesture:
+		_handle_pan_gesture(event)
+	elif event is InputEventMagnifyGesture:
+		_handle_magnify_gesture(event)
 
 
 func _handle_mouse_button(event: InputEventMouseButton) -> void:
 	if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		_course_editor.place_at(event.position, _camera)
+		if event.alt_pressed:
+			_is_panning = true
+		else:
+			_course_editor.place_at(event.position, _camera)
+	elif event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+		_is_panning = false
 	elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 		_course_editor.remove_at(event.position, _camera)
 	elif event.button_index == MOUSE_BUTTON_MIDDLE:
@@ -64,6 +73,16 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 		_gameplay_camera.global_translate(_camera.global_basis.y * delta.y)
 	else:
 		_course_editor.update_cursor(event.position, _camera)
+
+
+func _handle_pan_gesture(event: InputEventPanGesture) -> void:
+	## Two-finger scroll on trackpad — zoom
+	_gameplay_camera.orthographic_size += event.delta.y * 0.5
+
+
+func _handle_magnify_gesture(event: InputEventMagnifyGesture) -> void:
+	## Pinch to zoom on trackpad
+	_gameplay_camera.orthographic_size /= event.factor
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
