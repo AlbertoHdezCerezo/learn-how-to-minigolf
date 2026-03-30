@@ -65,9 +65,10 @@ func get_placement_position(screen_pos: Vector2, camera: Camera3D, world: World3
 ##
 ## Hits on the floor are ignored since there is no tile to remove there.
 func get_removal_position(screen_pos: Vector2, camera: Camera3D, world: World3D) -> Variant:
-	var result := Raycast.from_screen(screen_pos, camera, world)
+	var exclude: Array[RID] = [_floor_collider.get_rid()]
+	var result := Raycast.from_screen(screen_pos, camera, world, Raycast.DEFAULT_RAY_LENGTH, exclude)
 
-	if result.is_empty() or _is_hovering_floor(result): return null
+	if result.is_empty(): return null
 
 	return _get_hit_cell(result)
 

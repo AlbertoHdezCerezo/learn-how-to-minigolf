@@ -64,6 +64,12 @@ func _on_tile_button_pressed(item_id: int, pressed_btn: Button) -> void:
 		btn.button_pressed = (btn == pressed_btn)
 
 
+func _select_tile_by_index(index: int) -> void:
+	var buttons := _tile_buttons_container.get_children()
+	if index < 0 or index >= buttons.size(): return
+	_on_tile_button_pressed(index, buttons[index])
+
+
 func _populate_atmosphere_selector() -> void:
 	_atmosphere_paths.clear()
 	_atmosphere_selector.clear()
@@ -114,4 +120,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_BRACKETRIGHT:
 			_floor_spinbox.value = minf(_floor_spinbox.value + 1, _floor_spinbox.max_value)
+			get_viewport().set_input_as_handled()
+		elif event.keycode >= KEY_1 and event.keycode <= KEY_9:
+			_select_tile_by_index(event.keycode - KEY_1)
+			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_0:
+			_select_tile_by_index(9)
 			get_viewport().set_input_as_handled()

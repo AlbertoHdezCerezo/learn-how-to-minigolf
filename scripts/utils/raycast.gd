@@ -27,9 +27,10 @@ const DEFAULT_RAY_LENGTH := 500.0
 ## [param world] The World3D containing the physics space to query.
 ## [param ray_length] How far the ray extends into the scene (in world units).
 ## Returns a Dictionary with hit info, or an empty Dictionary if nothing was hit.
-static func from_screen(screen_pos: Vector2, camera: Camera3D, world: World3D, ray_length: float = DEFAULT_RAY_LENGTH) -> Dictionary:
+static func from_screen(screen_pos: Vector2, camera: Camera3D, world: World3D, ray_length: float = DEFAULT_RAY_LENGTH, exclude: Array[RID] = []) -> Dictionary:
 	var ray_origin := camera.project_ray_origin(screen_pos)
 	var ray_dir := camera.project_ray_normal(screen_pos)
 	var space_state := world.direct_space_state
 	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_origin + ray_dir * ray_length)
+	query.exclude = exclude
 	return space_state.intersect_ray(query)
