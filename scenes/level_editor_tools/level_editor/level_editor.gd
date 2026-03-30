@@ -97,6 +97,16 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		if event.keycode == KEY_H:
 			_toggle_ui()
 			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_N:
+			_reset_camera()
+			get_viewport().set_input_as_handled()
+
+
+func _reset_camera() -> void:
+	_gameplay_camera.global_position = Vector3.ZERO
+	_gameplay_camera.orbit_angle = 45.0
+	_gameplay_camera.pitch = 45.0
+	_gameplay_camera.orthographic_size = 80.0
 
 
 func _toggle_ui() -> void:
