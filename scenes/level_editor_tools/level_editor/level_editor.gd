@@ -30,7 +30,7 @@ func _connect_camera_ui() -> void:
 
 
 func _connect_atmosphere_ui() -> void:
-	_atmosphere = Atmosphere.new()
+	_atmosphere = _atmosphere_display.atmosphere if _atmosphere_display.atmosphere else Atmosphere.new()
 	_atmosphere_display.atmosphere = _atmosphere
 	_atmosphere_ui.bind(_atmosphere)
 
