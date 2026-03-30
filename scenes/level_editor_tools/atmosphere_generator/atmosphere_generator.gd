@@ -16,9 +16,9 @@ extends Node3D
 		gradient_position = value
 		_update_atmosphere()
 
-@export_range(0.5, 2.0, 0.01) var size: float = 0.5:
+@export_range(0.5, 2.0, 0.01) var gradient_size: float = 0.5:
 	set(value):
-		size = value
+		gradient_size = value
 		_update_atmosphere()
 
 @export_range(0.0, 360.0, 0.1) var angle: float = 90.0:
@@ -61,7 +61,7 @@ func _update_atmosphere() -> void:
 	_atmosphere.first_color = first_color
 	_atmosphere.second_color = second_color
 	_atmosphere.gradient_position = gradient_position
-	_atmosphere.size = size
+	_atmosphere.size = gradient_size
 	_atmosphere.angle = angle
 	_atmosphere.fog_enabled = fog_enabled
 	_atmosphere.fog_density = fog_density
@@ -79,7 +79,7 @@ func _connect_ui() -> void:
 	_ui.first_color_changed.connect(func(c: Color): first_color = c)
 	_ui.second_color_changed.connect(func(c: Color): second_color = c)
 	_ui.gradient_position_changed.connect(func(v: float): gradient_position = v)
-	_ui.size_changed.connect(func(v: float): size = v)
+	_ui.size_changed.connect(func(v: float): gradient_size = v)
 	_ui.angle_changed.connect(func(v: float): angle = v)
 	_ui.fog_enabled_changed.connect(func(v: bool): fog_enabled = v)
 	_ui.fog_density_changed.connect(func(v: float): fog_density = v)
