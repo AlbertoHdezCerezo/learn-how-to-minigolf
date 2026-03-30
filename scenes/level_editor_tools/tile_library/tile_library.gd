@@ -1,9 +1,11 @@
+@tool
 extends Node3D
 
-## Scene-based tile library generator.
-## Run this scene to regenerate resources/mesh_libraries/tile_library.tres.
-## Each tile is built with SurfaceTool for per-face material control
-## (lighter teal tops, darker teal sides/walls).
+## Scene-based tile library with preview.
+##
+## Each direct child Node3D represents a tile. This @tool script generates
+## the mesh for each tile child (as MeshInstance3D) so tiles are visible
+## in the editor. Run this scene standalone to save the MeshLibrary to disk.
 
 const SAVE_PATH := "res://resources/mesh_libraries/tile_library.tres"
 const CELL := Vector3(2, 2, 2)
@@ -18,18 +20,72 @@ const CURVE_SEGMENTS := 8
 var _floor_mat: StandardMaterial3D
 var _wall_mat: StandardMaterial3D
 
+## Maps tile child name → { "id": int, "mesh": Callable, "shapes": Callable }
+var _tile_defs: Dictionary
+
 
 func _ready() -> void:
 	_floor_mat = _create_floor_material()
 	_wall_mat = _create_wall_material()
 
-	var lib := _generate()
+	_tile_defs = {
+		"Flat":        { "id": 0, "mesh": _build_flat, "shapes": _shapes_box.bind(CELL) },
+		"Hole":        { "id": 1, "mesh": _build_hole, "shapes": _shapes_box.bind(CELL) },
+		"WallSingle":  { "id": 2, "mesh": _build_wall_single, "shapes": _shapes_wall_single },
+		"WallCorner":  { "id": 3, "mesh": _build_wall_corner, "shapes": _shapes_wall_corner },
+		"Corner":      { "id": 4, "mesh": _build_corner, "shapes": _shapes_corner },
+		"RoundedWall": { "id": 5, "mesh": _build_rounded_wall, "shapes": _shapes_rounded_wall },
+		"Ramp":        { "id": 6, "mesh": _build_ramp, "shapes": _shapes_ramp },
+	}
+
+	_generate_previews()
+
+	if not Engine.is_editor_hint():
+		_save_library()
+		get_tree().quit()
+
+
+func _generate_previews() -> void:
+	## Create/update MeshInstance3D children for each tile node so they preview in editor.
+	for child: Node in get_children():
+		if child.name not in _tile_defs: continue
+
+		var def: Dictionary = _tile_defs[child.name]
+		var mesh: Mesh = def["mesh"].call()
+
+		# Find or create the MeshInstance3D
+		var mesh_inst: MeshInstance3D
+		if child.has_node("MeshPreview"):
+			mesh_inst = child.get_node("MeshPreview")
+		else:
+			mesh_inst = MeshInstance3D.new()
+			mesh_inst.name = "MeshPreview"
+			child.add_child(mesh_inst)
+
+		mesh_inst.mesh = mesh
+
+
+func _save_library() -> void:
+	var lib := MeshLibrary.new()
+
+	for child: Node in get_children():
+		if child.name not in _tile_defs: continue
+
+		var def: Dictionary = _tile_defs[child.name]
+		var id: int = def["id"]
+		var mesh: Mesh = def["mesh"].call()
+		var shapes: Array = def["shapes"].call()
+
+		lib.create_item(id)
+		lib.set_item_name(id, child.name)
+		lib.set_item_mesh(id, mesh)
+		lib.set_item_shapes(id, shapes)
+
 	var error := ResourceSaver.save(lib, SAVE_PATH)
 	if error == OK:
 		print("MeshLibrary saved to: ", SAVE_PATH)
 	else:
 		print("Failed to save MeshLibrary: ", error)
-	get_tree().quit()
 
 
 func _create_floor_material() -> StandardMaterial3D:
@@ -44,49 +100,25 @@ func _create_wall_material() -> StandardMaterial3D:
 	return mat
 
 
-func _generate() -> MeshLibrary:
-	var lib := MeshLibrary.new()
-
-	_add_item(lib, 0, "Flat", _build_flat(), _shapes_box(CELL))
-	_add_item(lib, 1, "Hole", _build_hole(), _shapes_box(CELL))
-	_add_item(lib, 2, "WallSingle", _build_wall_single(), _shapes_wall_single())
-	_add_item(lib, 3, "WallCorner", _build_wall_corner(), _shapes_wall_corner())
-	_add_item(lib, 4, "Corner", _build_corner(), _shapes_corner())
-	_add_item(lib, 5, "RoundedWall", _build_rounded_wall(), _shapes_rounded_wall())
-	_add_item(lib, 6, "Ramp", _build_ramp(), _shapes_ramp())
-
-	return lib
-
-
-func _add_item(lib: MeshLibrary, id: int, item_name: String, mesh: Mesh, shapes: Array) -> void:
-	lib.create_item(id)
-	lib.set_item_name(id, item_name)
-	lib.set_item_mesh(id, mesh)
-	lib.set_item_shapes(id, shapes)
-
-
 # ── Mesh builders ──────────────────────────────────────────────────
 
 func _build_flat() -> Mesh:
-	## Basic platform: teal top, darker sides/bottom.
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var h := HALF
 
-	# Top face (floor material)
 	_add_quad(st, Vector3(-h.x, h.y, -h.z), Vector3(h.x, h.y, -h.z), Vector3(h.x, h.y, h.z), Vector3(-h.x, h.y, h.z))
 
 	st.generate_normals()
 	st.set_material(_floor_mat)
 	var mesh := st.commit()
 
-	# Side + bottom faces (wall material)
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	_add_quad(st, Vector3(-h.x, -h.y, -h.z), Vector3(h.x, -h.y, -h.z), Vector3(h.x, -h.y, h.z), Vector3(-h.x, -h.y, h.z))  # bottom
-	_add_quad(st, Vector3(-h.x, -h.y, -h.z), Vector3(-h.x, h.y, -h.z), Vector3(h.x, h.y, -h.z), Vector3(h.x, -h.y, -h.z))    # north
-	_add_quad(st, Vector3(h.x, -h.y, h.z), Vector3(h.x, h.y, h.z), Vector3(-h.x, h.y, h.z), Vector3(-h.x, -h.y, h.z))          # south
-	_add_quad(st, Vector3(h.x, -h.y, -h.z), Vector3(h.x, h.y, -h.z), Vector3(h.x, h.y, h.z), Vector3(h.x, -h.y, h.z))          # east
-	_add_quad(st, Vector3(-h.x, -h.y, h.z), Vector3(-h.x, h.y, h.z), Vector3(-h.x, h.y, -h.z), Vector3(-h.x, -h.y, -h.z))      # west
+	_add_quad(st, Vector3(-h.x, -h.y, -h.z), Vector3(h.x, -h.y, -h.z), Vector3(h.x, -h.y, h.z), Vector3(-h.x, -h.y, h.z))
+	_add_quad(st, Vector3(-h.x, -h.y, -h.z), Vector3(-h.x, h.y, -h.z), Vector3(h.x, h.y, -h.z), Vector3(h.x, -h.y, -h.z))
+	_add_quad(st, Vector3(h.x, -h.y, h.z), Vector3(h.x, h.y, h.z), Vector3(-h.x, h.y, h.z), Vector3(-h.x, -h.y, h.z))
+	_add_quad(st, Vector3(h.x, -h.y, -h.z), Vector3(h.x, h.y, -h.z), Vector3(h.x, h.y, h.z), Vector3(h.x, -h.y, h.z))
+	_add_quad(st, Vector3(-h.x, -h.y, h.z), Vector3(-h.x, h.y, h.z), Vector3(-h.x, h.y, -h.z), Vector3(-h.x, -h.y, -h.z))
 
 	st.generate_normals()
 	st.set_material(_wall_mat)
@@ -94,14 +126,12 @@ func _build_flat() -> Mesh:
 
 
 func _build_hole() -> Mesh:
-	## Flat tile with a circular depression on top.
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var h := HALF
 	var top_y := h.y
 	var hole_y := top_y - HOLE_DEPTH
 
-	# Top ring surface (floor material) — square outer edge to circular inner edge
 	var circle_top: Array[Vector3] = []
 	var circle_bottom: Array[Vector3] = []
 	for i: int in range(HOLE_SEGMENTS):
@@ -119,7 +149,6 @@ func _build_hole() -> Mesh:
 		var outer_b := _project_to_square_edge(inner_b, h.x)
 		_add_quad(st, inner_a, outer_a, outer_b, inner_b)
 
-	# Fill corner triangles
 	var corners: Array[Vector3] = [
 		Vector3(-h.x, top_y, -h.z), Vector3(h.x, top_y, -h.z),
 		Vector3(h.x, top_y, h.z), Vector3(-h.x, top_y, h.z)
@@ -138,20 +167,17 @@ func _build_hole() -> Mesh:
 	st.set_material(_floor_mat)
 	var mesh := st.commit()
 
-	# Wall material: 5 cube sides + inner cylinder + hole bottom
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	_add_quad(st, Vector3(-h.x, -h.y, -h.z), Vector3(h.x, -h.y, -h.z), Vector3(h.x, -h.y, h.z), Vector3(-h.x, -h.y, h.z))  # bottom
-	_add_quad(st, Vector3(-h.x, -h.y, -h.z), Vector3(-h.x, h.y, -h.z), Vector3(h.x, h.y, -h.z), Vector3(h.x, -h.y, -h.z))    # north
-	_add_quad(st, Vector3(h.x, -h.y, h.z), Vector3(h.x, h.y, h.z), Vector3(-h.x, h.y, h.z), Vector3(-h.x, -h.y, h.z))          # south
-	_add_quad(st, Vector3(h.x, -h.y, -h.z), Vector3(h.x, h.y, -h.z), Vector3(h.x, h.y, h.z), Vector3(h.x, -h.y, h.z))          # east
-	_add_quad(st, Vector3(-h.x, -h.y, h.z), Vector3(-h.x, h.y, h.z), Vector3(-h.x, h.y, -h.z), Vector3(-h.x, -h.y, -h.z))      # west
+	_add_quad(st, Vector3(-h.x, -h.y, -h.z), Vector3(h.x, -h.y, -h.z), Vector3(h.x, -h.y, h.z), Vector3(-h.x, -h.y, h.z))
+	_add_quad(st, Vector3(-h.x, -h.y, -h.z), Vector3(-h.x, h.y, -h.z), Vector3(h.x, h.y, -h.z), Vector3(h.x, -h.y, -h.z))
+	_add_quad(st, Vector3(h.x, -h.y, h.z), Vector3(h.x, h.y, h.z), Vector3(-h.x, h.y, h.z), Vector3(-h.x, -h.y, h.z))
+	_add_quad(st, Vector3(h.x, -h.y, -h.z), Vector3(h.x, h.y, -h.z), Vector3(h.x, h.y, h.z), Vector3(h.x, -h.y, h.z))
+	_add_quad(st, Vector3(-h.x, -h.y, h.z), Vector3(-h.x, h.y, h.z), Vector3(-h.x, h.y, -h.z), Vector3(-h.x, -h.y, -h.z))
 
-	# Inner cylinder walls
 	for i: int in range(HOLE_SEGMENTS):
 		var i_next := (i + 1) % HOLE_SEGMENTS
 		_add_quad(st, circle_bottom[i_next], circle_bottom[i], circle_top[i], circle_top[i_next])
 
-	# Hole bottom disc
 	var bottom_center := Vector3(0, hole_y, 0)
 	for i: int in range(HOLE_SEGMENTS):
 		var i_next := (i + 1) % HOLE_SEGMENTS
@@ -163,7 +189,6 @@ func _build_hole() -> Mesh:
 
 
 func _build_wall_single() -> Mesh:
-	## Flat tile + one wall on the north side.
 	var mesh := _build_flat()
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -176,7 +201,6 @@ func _build_wall_single() -> Mesh:
 
 
 func _build_wall_corner() -> Mesh:
-	## Flat tile + walls on north and east sides.
 	var mesh := _build_flat()
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -192,14 +216,11 @@ func _build_wall_corner() -> Mesh:
 
 
 func _build_corner() -> Mesh:
-	## Triangular wedge piece (half-cube diagonal): floor on slope, darker sides.
-	## Right triangle: NW → NE → SE, with a sloped top from NW down to SE.
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var h := HALF
 	var base_y := h.y
 
-	# Top triangular face (floor material)
 	_add_tri(st,
 		Vector3(-h.x, base_y + WALL_HEIGHT, -h.z),
 		Vector3(h.x, base_y + WALL_HEIGHT, -h.z),
@@ -209,19 +230,15 @@ func _build_corner() -> Mesh:
 	st.set_material(_floor_mat)
 	var mesh := st.commit()
 
-	# Side faces (wall material): bottom tri, 3 side quads, base cube
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 
-	# Base cube underneath
-	_add_quad(st, Vector3(-h.x, -h.y, -h.z), Vector3(h.x, -h.y, -h.z), Vector3(h.x, -h.y, h.z), Vector3(-h.x, -h.y, h.z))  # bottom
-	_add_quad(st, Vector3(-h.x, -h.y, -h.z), Vector3(-h.x, h.y, -h.z), Vector3(h.x, h.y, -h.z), Vector3(h.x, -h.y, -h.z))    # north
-	_add_quad(st, Vector3(h.x, -h.y, h.z), Vector3(h.x, h.y, h.z), Vector3(-h.x, h.y, h.z), Vector3(-h.x, -h.y, h.z))          # south
-	_add_quad(st, Vector3(h.x, -h.y, -h.z), Vector3(h.x, h.y, -h.z), Vector3(h.x, h.y, h.z), Vector3(h.x, -h.y, h.z))          # east
-	_add_quad(st, Vector3(-h.x, -h.y, h.z), Vector3(-h.x, h.y, h.z), Vector3(-h.x, h.y, -h.z), Vector3(-h.x, -h.y, -h.z))      # west
-	# Top face of base cube (only the part not covered by the wedge)
+	_add_quad(st, Vector3(-h.x, -h.y, -h.z), Vector3(h.x, -h.y, -h.z), Vector3(h.x, -h.y, h.z), Vector3(-h.x, -h.y, h.z))
+	_add_quad(st, Vector3(-h.x, -h.y, -h.z), Vector3(-h.x, h.y, -h.z), Vector3(h.x, h.y, -h.z), Vector3(h.x, -h.y, -h.z))
+	_add_quad(st, Vector3(h.x, -h.y, h.z), Vector3(h.x, h.y, h.z), Vector3(-h.x, h.y, h.z), Vector3(-h.x, -h.y, h.z))
+	_add_quad(st, Vector3(h.x, -h.y, -h.z), Vector3(h.x, h.y, -h.z), Vector3(h.x, h.y, h.z), Vector3(h.x, -h.y, h.z))
+	_add_quad(st, Vector3(-h.x, -h.y, h.z), Vector3(-h.x, h.y, h.z), Vector3(-h.x, h.y, -h.z), Vector3(-h.x, -h.y, -h.z))
 	_add_quad(st, Vector3(-h.x, h.y, -h.z), Vector3(-h.x, h.y, h.z), Vector3(h.x, h.y, h.z), Vector3(h.x, h.y, -h.z))
 
-	# Wedge side faces
 	var top_nw := Vector3(-h.x, base_y + WALL_HEIGHT, -h.z)
 	var top_ne := Vector3(h.x, base_y + WALL_HEIGHT, -h.z)
 	var top_se := Vector3(h.x, base_y + WALL_HEIGHT, h.z)
@@ -229,14 +246,10 @@ func _build_corner() -> Mesh:
 	var base_ne := Vector3(h.x, base_y, -h.z)
 	var base_se := Vector3(h.x, base_y, h.z)
 
-	# North wall (NW→NE)
 	_add_quad(st, base_nw, top_nw, top_ne, base_ne)
-	# East wall (NE→SE)
 	_add_quad(st, base_ne, top_ne, top_se, base_se)
-	# Diagonal face (SE→NW hypotenuse)
 	_add_tri(st, base_nw, base_se, top_se)
 	_add_tri(st, base_nw, top_se, top_nw)
-	# West cap triangle
 	_add_tri(st, base_nw, top_nw, Vector3(-h.x, base_y, -h.z))
 
 	st.generate_normals()
@@ -245,54 +258,42 @@ func _build_corner() -> Mesh:
 
 
 func _build_rounded_wall() -> Mesh:
-	## Flat tile with a curved wall on one side (north edge, curves inward).
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var h := HALF
 	var wall_top := h.y + WALL_HEIGHT
 
-	# Top face of the flat part (floor material) — we build the full top
 	_add_quad(st, Vector3(-h.x, h.y, -h.z), Vector3(h.x, h.y, -h.z), Vector3(h.x, h.y, h.z), Vector3(-h.x, h.y, h.z))
 
 	st.generate_normals()
 	st.set_material(_floor_mat)
 	var mesh := st.commit()
 
-	# Sides + curved wall (wall material)
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 
-	# 5 cube faces
-	_add_quad(st, Vector3(-h.x, -h.y, -h.z), Vector3(h.x, -h.y, -h.z), Vector3(h.x, -h.y, h.z), Vector3(-h.x, -h.y, h.z))  # bottom
-	_add_quad(st, Vector3(-h.x, -h.y, -h.z), Vector3(-h.x, h.y, -h.z), Vector3(h.x, h.y, -h.z), Vector3(h.x, -h.y, -h.z))    # north
-	_add_quad(st, Vector3(h.x, -h.y, h.z), Vector3(h.x, h.y, h.z), Vector3(-h.x, h.y, h.z), Vector3(-h.x, -h.y, h.z))          # south
-	_add_quad(st, Vector3(h.x, -h.y, -h.z), Vector3(h.x, h.y, -h.z), Vector3(h.x, h.y, h.z), Vector3(h.x, -h.y, h.z))          # east
-	_add_quad(st, Vector3(-h.x, -h.y, h.z), Vector3(-h.x, h.y, h.z), Vector3(-h.x, h.y, -h.z), Vector3(-h.x, -h.y, -h.z))      # west
+	_add_quad(st, Vector3(-h.x, -h.y, -h.z), Vector3(h.x, -h.y, -h.z), Vector3(h.x, -h.y, h.z), Vector3(-h.x, -h.y, h.z))
+	_add_quad(st, Vector3(-h.x, -h.y, -h.z), Vector3(-h.x, h.y, -h.z), Vector3(h.x, h.y, -h.z), Vector3(h.x, -h.y, -h.z))
+	_add_quad(st, Vector3(h.x, -h.y, h.z), Vector3(h.x, h.y, h.z), Vector3(-h.x, h.y, h.z), Vector3(-h.x, -h.y, h.z))
+	_add_quad(st, Vector3(h.x, -h.y, -h.z), Vector3(h.x, h.y, -h.z), Vector3(h.x, h.y, h.z), Vector3(h.x, -h.y, h.z))
+	_add_quad(st, Vector3(-h.x, -h.y, h.z), Vector3(-h.x, h.y, h.z), Vector3(-h.x, h.y, -h.z), Vector3(-h.x, -h.y, -h.z))
 
-	# Curved wall along north edge: semi-cylinder from x=-1 to x=+1 at z=-1
-	# The curve bulges inward (toward +z)
-	var center_z := -h.z + WALL_THICKNESS
 	for i: int in range(CURVE_SEGMENTS):
 		var a0 := PI * float(i) / CURVE_SEGMENTS
 		var a1 := PI * float(i + 1) / CURVE_SEGMENTS
-		# Curve runs along X axis, bulges in Z
 		var x0 := -h.x + CELL.x * float(i) / CURVE_SEGMENTS
 		var x1 := -h.x + CELL.x * float(i + 1) / CURVE_SEGMENTS
 		var z0 := -h.z + sin(a0) * WALL_THICKNESS
 		var z1 := -h.z + sin(a1) * WALL_THICKNESS
-		# Outer face
 		_add_quad(st,
 			Vector3(x0, h.y, z0), Vector3(x0, wall_top, z0),
 			Vector3(x1, wall_top, z1), Vector3(x1, h.y, z1))
-		# Top face
 		_add_quad(st,
 			Vector3(x0, wall_top, -h.z), Vector3(x0, wall_top, z0),
 			Vector3(x1, wall_top, z1), Vector3(x1, wall_top, -h.z))
-		# Inner face (flat at z = -h.z)
 		_add_quad(st,
 			Vector3(x1, h.y, -h.z), Vector3(x1, wall_top, -h.z),
 			Vector3(x0, wall_top, -h.z), Vector3(x0, h.y, -h.z))
 
-	# End caps
 	var z_start := -h.z + sin(0.0) * WALL_THICKNESS
 	var z_end := -h.z + sin(PI) * WALL_THICKNESS
 	_add_quad(st,
@@ -308,12 +309,10 @@ func _build_rounded_wall() -> Mesh:
 
 
 func _build_ramp() -> Mesh:
-	## Sloped tile: high at x=-1, low at x=+1. Teal slope surface, darker sides.
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var h := HALF
 
-	# Slope surface (floor material)
 	_add_quad(st,
 		Vector3(-h.x, h.y, -h.z), Vector3(h.x, -h.y, -h.z),
 		Vector3(h.x, -h.y, h.z), Vector3(-h.x, h.y, h.z))
@@ -322,16 +321,11 @@ func _build_ramp() -> Mesh:
 	st.set_material(_floor_mat)
 	var mesh := st.commit()
 
-	# Sides (wall material)
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 
-	# Bottom
 	_add_quad(st, Vector3(-h.x, -h.y, -h.z), Vector3(h.x, -h.y, -h.z), Vector3(h.x, -h.y, h.z), Vector3(-h.x, -h.y, h.z))
-	# North side (triangle)
 	_add_quad(st, Vector3(-h.x, -h.y, -h.z), Vector3(-h.x, h.y, -h.z), Vector3(h.x, -h.y, -h.z), Vector3(h.x, -h.y, -h.z))
-	# South side (triangle)
 	_add_quad(st, Vector3(h.x, -h.y, h.z), Vector3(-h.x, h.y, h.z), Vector3(-h.x, -h.y, h.z), Vector3(-h.x, -h.y, h.z))
-	# Left (tall) wall
 	_add_quad(st, Vector3(-h.x, -h.y, h.z), Vector3(-h.x, h.y, h.z), Vector3(-h.x, h.y, -h.z), Vector3(-h.x, -h.y, -h.z))
 
 	st.generate_normals()
@@ -353,30 +347,23 @@ func _add_quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3) 
 
 
 func _append_wall_box_faces(st: SurfaceTool, center: Vector3, size: Vector3) -> void:
-	## Adds all 6 faces of a box at the given center and size.
 	var hs := size / 2.0
 	var c := center
-	# Front (-Z)
 	_add_quad(st,
 		Vector3(c.x - hs.x, c.y - hs.y, c.z - hs.z), Vector3(c.x - hs.x, c.y + hs.y, c.z - hs.z),
 		Vector3(c.x + hs.x, c.y + hs.y, c.z - hs.z), Vector3(c.x + hs.x, c.y - hs.y, c.z - hs.z))
-	# Back (+Z)
 	_add_quad(st,
 		Vector3(c.x + hs.x, c.y - hs.y, c.z + hs.z), Vector3(c.x + hs.x, c.y + hs.y, c.z + hs.z),
 		Vector3(c.x - hs.x, c.y + hs.y, c.z + hs.z), Vector3(c.x - hs.x, c.y - hs.y, c.z + hs.z))
-	# Top
 	_add_quad(st,
 		Vector3(c.x - hs.x, c.y + hs.y, c.z - hs.z), Vector3(c.x - hs.x, c.y + hs.y, c.z + hs.z),
 		Vector3(c.x + hs.x, c.y + hs.y, c.z + hs.z), Vector3(c.x + hs.x, c.y + hs.y, c.z - hs.z))
-	# Bottom
 	_add_quad(st,
 		Vector3(c.x - hs.x, c.y - hs.y, c.z + hs.z), Vector3(c.x - hs.x, c.y - hs.y, c.z - hs.z),
 		Vector3(c.x + hs.x, c.y - hs.y, c.z - hs.z), Vector3(c.x + hs.x, c.y - hs.y, c.z + hs.z))
-	# Left (-X)
 	_add_quad(st,
 		Vector3(c.x - hs.x, c.y - hs.y, c.z + hs.z), Vector3(c.x - hs.x, c.y + hs.y, c.z + hs.z),
 		Vector3(c.x - hs.x, c.y + hs.y, c.z - hs.z), Vector3(c.x - hs.x, c.y - hs.y, c.z - hs.z))
-	# Right (+X)
 	_add_quad(st,
 		Vector3(c.x + hs.x, c.y - hs.y, c.z - hs.z), Vector3(c.x + hs.x, c.y + hs.y, c.z - hs.z),
 		Vector3(c.x + hs.x, c.y + hs.y, c.z + hs.z), Vector3(c.x + hs.x, c.y - hs.y, c.z + hs.z))
@@ -420,7 +407,6 @@ func _shapes_wall_corner() -> Array:
 
 
 func _shapes_corner() -> Array:
-	## Box base + triangular prism on top.
 	var prism_shape := ConvexPolygonShape3D.new()
 	var base_y := HALF.y
 	var top := base_y + WALL_HEIGHT
@@ -432,7 +418,6 @@ func _shapes_corner() -> Array:
 
 
 func _shapes_rounded_wall() -> Array:
-	## Approximate curved wall with a box shape.
 	return _shapes_box(CELL) + _wall_shape_north()
 
 
