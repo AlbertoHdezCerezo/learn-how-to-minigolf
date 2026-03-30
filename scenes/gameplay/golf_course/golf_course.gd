@@ -25,11 +25,15 @@ func _load_level() -> void:
 		push_error("Failed to load MeshLibrary: ", TILE_LIBRARY_PATH)
 		return
 
-	# Create and populate GridMap
+	# Create course container with GridMap
+	var course := Node3D.new()
+	course.name = "Course"
+	add_child(course)
+
 	var grid_map := GridMap.new()
 	grid_map.mesh_library = lib
 	grid_map.cell_size = level.cell_size
-	add_child(grid_map)
+	course.add_child(grid_map)
 
 	for tile: TilePlacement in level.tiles:
 		grid_map.set_cell_item(tile.position, tile.item_id, tile.orientation)
@@ -41,7 +45,7 @@ func _load_level() -> void:
 		return
 
 	var ball := ball_scene.instantiate()
-	add_child(ball)
+	course.add_child(ball)
 
 	# Convert grid position to world position, place ball on top of tile
 	var world_pos := Vector3(
