@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://desgseqy5aydm" path="res://scenes/gameplay/atmosphere_display/atmosphere_display.gd" id="1_script"]
 [ext_resource type="Shader" uid="uid://b5r8u5fl8wflw" path="res://shaders/sky_gradient.gdshader" id="2_shader"]
-[ext_resource type="Resource" uid="uid://dmlggksrqtqrb" path="res://resources/atmospheres/default_atmosphere.tres" id="3_default_atmosphere"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
 shader = ExtResource("2_shader")
@@ -25,7 +24,6 @@ fog_height_density = 2.0
 
 [node name="AtmosphereDisplay" type="Node3D"]
 script = ExtResource("1_script")
-atmosphere = ExtResource("3_default_atmosphere")
 
 [node name="GradientBackground" type="CanvasLayer" parent="."]
 layer = -1
