@@ -66,6 +66,20 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 		_course_editor.update_cursor(event.position, _camera)
 
 
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_H:
+			_toggle_ui()
+			get_viewport().set_input_as_handled()
+
+
+func _toggle_ui() -> void:
+	var show := not _ui.visible
+	_ui.visible = show
+	_camera_ui.visible = show
+	_atmosphere_ui.visible = show
+
+
 # -- UI signal handlers --
 
 func _on_atmosphere_changed(atm: Atmosphere) -> void:
