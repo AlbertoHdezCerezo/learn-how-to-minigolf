@@ -243,3 +243,87 @@ We also reorganized the entire project to follow convention #1.
 - **`get_script().get_script_constant_map()`** lets you introspect a script's enums and constants at runtime — useful for auto-discovering state names without manual registration.
 
 ---
+
+## feat: Level Design
+
+> Date: 2026-03-30
+> Issue: #10 — https://github.com/AlbertoHdezCerezo/learn-how-to-minigolf/issues/10
+> PR: #11 — https://github.com/AlbertoHdezCerezo/learn-how-to-minigolf/pull/11
+> Branch: feat-level-design
+
+### What we did
+
+Replaced the procedural tile mesh generator with a scene-based tile library using a monochromatic teal color palette, built the gameplay golf course scene that loads level resources and instances the ball, and created the first playable level — an L-shaped course with a 3-story ramp and a right turn to the hole.
+
+### Why
+
+With ball mechanics ready, the game needed actual levels to play on. The previous tile generator was script-only — just code producing gray meshes with no visual identity. The issue asked for a scene-based approach where tile meshes are defined visually and the library is generated from them, with proper colors inspired by the IsoPutt reference game. We also needed the golf course scene to actually load levels and let the player hit the ball on them.
+
+### How we implemented it
+
+#### Per-face materials with SurfaceTool
+
+The core challenge was giving tiles a two-tone look: lighter teal on top surfaces (where the ball rolls) and darker teal on sides and walls. Godot's primitive meshes (`BoxMesh`, `PrismMesh`) apply a single material to the whole shape, so we couldn't just slap two materials on a `BoxMesh`.
+
+The solution was building every tile with `SurfaceTool`, committing in two passes:
+1. First pass: add the top/floor faces, set floor material (`Color(0.30, 0.62, 0.58)`), commit to create the mesh
+2. Second pass: add sides, bottom, and wall faces, set wall material (`Color(0.18, 0.42, 0.40)`), commit to the same mesh
+
+This creates a mesh with two surfaces, each with its own material. The `st.commit(existing_mesh)` overload appends a new surface to an existing mesh — a pattern we hadn't used before.
+
+#### The teal palette
+
+We closely studied the IsoPutt reference image from the issue. The game uses a monochromatic teal palette — not green, not blue, but a specific desaturated teal. Everything is the same hue at different brightnesses: lighter for surfaces facing the light, darker for sides and recessed areas. We matched this with two `StandardMaterial3D` colors and a teal atmosphere with matching fog and gradient.
+
+#### 7 tile types
+
+The tile library was simplified from the previous 9-tile set to 6 tiles matching the issue's requirements, plus a Ramp tile added after discussion:
+
+| Tile | Approach |
+|------|----------|
+| Flat | SurfaceTool — green top quad, darker 5 side/bottom quads |
+| Hole | SurfaceTool — circular depression ring (floor mat) + cylinder walls + disc bottom (wall mat) |
+| WallSingle | Flat base + appended wall box on north face |
+| WallCorner | Flat base + two wall boxes (north + east) |
+| Corner | Triangular wedge prism on cube base |
+| RoundedWall | Flat base + curved wall segments along north edge |
+| Ramp | Slope quad (floor mat) + triangular side faces + bottom (wall mat) |
+
+The Hole tile was the most complex — it reuses the circular depression technique from the old generator with the ring-to-square-edge projection algorithm, but now with per-face materials.
+
+#### GridMap orientation math
+
+The trickiest part of the level design was getting the GridMap orientation indices right. GridMap uses an opaque 0-23 index system from `get_orthogonal_index_from_basis()`. For Y-axis rotations, the mapping is:
+
+| Angle | Index | WallSingle wall faces | WallCorner walls |
+|-------|-------|----------------------|------------------|
+| 0°    | 0     | North                | North + East (NE) |
+| 90°   | 22    | West                 | West + North (NW) |
+| 180°  | 10    | South                | South + West (SW) |
+| 270°  | 16    | East                 | East + South (SE) |
+
+This had to be derived from the rotation matrix — `Basis(Vector3.UP, angle)` rotates vertices and the wall positions follow. Getting this wrong meant walls facing the wrong direction, which was hard to spot without running the scene.
+
+For the ramp, orientation 270° (index 16) gives high-at-north, low-at-south — meaning the ball enters from the south (low end) and climbs northward (high end). This was counterintuitive at first because "270°" doesn't obviously mean "climbs north."
+
+#### The level layout
+
+The first level is an L-shape:
+- **Start area** (y=0, z=2): 3 tiles with south walls (SW corner, south wall, SE corner)
+- **Ramp corridor** (x=1): 3 ramp tiles at grid positions (1,1,1), (1,2,0), (1,3,-1) — climbing 3 cell heights from y=0 to y=3 with no side walls (falling off is part of the challenge)
+- **Upper platform** (y=3): 2×4 tile area with walls on the perimeter, hole at the far right
+
+The ramp connections had to be verified mathematically — each ramp's high-north end must match the next ramp's low-south end in both Y height and Z position. The final ramp's high end connects to the upper platform's south edge at the same world coordinates.
+
+#### Golf course scene
+
+Extended `golf_course.gd` with a `@export var level: LevelData`. On `_ready()`, it loads the MeshLibrary, creates a GridMap, populates it from the level's tile array, and instances the ball at `start_position` converted from grid to world coordinates (with ball radius offset so it sits on top of the surface).
+
+### Key takeaways
+
+- **`SurfaceTool.commit(existing_mesh)` appends surfaces** — this is the key to per-face materials in procedural meshes. Build each material group separately and commit them to the same mesh. Not obvious from the docs.
+- **GridMap orientation indices are opaque but deterministic** — the 0/22/10/16 mapping for 0°/90°/180°/270° Y rotations is worth memorizing or keeping as named constants. The underlying math is just the Y-rotation matrix applied to face positions.
+- **Ramp connections require exact coordinate math** — cell center = `grid_pos * cell_size`, and the ramp's low/high ends are at `center ± half_cell`. Each ramp must connect at exact matching coordinates or the ball falls through gaps. Drawing it on paper first saved a lot of trial and error.
+- **Monochromatic palettes are powerful for minimalist games** — using just two brightness levels of the same teal hue (plus matching atmosphere) creates a surprisingly cohesive look with zero textures. The IsoPutt reference proved that flat colors + good lighting = clean visual style.
+
+---
