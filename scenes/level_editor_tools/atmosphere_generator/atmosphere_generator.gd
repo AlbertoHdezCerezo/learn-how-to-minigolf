@@ -61,7 +61,7 @@ func _update_atmosphere() -> void:
 	_atmosphere.first_color = first_color
 	_atmosphere.second_color = second_color
 	_atmosphere.gradient_position = gradient_position
-	_atmosphere.size = gradient_size
+	_atmosphere.gradient_size = gradient_size
 	_atmosphere.angle = angle
 	_atmosphere.fog_enabled = fog_enabled
 	_atmosphere.fog_density = fog_density

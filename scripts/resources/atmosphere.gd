@@ -19,9 +19,9 @@ extends Resource
 		gradient_position = value
 		emit_changed()
 
-@export_range(0.5, 2.0, 0.01) var size: float = 0.5:
+@export_range(0.5, 2.0, 0.01) var gradient_size: float = 0.5:
 	set(value):
-		size = value
+		gradient_size = value
 		emit_changed()
 
 @export_range(0.0, 360.0, 0.1) var angle: float = 90.0:
@@ -65,7 +65,7 @@ func _apply_gradient(material: ShaderMaterial) -> void:
 	material.set_shader_parameter("first_color", first_color)
 	material.set_shader_parameter("second_color", second_color)
 	material.set_shader_parameter("position", gradient_position)
-	material.set_shader_parameter("size", size)
+	material.set_shader_parameter("size", gradient_size)
 	material.set_shader_parameter("angle", angle)
 
 

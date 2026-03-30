@@ -47,7 +47,7 @@ func bind(atmosphere: Atmosphere) -> void:
 	first_color_changed.connect(func(c: Color) -> void: atmosphere.first_color = c)
 	second_color_changed.connect(func(c: Color) -> void: atmosphere.second_color = c)
 	gradient_position_changed.connect(func(v: float) -> void: atmosphere.gradient_position = v)
-	size_changed.connect(func(v: float) -> void: atmosphere.size = v)
+	size_changed.connect(func(v: float) -> void: atmosphere.gradient_size = v)
 	angle_changed.connect(func(v: float) -> void: atmosphere.angle = v)
 	fog_enabled_changed.connect(func(v: bool) -> void: atmosphere.fog_enabled = v)
 	fog_density_changed.connect(func(v: float) -> void: atmosphere.fog_density = v)
@@ -65,7 +65,7 @@ func sync_from(atmosphere: Atmosphere) -> void:
 	if _syncing: return
 	sync(
 		atmosphere.first_color, atmosphere.second_color,
-		atmosphere.gradient_position, atmosphere.size, atmosphere.angle,
+		atmosphere.gradient_position, atmosphere.gradient_size, atmosphere.angle,
 		atmosphere.fog_enabled, atmosphere.fog_density, atmosphere.fog_height_density
 	)
 
