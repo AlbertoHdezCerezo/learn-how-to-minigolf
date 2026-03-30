@@ -4,9 +4,11 @@
 [ext_resource type="PackedScene" path="res://scenes/gameplay/atmosphere_display/atmosphere_display.tscn" id="2_atmosphere_display"]
 [ext_resource type="Resource" uid="uid://dmlggksrqtqrb" path="res://resources/default_atmosphere.tres" id="3_atmosphere"]
 [ext_resource type="PackedScene" path="res://scenes/gameplay/gameplay_camera/gameplay_camera.tscn" id="4_gameplay_camera"]
+[ext_resource type="Resource" path="res://resources/levels/level_01.tres" id="5_level"]
 
 [node name="GolfCourse" type="Node3D"]
 script = ExtResource("1_script")
+level = ExtResource("5_level")
 atmosphere = ExtResource("3_atmosphere")
 
 [node name="AtmosphereDisplay" parent="." instance=ExtResource("2_atmosphere_display")]
