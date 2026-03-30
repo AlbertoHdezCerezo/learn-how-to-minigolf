@@ -4,3 +4,11 @@
 
 [resource]
 script = ExtResource("1_atmosphere")
+first_color = Color(0.15, 0.35, 0.35)
+second_color = Color(0.25, 0.55, 0.53)
+gradient_position = -0.1
+size = 0.7
+angle = 90.0
+fog_enabled = true
+fog_density = 0.015
+fog_height_density = 1.5

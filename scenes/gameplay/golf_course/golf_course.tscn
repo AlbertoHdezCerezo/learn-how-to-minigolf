@@ -2,12 +2,12 @@
 
 [ext_resource type="Script" path="res://scenes/gameplay/golf_course/golf_course.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/gameplay/atmosphere_display/atmosphere_display.tscn" id="2_atmosphere_display"]
-[ext_resource type="Resource" path="res://resources/atmospheres/teal_atmosphere.tres" id="3_teal_atmosphere"]
+[ext_resource type="Resource" uid="uid://dmlggksrqtqrb" path="res://resources/default_atmosphere.tres" id="3_atmosphere"]
 [ext_resource type="PackedScene" path="res://scenes/gameplay/gameplay_camera/gameplay_camera.tscn" id="4_gameplay_camera"]
 
 [node name="GolfCourse" type="Node3D"]
 script = ExtResource("1_script")
-atmosphere = ExtResource("3_teal_atmosphere")
+atmosphere = ExtResource("3_atmosphere")
 
 [node name="AtmosphereDisplay" parent="." instance=ExtResource("2_atmosphere_display")]
 
