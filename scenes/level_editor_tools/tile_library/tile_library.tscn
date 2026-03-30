@@ -1,12 +1,12 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://2d3svyw7i2cb"]
 
-[ext_resource type="Script" path="res://scenes/level_editor_tools/tile_library/tile_library.gd" id="1_script"]
-
-[sub_resource type="StandardMaterial3D" id="floor_mat"]
-albedo_color = Color(0.30, 0.62, 0.58, 1)
+[ext_resource type="Script" uid="uid://bqahaxp047lcc" path="res://scenes/level_editor_tools/tile_library/tile_library.gd" id="1_script"]
 
 [sub_resource type="StandardMaterial3D" id="wall_mat"]
-albedo_color = Color(0.12, 0.30, 0.28, 1)
+albedo_color = Color(0.12, 0.3, 0.28, 1)
+
+[sub_resource type="StandardMaterial3D" id="floor_mat"]
+albedo_color = Color(0.3, 0.62, 0.58, 1)
 
 [sub_resource type="BoxShape3D" id="box_2x2x2"]
 size = Vector3(2, 2, 2)
@@ -17,47 +17,44 @@ size = Vector3(2, 0.5, 0.3)
 [sub_resource type="BoxShape3D" id="wall_east"]
 size = Vector3(0.3, 0.5, 2)
 
-[sub_resource type="ConvexPolygonShape3D" id="ramp_shape"]
-points = PackedVector3Array(-1, -1, -1, -1, -1, 1, 1, -1, -1, 1, -1, 1, -1, 1, -1, -1, 1, 1)
-
 [sub_resource type="ConvexPolygonShape3D" id="corner_prism"]
 points = PackedVector3Array(-1, 1, -1, 1, 1, -1, 1, 1, 1, -1, 1.5, -1, 1, 1.5, -1, 1, 1.5, 1)
 
-[node name="TileLibrary" type="Node3D"]
+[sub_resource type="ConvexPolygonShape3D" id="ramp_shape"]
+points = PackedVector3Array(-1, -1, -1, -1, -1, 1, 1, -1, -1, 1, -1, 1, -1, 1, -1, -1, 1, 1)
+
+[node name="TileLibrary" type="Node3D" unique_id=413467742]
 script = ExtResource("1_script")
 
-; ── Flat (ID 0) ─────────────────────────────────────────────────
-[node name="Flat" type="CSGCombiner3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+[node name="Flat" type="CSGCombiner3D" parent="." unique_id=1191309638]
 
-[node name="Body" type="CSGBox3D" parent="Flat"]
+[node name="Body" type="CSGBox3D" parent="Flat" unique_id=1593497539]
 size = Vector3(2, 2, 2)
 material = SubResource("wall_mat")
 
-[node name="FloorTop" type="CSGBox3D" parent="Flat"]
+[node name="FloorTop" type="CSGBox3D" parent="Flat" unique_id=110501104]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.005, 0)
 size = Vector3(2.002, 0.01, 2.002)
 material = SubResource("floor_mat")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Flat"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Flat" unique_id=789702980]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Flat/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Flat/StaticBody3D" unique_id=931730305]
 shape = SubResource("box_2x2x2")
 
-; ── Hole (ID 1) ─────────────────────────────────────────────────
-[node name="Hole" type="CSGCombiner3D" parent="."]
+[node name="Hole" type="CSGCombiner3D" parent="." unique_id=305774569]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 0)
 
-[node name="Body" type="CSGBox3D" parent="Hole"]
+[node name="Body" type="CSGBox3D" parent="Hole" unique_id=216702233]
 size = Vector3(2, 2, 2)
 material = SubResource("wall_mat")
 
-[node name="FloorTop" type="CSGBox3D" parent="Hole"]
+[node name="FloorTop" type="CSGBox3D" parent="Hole" unique_id=1814442947]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.005, 0)
 size = Vector3(2.002, 0.01, 2.002)
 material = SubResource("floor_mat")
 
-[node name="HoleCut" type="CSGCylinder3D" parent="Hole"]
+[node name="HoleCut" type="CSGCylinder3D" parent="Hole" unique_id=114819377]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
 operation = 2
 radius = 0.4
@@ -65,205 +62,195 @@ height = 0.35
 sides = 16
 material = SubResource("wall_mat")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Hole"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Hole" unique_id=267986416]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Hole/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hole/StaticBody3D" unique_id=530005849]
 shape = SubResource("box_2x2x2")
 
-; ── WallSingle (ID 2) ──────────────────────────────────────────
-[node name="WallSingle" type="CSGCombiner3D" parent="."]
+[node name="WallSingle" type="CSGCombiner3D" parent="." unique_id=1435826167]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 0)
 
-[node name="Body" type="CSGBox3D" parent="WallSingle"]
+[node name="Body" type="CSGBox3D" parent="WallSingle" unique_id=1642827187]
 size = Vector3(2, 2, 2)
 material = SubResource("wall_mat")
 
-[node name="FloorTop" type="CSGBox3D" parent="WallSingle"]
+[node name="FloorTop" type="CSGBox3D" parent="WallSingle" unique_id=783240475]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.005, 0)
 size = Vector3(2.002, 0.01, 2.002)
 material = SubResource("floor_mat")
 
-[node name="NorthWall" type="CSGBox3D" parent="WallSingle"]
+[node name="NorthWall" type="CSGBox3D" parent="WallSingle" unique_id=236094067]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -0.85)
 size = Vector3(2, 0.5, 0.3)
 material = SubResource("wall_mat")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="WallSingle"]
+[node name="StaticBody3D" type="StaticBody3D" parent="WallSingle" unique_id=491951670]
 
-[node name="Base" type="CollisionShape3D" parent="WallSingle/StaticBody3D"]
+[node name="Base" type="CollisionShape3D" parent="WallSingle/StaticBody3D" unique_id=1225453403]
 shape = SubResource("box_2x2x2")
 
-[node name="Wall" type="CollisionShape3D" parent="WallSingle/StaticBody3D"]
+[node name="Wall" type="CollisionShape3D" parent="WallSingle/StaticBody3D" unique_id=284147667]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -0.85)
 shape = SubResource("wall_north")
 
-; ── WallCorner (ID 3) ──────────────────────────────────────────
-[node name="WallCorner" type="CSGCombiner3D" parent="."]
+[node name="WallCorner" type="CSGCombiner3D" parent="." unique_id=108536127]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 0)
 
-[node name="Body" type="CSGBox3D" parent="WallCorner"]
+[node name="Body" type="CSGBox3D" parent="WallCorner" unique_id=509650029]
 size = Vector3(2, 2, 2)
 material = SubResource("wall_mat")
 
-[node name="FloorTop" type="CSGBox3D" parent="WallCorner"]
+[node name="FloorTop" type="CSGBox3D" parent="WallCorner" unique_id=1807811085]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.005, 0)
 size = Vector3(2.002, 0.01, 2.002)
 material = SubResource("floor_mat")
 
-[node name="NorthWall" type="CSGBox3D" parent="WallCorner"]
+[node name="NorthWall" type="CSGBox3D" parent="WallCorner" unique_id=1414802183]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -0.85)
 size = Vector3(2, 0.5, 0.3)
 material = SubResource("wall_mat")
 
-[node name="EastWall" type="CSGBox3D" parent="WallCorner"]
+[node name="EastWall" type="CSGBox3D" parent="WallCorner" unique_id=1322273480]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, 1.25, 0)
 size = Vector3(0.3, 0.5, 2)
 material = SubResource("wall_mat")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="WallCorner"]
+[node name="StaticBody3D" type="StaticBody3D" parent="WallCorner" unique_id=907847414]
 
-[node name="Base" type="CollisionShape3D" parent="WallCorner/StaticBody3D"]
+[node name="Base" type="CollisionShape3D" parent="WallCorner/StaticBody3D" unique_id=2062386587]
 shape = SubResource("box_2x2x2")
 
-[node name="NorthWall" type="CollisionShape3D" parent="WallCorner/StaticBody3D"]
+[node name="NorthWall" type="CollisionShape3D" parent="WallCorner/StaticBody3D" unique_id=1140948155]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -0.85)
 shape = SubResource("wall_north")
 
-[node name="EastWall" type="CollisionShape3D" parent="WallCorner/StaticBody3D"]
+[node name="EastWall" type="CollisionShape3D" parent="WallCorner/StaticBody3D" unique_id=1246644891]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, 1.25, 0)
 shape = SubResource("wall_east")
 
-; ── Corner (ID 4) ──────────────────────────────────────────────
-; Base cube + triangular wedge on top (NW → NE → SE diagonal)
-[node name="Corner" type="CSGCombiner3D" parent="."]
+[node name="Corner" type="CSGCombiner3D" parent="." unique_id=413532207]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 0)
 
-[node name="Body" type="CSGBox3D" parent="Corner"]
+[node name="Body" type="CSGBox3D" parent="Corner" unique_id=2082015865]
 size = Vector3(2, 2, 2)
 material = SubResource("wall_mat")
 
-[node name="FloorTop" type="CSGBox3D" parent="Corner"]
+[node name="FloorTop" type="CSGBox3D" parent="Corner" unique_id=80434611]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.005, 0)
 size = Vector3(2.002, 0.01, 2.002)
 material = SubResource("floor_mat")
 
-[node name="Wedge" type="CSGPolygon3D" parent="Corner"]
+[node name="Wedge" type="CSGPolygon3D" parent="Corner" unique_id=1248264627]
 transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 1, 0)
 polygon = PackedVector2Array(-1, 1, 1, 1, 1, -1)
 depth = 0.5
 material = SubResource("wall_mat")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Corner"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Corner" unique_id=693325935]
 
-[node name="Base" type="CollisionShape3D" parent="Corner/StaticBody3D"]
+[node name="Base" type="CollisionShape3D" parent="Corner/StaticBody3D" unique_id=283972510]
 shape = SubResource("box_2x2x2")
 
-[node name="Prism" type="CollisionShape3D" parent="Corner/StaticBody3D"]
+[node name="Prism" type="CollisionShape3D" parent="Corner/StaticBody3D" unique_id=1643844914]
 shape = SubResource("corner_prism")
 
-; ── RoundedWall (ID 5) ─────────────────────────────────────────
-; Like Corner but with a quarter-circle instead of a diagonal.
-[node name="RoundedWall" type="CSGCombiner3D" parent="."]
+[node name="RoundedWall" type="CSGCombiner3D" parent="." unique_id=498711031]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 0)
 
-[node name="Body" type="CSGBox3D" parent="RoundedWall"]
+[node name="Body" type="CSGBox3D" parent="RoundedWall" unique_id=345996481]
 size = Vector3(2, 2, 2)
 material = SubResource("wall_mat")
 
-[node name="FloorTop" type="CSGBox3D" parent="RoundedWall"]
+[node name="FloorTop" type="CSGBox3D" parent="RoundedWall" unique_id=88594335]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.005, 0)
 size = Vector3(2.002, 0.01, 2.002)
 material = SubResource("floor_mat")
 
-[node name="CylinderFull" type="CSGCylinder3D" parent="RoundedWall"]
+[node name="CylinderFull" type="CSGCylinder3D" parent="RoundedWall" unique_id=125812650]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 1.25, 1)
 radius = 2.0
 height = 0.5
 sides = 24
 material = SubResource("wall_mat")
 
-[node name="CutWest" type="CSGBox3D" parent="RoundedWall"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.25, 0)
+[node name="CutWest" type="CSGBox3D" parent="RoundedWall" unique_id=926612732]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.25, 0.77176)
 operation = 2
 size = Vector3(2, 0.6, 4)
 
-[node name="CutSouth" type="CSGBox3D" parent="RoundedWall"]
+[node name="CutSouth" type="CSGBox3D" parent="RoundedWall" unique_id=1459313894]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 2)
 operation = 2
 size = Vector3(4, 0.6, 2)
 
-[node name="StaticBody3D" type="StaticBody3D" parent="RoundedWall"]
+[node name="StaticBody3D" type="StaticBody3D" parent="RoundedWall" unique_id=105979979]
 
-[node name="Base" type="CollisionShape3D" parent="RoundedWall/StaticBody3D"]
+[node name="Base" type="CollisionShape3D" parent="RoundedWall/StaticBody3D" unique_id=1894599644]
 shape = SubResource("box_2x2x2")
 
-[node name="NorthWall" type="CollisionShape3D" parent="RoundedWall/StaticBody3D"]
+[node name="NorthWall" type="CollisionShape3D" parent="RoundedWall/StaticBody3D" unique_id=399856697]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -0.85)
 shape = SubResource("wall_north")
 
-[node name="EastWall" type="CollisionShape3D" parent="RoundedWall/StaticBody3D"]
+[node name="EastWall" type="CollisionShape3D" parent="RoundedWall/StaticBody3D" unique_id=942310027]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, 1.25, 0)
 shape = SubResource("wall_east")
 
-; ── Ramp (ID 6) ────────────────────────────────────────────────
-; Full 2×2×2 cube with the top cut diagonally: high at -X, low at +X.
-[node name="Ramp" type="CSGCombiner3D" parent="."]
+[node name="Ramp" type="CSGCombiner3D" parent="." unique_id=377785573]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0, 0)
 
-[node name="Body" type="CSGBox3D" parent="Ramp"]
+[node name="Body" type="CSGBox3D" parent="Ramp" unique_id=531560064]
 size = Vector3(2, 2, 2)
 material = SubResource("wall_mat")
 
-[node name="SlopeCutter" type="CSGBox3D" parent="Ramp"]
+[node name="SlopeCutter" type="CSGBox3D" parent="Ramp" unique_id=164332275]
 transform = Transform3D(0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 0, 0, 1, -1.414214, 1.414214, 0)
 operation = 2
 size = Vector3(4, 4, 2.2)
 
-[node name="SlopeTop" type="CSGBox3D" parent="Ramp"]
+[node name="SlopeTop" type="CSGBox3D" parent="Ramp" unique_id=647902917]
 transform = Transform3D(0.707107, -0.707107, 0, 0.707107, 0.707107, 0, 0, 0, 1, 0, 0.007, 0)
 size = Vector3(2.83, 0.01, 2.002)
 material = SubResource("floor_mat")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Ramp"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Ramp" unique_id=1087898918]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Ramp/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ramp/StaticBody3D" unique_id=715875052]
 shape = SubResource("ramp_shape")
 
-; ── ConcaveCurve (ID 7) ───────────────────────────────────────
-; Full block on top with a quarter-circle scooped from NE corner.
-[node name="ConcaveCurve" type="CSGCombiner3D" parent="."]
+[node name="ConcaveCurve" type="CSGCombiner3D" parent="." unique_id=1969198981]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, 0)
 
-[node name="Body" type="CSGBox3D" parent="ConcaveCurve"]
+[node name="Body" type="CSGBox3D" parent="ConcaveCurve" unique_id=284116981]
 size = Vector3(2, 2, 2)
 material = SubResource("wall_mat")
 
-[node name="FloorTop" type="CSGBox3D" parent="ConcaveCurve"]
+[node name="FloorTop" type="CSGBox3D" parent="ConcaveCurve" unique_id=366336432]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.005, 0)
 size = Vector3(2.002, 0.01, 2.002)
 material = SubResource("floor_mat")
 
-[node name="WallBlock" type="CSGBox3D" parent="ConcaveCurve"]
+[node name="WallBlock" type="CSGBox3D" parent="ConcaveCurve" unique_id=1507759245]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
 size = Vector3(2, 0.5, 2)
 material = SubResource("wall_mat")
 
-[node name="ConcaveCut" type="CSGCylinder3D" parent="ConcaveCurve"]
+[node name="ConcaveCut" type="CSGCylinder3D" parent="ConcaveCurve" unique_id=160111198]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1.25, -1)
 operation = 2
 radius = 2.0
 height = 0.6
 sides = 24
 
-[node name="StaticBody3D" type="StaticBody3D" parent="ConcaveCurve"]
+[node name="StaticBody3D" type="StaticBody3D" parent="ConcaveCurve" unique_id=619487206]
 
-[node name="Base" type="CollisionShape3D" parent="ConcaveCurve/StaticBody3D"]
+[node name="Base" type="CollisionShape3D" parent="ConcaveCurve/StaticBody3D" unique_id=1531501289]
 shape = SubResource("box_2x2x2")
 
-[node name="NorthWall" type="CollisionShape3D" parent="ConcaveCurve/StaticBody3D"]
+[node name="NorthWall" type="CollisionShape3D" parent="ConcaveCurve/StaticBody3D" unique_id=1484319910]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -0.85)
 shape = SubResource("wall_north")
 
-[node name="EastWall" type="CollisionShape3D" parent="ConcaveCurve/StaticBody3D"]
+[node name="EastWall" type="CollisionShape3D" parent="ConcaveCurve/StaticBody3D" unique_id=338161277]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, 1.25, 0)
 shape = SubResource("wall_east")

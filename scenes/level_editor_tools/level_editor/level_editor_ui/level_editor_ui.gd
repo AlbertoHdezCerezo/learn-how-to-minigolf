@@ -68,7 +68,7 @@ func _populate_atmosphere_selector() -> void:
 	_atmosphere_paths.clear()
 	_atmosphere_selector.clear()
 
-	var default_path := "res://resources/default_atmosphere.tres"
+	var default_path := "res://resources/atmospheres/default_atmosphere.tres"
 	if ResourceLoader.exists(default_path):
 		_atmosphere_paths.append(default_path)
 		_atmosphere_selector.add_item("Default")
