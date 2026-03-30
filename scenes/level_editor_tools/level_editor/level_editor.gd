@@ -10,8 +10,9 @@ extends Node3D
 
 var _atmosphere: Atmosphere
 
-## Camera pan state
+## Camera pan/orbit state
 var _is_panning := false
+var _is_orbiting := false
 
 
 func _ready() -> void:
@@ -52,10 +53,13 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 	if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		if event.alt_pressed:
 			_is_panning = true
+		elif event.meta_pressed:
+			_is_orbiting = true
 		else:
 			_course_editor.place_at(event.position, _camera)
 	elif event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
 		_is_panning = false
+		_is_orbiting = false
 	elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 		_course_editor.remove_at(event.position, _camera)
 	elif event.button_index == MOUSE_BUTTON_MIDDLE:
@@ -67,7 +71,9 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 
 
 func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
-	if _is_panning:
+	if _is_orbiting:
+		_gameplay_camera.orbit_angle += event.relative.x * 0.5
+	elif _is_panning:
 		var delta := event.relative * _gameplay_camera.orthographic_size * 0.002
 		_gameplay_camera.global_translate(-_camera.global_basis.x * delta.x)
 		_gameplay_camera.global_translate(_camera.global_basis.y * delta.y)
@@ -76,8 +82,9 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 
 
 func _handle_pan_gesture(event: InputEventPanGesture) -> void:
-	## Two-finger scroll on trackpad — zoom
+	## Two-finger scroll on trackpad — vertical: zoom, horizontal: orbit
 	_gameplay_camera.orthographic_size += event.delta.y * 0.5
+	_gameplay_camera.orbit_angle += event.delta.x * 2.0
 
 
 func _handle_magnify_gesture(event: InputEventMagnifyGesture) -> void:
