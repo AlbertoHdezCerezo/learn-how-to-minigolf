@@ -18,6 +18,8 @@ var _is_orbiting := false
 var _is_drawing := false
 var _is_erasing := false
 var _draw_start: Variant = null  # Vector3i or null
+var _draw_screen_start: Vector2 = Vector2.ZERO
+const DRAG_THRESHOLD := 5.0  # pixels — below this it's a single click
 
 
 func _ready() -> void:
@@ -67,13 +69,18 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 		else:
 			_is_drawing = true
 			_draw_start = _course_editor.get_floor_grid_pos(event.position, _camera)
+			_draw_screen_start = event.position
 	elif event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
-		if _is_drawing and _draw_start != null:
-			var draw_end: Variant = _course_editor.get_floor_grid_pos(event.position, _camera)
-			if draw_end != null:
-				_course_editor.fill_rect(_draw_start, draw_end)
-			else:
-				_course_editor.fill_rect(_draw_start, _draw_start)
+		if _is_drawing:
+			var is_click := event.position.distance_to(_draw_screen_start) < DRAG_THRESHOLD
+			if is_click:
+				_course_editor.place_at(event.position, _camera)
+			elif _draw_start != null:
+				var draw_end: Variant = _course_editor.get_floor_grid_pos(event.position, _camera)
+				if draw_end != null:
+					_course_editor.fill_rect(_draw_start, draw_end)
+				else:
+					_course_editor.fill_rect(_draw_start, _draw_start)
 		_course_editor.hide_rect_preview()
 		_is_panning = false
 		_is_orbiting = false
