@@ -36,7 +36,7 @@ extends Node3D
 		fog_density = value
 		_update_atmosphere()
 
-@export_range(-10.0, 10.0, 0.1) var fog_height_density: float = 2.0:
+@export_range(-10.0, 10.0, 0.01) var fog_height_density: float = 2.0:
 	set(value):
 		fog_height_density = value
 		_update_atmosphere()

@@ -177,7 +177,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 min_value = -10.0
 max_value = 10.0
-step = 0.1
+step = 0.01
 value = 2.0
 
 [node name="FogHeightDensityInput" type="SpinBox" parent="SettingsPanel/SettingsPadding/SettingsList/FogHeightDensityRow"]
@@ -186,7 +186,7 @@ custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
 min_value = -10.0
 max_value = 10.0
-step = 0.1
+step = 0.01
 value = 2.0
 
 [node name="FogHeightRow" type="HBoxContainer" parent="SettingsPanel/SettingsPadding/SettingsList"]
