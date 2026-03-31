@@ -51,6 +51,15 @@ func place_at(screen_pos: Vector2, camera: Camera3D) -> void:
 	grid_map.set_cell_item(grid_pos, _current_item, orientation)
 
 
+func paint_at(screen_pos: Vector2, camera: Camera3D) -> void:
+	## Like place_at but only on the current floor level (no stacking).
+	var grid_pos: Variant = _grid_raycast.get_floor_position(screen_pos, camera, get_world_3d(), _current_floor)
+	if grid_pos == null: return
+
+	var orientation := _get_grid_orientation()
+	grid_map.set_cell_item(grid_pos, _current_item, orientation)
+
+
 func remove_at(screen_pos: Vector2, camera: Camera3D) -> void:
 	var grid_pos: Variant = _grid_raycast.get_removal_position(screen_pos, camera, get_world_3d())
 	if grid_pos == null: return

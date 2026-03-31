@@ -61,6 +61,19 @@ func get_placement_position(screen_pos: Vector2, camera: Camera3D, world: World3
 	return _get_adjacent_cell(result)
 
 
+## Returns the grid cell on the floor plane only, ignoring existing tiles.
+## Used for drag-painting to avoid stacking.
+func get_floor_position(screen_pos: Vector2, camera: Camera3D, world: World3D, floor_level: int) -> Variant:
+	var result := Raycast.from_screen(screen_pos, camera, world)
+	if result.is_empty(): return null
+	if not _is_hovering_floor(result): return null
+
+	var hit_local: Vector3 = _grid_map.to_local(result.position)
+	var grid_pos: Vector3i = _grid_map.local_to_map(hit_local)
+	grid_pos.y = floor_level
+	return grid_pos
+
+
 ## Returns the grid cell of the tile that was hit, or null.
 ##
 ## Hits on the floor are ignored since there is no tile to remove there.

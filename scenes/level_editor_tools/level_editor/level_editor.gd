@@ -91,7 +91,7 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 		_gameplay_camera.global_translate(_camera.global_basis.y * delta.y)
 	else:
 		_course_editor.update_cursor(event.position, _camera)
-		if _is_drawing: _course_editor.place_at(event.position, _camera)
+		if _is_drawing: _course_editor.paint_at(event.position, _camera)
 		elif _is_erasing: _course_editor.remove_at(event.position, _camera)
 
 
