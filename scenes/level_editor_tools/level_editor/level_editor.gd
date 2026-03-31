@@ -91,13 +91,18 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 	elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 		_is_erasing = true
 		_draw_start = _course_editor.get_floor_grid_pos(event.position, _camera)
+		_draw_screen_start = event.position
 	elif event.button_index == MOUSE_BUTTON_RIGHT and not event.pressed:
-		if _is_erasing and _draw_start != null:
-			var draw_end: Variant = _course_editor.get_floor_grid_pos(event.position, _camera)
-			if draw_end != null:
-				_course_editor.erase_rect(_draw_start, draw_end)
-			else:
-				_course_editor.erase_rect(_draw_start, _draw_start)
+		if _is_erasing:
+			var is_click := event.position.distance_to(_draw_screen_start) < DRAG_THRESHOLD
+			if is_click:
+				_course_editor.remove_at(event.position, _camera)
+			elif _draw_start != null:
+				var draw_end: Variant = _course_editor.get_floor_grid_pos(event.position, _camera)
+				if draw_end != null:
+					_course_editor.erase_rect(_draw_start, draw_end)
+				else:
+					_course_editor.erase_rect(_draw_start, _draw_start)
 		_course_editor.hide_rect_preview()
 		_is_erasing = false
 		_draw_start = null
