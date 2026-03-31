@@ -70,7 +70,14 @@ func place_at(screen_pos: Vector2, camera: Camera3D) -> void:
 
 func get_floor_grid_pos(screen_pos: Vector2, camera: Camera3D) -> Variant:
 	## Returns the grid position on the current floor, or null.
-	return _grid_raycast.get_floor_position(screen_pos, camera, get_world_3d(), _current_floor)
+	## Works whether the ray hits the floor plane or an existing tile.
+	var result := Raycast.from_screen(screen_pos, camera, get_world_3d())
+	if result.is_empty(): return null
+
+	var hit_local: Vector3 = grid_map.to_local(result.position)
+	var grid_pos: Vector3i = grid_map.local_to_map(hit_local)
+	grid_pos.y = _current_floor
+	return grid_pos
 
 
 func fill_rect(from: Vector3i, to: Vector3i) -> void:
