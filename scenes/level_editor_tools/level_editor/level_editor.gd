@@ -38,6 +38,7 @@ func _connect_atmosphere_ui() -> void:
 	_atmosphere = _atmosphere_display.atmosphere if _atmosphere_display.atmosphere else Atmosphere.new()
 	_atmosphere_display.atmosphere = _atmosphere
 	_atmosphere_ui.bind(_atmosphere)
+	_atmosphere_ui.sync_from(_atmosphere)
 
 
 # -- Input --
@@ -133,6 +134,14 @@ func _toggle_ui() -> void:
 # -- UI signal handlers --
 
 func _on_atmosphere_changed(atm: Atmosphere) -> void:
-	_atmosphere = atm
-	_atmosphere_display.atmosphere = _atmosphere
+	# Copy values into existing atmosphere so UI bindings stay valid
+	_atmosphere.first_color = atm.first_color
+	_atmosphere.second_color = atm.second_color
+	_atmosphere.gradient_position = atm.gradient_position
+	_atmosphere.gradient_size = atm.gradient_size
+	_atmosphere.angle = atm.angle
+	_atmosphere.fog_enabled = atm.fog_enabled
+	_atmosphere.fog_density = atm.fog_density
+	_atmosphere.fog_height_density = atm.fog_height_density
+	_atmosphere.fog_height = atm.fog_height
 	_atmosphere_ui.sync_from(_atmosphere)
