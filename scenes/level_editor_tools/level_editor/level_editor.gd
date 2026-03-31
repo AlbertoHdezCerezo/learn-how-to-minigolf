@@ -17,6 +17,7 @@ var _is_orbiting := false
 ## Drawing state
 var _is_drawing := false
 var _is_erasing := false
+var _draw_start: Variant = null  # Vector3i or null
 
 
 func _ready() -> void:
@@ -65,16 +66,30 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			_is_orbiting = true
 		else:
 			_is_drawing = true
-			_course_editor.place_at(event.position, _camera)
+			_draw_start = _course_editor.get_floor_grid_pos(event.position, _camera)
 	elif event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+		if _is_drawing and _draw_start != null:
+			var draw_end: Variant = _course_editor.get_floor_grid_pos(event.position, _camera)
+			if draw_end != null:
+				_course_editor.fill_rect(_draw_start, draw_end)
+			elif _draw_start != null:
+				_course_editor.fill_rect(_draw_start, _draw_start)
 		_is_panning = false
 		_is_orbiting = false
 		_is_drawing = false
+		_draw_start = null
 	elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 		_is_erasing = true
-		_course_editor.remove_at(event.position, _camera)
+		_draw_start = _course_editor.get_floor_grid_pos(event.position, _camera)
 	elif event.button_index == MOUSE_BUTTON_RIGHT and not event.pressed:
+		if _is_erasing and _draw_start != null:
+			var draw_end: Variant = _course_editor.get_floor_grid_pos(event.position, _camera)
+			if draw_end != null:
+				_course_editor.erase_rect(_draw_start, draw_end)
+			elif _draw_start != null:
+				_course_editor.erase_rect(_draw_start, _draw_start)
 		_is_erasing = false
+		_draw_start = null
 	elif event.button_index == MOUSE_BUTTON_MIDDLE:
 		_is_panning = event.pressed
 	elif event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
@@ -92,8 +107,6 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 		_gameplay_camera.global_translate(_camera.global_basis.y * delta.y)
 	else:
 		_course_editor.update_cursor(event.position, _camera)
-		if _is_drawing: _course_editor.paint_at(event.position, _camera)
-		elif _is_erasing: _course_editor.remove_at(event.position, _camera)
 
 
 func _handle_pan_gesture(event: InputEventPanGesture) -> void:

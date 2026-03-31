@@ -51,13 +51,32 @@ func place_at(screen_pos: Vector2, camera: Camera3D) -> void:
 	grid_map.set_cell_item(grid_pos, _current_item, orientation)
 
 
-func paint_at(screen_pos: Vector2, camera: Camera3D) -> void:
-	## Like place_at but only on the current floor level (no stacking).
-	var grid_pos: Variant = _grid_raycast.get_floor_position(screen_pos, camera, get_world_3d(), _current_floor)
-	if grid_pos == null: return
+func get_floor_grid_pos(screen_pos: Vector2, camera: Camera3D) -> Variant:
+	## Returns the grid position on the current floor, or null.
+	return _grid_raycast.get_floor_position(screen_pos, camera, get_world_3d(), _current_floor)
 
+
+func fill_rect(from: Vector3i, to: Vector3i) -> void:
+	## Fill a rectangle of tiles between two grid positions on the same floor.
 	var orientation := _get_grid_orientation()
-	grid_map.set_cell_item(grid_pos, _current_item, orientation)
+	var min_x := mini(from.x, to.x)
+	var max_x := maxi(from.x, to.x)
+	var min_z := mini(from.z, to.z)
+	var max_z := maxi(from.z, to.z)
+	for x: int in range(min_x, max_x + 1):
+		for z: int in range(min_z, max_z + 1):
+			grid_map.set_cell_item(Vector3i(x, from.y, z), _current_item, orientation)
+
+
+func erase_rect(from: Vector3i, to: Vector3i) -> void:
+	## Erase a rectangle of tiles between two grid positions on the same floor.
+	var min_x := mini(from.x, to.x)
+	var max_x := maxi(from.x, to.x)
+	var min_z := mini(from.z, to.z)
+	var max_z := maxi(from.z, to.z)
+	for x: int in range(min_x, max_x + 1):
+		for z: int in range(min_z, max_z + 1):
+			grid_map.set_cell_item(Vector3i(x, from.y, z), GridMap.INVALID_CELL_ITEM)
 
 
 func remove_at(screen_pos: Vector2, camera: Camera3D) -> void:
