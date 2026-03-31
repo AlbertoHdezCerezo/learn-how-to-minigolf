@@ -8,6 +8,7 @@ signal angle_changed(value: float)
 signal fog_enabled_changed(value: bool)
 signal fog_density_changed(value: float)
 signal fog_height_density_changed(value: float)
+signal fog_height_changed(value: float)
 signal save_requested(resource_name: String)
 
 @onready var _first_color_picker: ColorPickerButton = %FirstColorPicker
@@ -21,8 +22,10 @@ signal save_requested(resource_name: String)
 @onready var _fog_checkbox: CheckBox = %FogEnabledCheckbox
 @onready var _fog_density_slider: HSlider = %FogDensitySlider
 @onready var _fog_density_input: SpinBox = %FogDensityInput
-@onready var _fog_height_slider: HSlider = %FogHeightDensitySlider
-@onready var _fog_height_input: SpinBox = %FogHeightDensityInput
+@onready var _fog_height_density_slider: HSlider = %FogHeightDensitySlider
+@onready var _fog_height_density_input: SpinBox = %FogHeightDensityInput
+@onready var _fog_height_slider: HSlider = %FogHeightSlider
+@onready var _fog_height_input: SpinBox = %FogHeightInput
 @onready var _name_input: LineEdit = %ResourceNameInput
 @onready var _save_button: Button = %SaveResourceButton
 
@@ -37,7 +40,8 @@ func _ready() -> void:
 	_connect_slider_and_input(_size_slider, _size_input, size_changed)
 	_connect_slider_and_input(_angle_slider, _angle_input, angle_changed)
 	_connect_slider_and_input(_fog_density_slider, _fog_density_input, fog_density_changed)
-	_connect_slider_and_input(_fog_height_slider, _fog_height_input, fog_height_density_changed)
+	_connect_slider_and_input(_fog_height_density_slider, _fog_height_density_input, fog_height_density_changed)
+	_connect_slider_and_input(_fog_height_slider, _fog_height_input, fog_height_changed)
 
 	_fog_checkbox.toggled.connect(func(v: bool): fog_enabled_changed.emit(v))
 	_save_button.pressed.connect(func(): save_requested.emit(_name_input.text.strip_edges()))
@@ -52,6 +56,7 @@ func bind(atmosphere: Atmosphere) -> void:
 	fog_enabled_changed.connect(func(v: bool) -> void: atmosphere.fog_enabled = v)
 	fog_density_changed.connect(func(v: float) -> void: atmosphere.fog_density = v)
 	fog_height_density_changed.connect(func(v: float) -> void: atmosphere.fog_height_density = v)
+	fog_height_changed.connect(func(v: float) -> void: atmosphere.fog_height = v)
 	save_requested.connect(func(name: String) -> void:
 		var error := atmosphere.save_to_file(name)
 		if error == OK:
@@ -66,11 +71,12 @@ func sync_from(atmosphere: Atmosphere) -> void:
 	sync(
 		atmosphere.first_color, atmosphere.second_color,
 		atmosphere.gradient_position, atmosphere.gradient_size, atmosphere.angle,
-		atmosphere.fog_enabled, atmosphere.fog_density, atmosphere.fog_height_density
+		atmosphere.fog_enabled, atmosphere.fog_density, atmosphere.fog_height_density,
+		atmosphere.fog_height
 	)
 
 
-func sync(first_color: Color, second_color: Color, gradient_position: float, gradient_size: float, gradient_angle: float, fog: bool, density: float, height_density: float) -> void:
+func sync(first_color: Color, second_color: Color, gradient_position: float, gradient_size: float, gradient_angle: float, fog: bool, density: float, height_density: float, fog_h: float = 0.0) -> void:
 	if _syncing: return
 	_syncing = true
 	_first_color_picker.color = first_color
@@ -84,8 +90,10 @@ func sync(first_color: Color, second_color: Color, gradient_position: float, gra
 	_fog_checkbox.button_pressed = fog
 	_fog_density_slider.value = density
 	_fog_density_input.value = density
-	_fog_height_slider.value = height_density
-	_fog_height_input.value = height_density
+	_fog_height_density_slider.value = height_density
+	_fog_height_density_input.value = height_density
+	_fog_height_slider.value = fog_h
+	_fog_height_input.value = fog_h
 	_syncing = false
 
 

@@ -34,7 +34,7 @@ extends Resource
 		fog_enabled = value
 		emit_changed()
 
-@export_range(0.0, 1.0, 0.001) var fog_density: float = 0.02:
+@export_range(0.0, 0.1, 0.0005) var fog_density: float = 0.02:
 	set(value):
 		fog_density = value
 		emit_changed()
@@ -42,6 +42,11 @@ extends Resource
 @export_range(-10.0, 10.0, 0.1) var fog_height_density: float = 2.0:
 	set(value):
 		fog_height_density = value
+		emit_changed()
+
+@export_range(-50.0, 50.0, 0.5) var fog_height: float = 0.0:
+	set(value):
+		fog_height = value
 		emit_changed()
 
 const SAVE_DIR := "res://resources/atmospheres/"
@@ -76,3 +81,4 @@ func _apply_environment_fog(env: Environment) -> void:
 	env.fog_light_color = second_color
 	env.fog_density = fog_density
 	env.fog_height_density = fog_height_density
+	env.fog_height = fog_height

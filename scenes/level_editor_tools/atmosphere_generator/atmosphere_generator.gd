@@ -31,14 +31,19 @@ extends Node3D
 		fog_enabled = value
 		_update_atmosphere()
 
-@export_range(0.0, 1.0, 0.001) var fog_density: float = 0.02:
+@export_range(0.0, 0.1, 0.0005) var fog_density: float = 0.02:
 	set(value):
 		fog_density = value
 		_update_atmosphere()
 
-@export_range(0.0, 10.0, 0.1) var fog_height_density: float = 2.0:
+@export_range(-10.0, 10.0, 0.1) var fog_height_density: float = 2.0:
 	set(value):
 		fog_height_density = value
+		_update_atmosphere()
+
+@export_range(-50.0, 50.0, 0.5) var fog_height: float = 0.0:
+	set(value):
+		fog_height = value
 		_update_atmosphere()
 
 @onready var _atmosphere_display = $AtmosphereDisplay
@@ -66,6 +71,7 @@ func _update_atmosphere() -> void:
 	_atmosphere.fog_enabled = fog_enabled
 	_atmosphere.fog_density = fog_density
 	_atmosphere.fog_height_density = fog_height_density
+	_atmosphere.fog_height = fog_height
 
 	_atmosphere_display.atmosphere = _atmosphere
 
@@ -84,3 +90,4 @@ func _connect_ui() -> void:
 	_ui.fog_enabled_changed.connect(func(v: bool): fog_enabled = v)
 	_ui.fog_density_changed.connect(func(v: float): fog_density = v)
 	_ui.fog_height_density_changed.connect(func(v: float): fog_height_density = v)
+	_ui.fog_height_changed.connect(func(v: float): fog_height = v)
