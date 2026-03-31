@@ -80,6 +80,24 @@ func get_floor_grid_pos(screen_pos: Vector2, camera: Camera3D) -> Variant:
 	return grid_pos
 
 
+func get_smart_grid_pos(screen_pos: Vector2, camera: Camera3D) -> Variant:
+	## Returns the grid position, using the tile's Y level if hitting a tile,
+	## or the current floor level if hitting the floor plane.
+	var result := Raycast.from_screen(screen_pos, camera, get_world_3d())
+	if result.is_empty(): return null
+
+	if result.collider == _floor_plane:
+		var hit_local: Vector3 = grid_map.to_local(result.position)
+		var grid_pos: Vector3i = grid_map.local_to_map(hit_local)
+		grid_pos.y = _current_floor
+		return grid_pos
+
+	# Hit a tile — offset inward to get the correct cell, then use its actual Y
+	var hit_pos: Vector3 = result.position - result.normal * 0.1
+	var hit_local: Vector3 = grid_map.to_local(hit_pos)
+	return grid_map.local_to_map(hit_local)
+
+
 func fill_rect(from: Vector3i, to: Vector3i) -> void:
 	## Fill a rectangle of tiles between two grid positions on the same floor.
 	var orientation := _get_grid_orientation()

@@ -70,7 +70,7 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			_is_orbiting = true
 		else:
 			_is_drawing = true
-			_draw_start = _course_editor.get_floor_grid_pos(event.position, _camera)
+			_draw_start = _course_editor.get_smart_grid_pos(event.position, _camera)
 			_draw_screen_start = event.position
 	elif event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
 		if _is_drawing:
@@ -80,6 +80,7 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			elif _draw_start != null:
 				var draw_end: Variant = _course_editor.get_floor_grid_pos(event.position, _camera)
 				if draw_end != null:
+					draw_end.y = _draw_start.y
 					_course_editor.fill_rect(_draw_start, draw_end)
 				else:
 					_course_editor.fill_rect(_draw_start, _draw_start)
