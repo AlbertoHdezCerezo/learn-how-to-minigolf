@@ -49,6 +49,21 @@ extends Resource
 		fog_height = value
 		emit_changed()
 
+@export_range(0.0, 360.0, 1.0) var light_yaw: float = 225.0:
+	set(value):
+		light_yaw = value
+		emit_changed()
+
+@export_range(15.0, 85.0, 1.0) var light_pitch: float = 60.0:
+	set(value):
+		light_pitch = value
+		emit_changed()
+
+@export_range(0.0, 2.0, 0.05) var light_energy: float = 0.8:
+	set(value):
+		light_energy = value
+		emit_changed()
+
 const SAVE_DIR := "res://resources/atmospheres/"
 
 
@@ -59,9 +74,10 @@ func save_to_file(resource_name: String) -> Error:
 	return ResourceSaver.save(self, path)
 
 
-func apply(gradient_material: ShaderMaterial, env: Environment) -> void:
+func apply(gradient_material: ShaderMaterial, env: Environment, light: DirectionalLight3D = null) -> void:
 	_apply_gradient(gradient_material)
 	_apply_environment_fog(env)
+	if light: _apply_light(light)
 
 
 func _apply_gradient(material: ShaderMaterial) -> void:
@@ -72,6 +88,13 @@ func _apply_gradient(material: ShaderMaterial) -> void:
 	material.set_shader_parameter("position", gradient_position)
 	material.set_shader_parameter("size", gradient_size)
 	material.set_shader_parameter("angle", angle)
+
+
+func _apply_light(light: DirectionalLight3D) -> void:
+	var yaw_rad := deg_to_rad(light_yaw)
+	var pitch_rad := deg_to_rad(light_pitch)
+	light.basis = Basis(Vector3.UP, yaw_rad) * Basis(Vector3.RIGHT, -pitch_rad)
+	light.light_energy = light_energy
 
 
 func _apply_environment_fog(env: Environment) -> void:

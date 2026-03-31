@@ -189,4 +189,7 @@ func _on_atmosphere_changed(atm: Atmosphere) -> void:
 	_atmosphere.fog_density = atm.fog_density
 	_atmosphere.fog_height_density = atm.fog_height_density
 	_atmosphere.fog_height = atm.fog_height
+	_atmosphere.light_yaw = atm.light_yaw
+	_atmosphere.light_pitch = atm.light_pitch
+	_atmosphere.light_energy = atm.light_energy
 	_atmosphere_ui.sync_from(_atmosphere)

@@ -46,6 +46,21 @@ extends Node3D
 		fog_height = value
 		_update_atmosphere()
 
+@export_range(0.0, 360.0, 1.0) var light_yaw: float = 225.0:
+	set(value):
+		light_yaw = value
+		_update_atmosphere()
+
+@export_range(15.0, 85.0, 1.0) var light_pitch: float = 60.0:
+	set(value):
+		light_pitch = value
+		_update_atmosphere()
+
+@export_range(0.0, 2.0, 0.05) var light_energy: float = 0.8:
+	set(value):
+		light_energy = value
+		_update_atmosphere()
+
 @onready var _atmosphere_display = $AtmosphereDisplay
 @onready var _ui = $AtmosphereUI
 
@@ -72,6 +87,9 @@ func _update_atmosphere() -> void:
 	_atmosphere.fog_density = fog_density
 	_atmosphere.fog_height_density = fog_height_density
 	_atmosphere.fog_height = fog_height
+	_atmosphere.light_yaw = light_yaw
+	_atmosphere.light_pitch = light_pitch
+	_atmosphere.light_energy = light_energy
 
 	_atmosphere_display.atmosphere = _atmosphere
 
@@ -91,3 +109,6 @@ func _connect_ui() -> void:
 	_ui.fog_density_changed.connect(func(v: float): fog_density = v)
 	_ui.fog_height_density_changed.connect(func(v: float): fog_height_density = v)
 	_ui.fog_height_changed.connect(func(v: float): fog_height = v)
+	_ui.light_yaw_changed.connect(func(v: float): light_yaw = v)
+	_ui.light_pitch_changed.connect(func(v: float): light_pitch = v)
+	_ui.light_energy_changed.connect(func(v: float): light_energy = v)

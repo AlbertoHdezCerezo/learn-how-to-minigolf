@@ -12,7 +12,7 @@ extends Node3D
 
 @onready var _world_environment: WorldEnvironment = $WorldEnvironment
 @onready var _color_rect: ColorRect = $GradientBackground/GradientRect
-@onready var _scene_light: DirectionalLight3D = $SceneLight
+@onready var _light: DirectionalLight3D = $SceneLight
 
 
 func _ready() -> void:
@@ -26,4 +26,4 @@ func _apply_atmosphere() -> void:
 	if not env: return
 
 	var gradient_material := _color_rect.material as ShaderMaterial
-	atmosphere.apply(gradient_material, env)
+	atmosphere.apply(gradient_material, env, _light)
