@@ -43,6 +43,9 @@ func _connect_atmosphere_ui() -> void:
 # -- Input --
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		get_viewport().gui_release_focus()
+
 	if event is InputEventMouseButton:
 		_handle_mouse_button(event)
 	elif event is InputEventMouseMotion:
