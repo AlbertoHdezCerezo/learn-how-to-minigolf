@@ -254,3 +254,34 @@ shape = SubResource("wall_north")
 [node name="EastWall" type="CollisionShape3D" parent="ConcaveCurve/StaticBody3D" unique_id=338161277]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, 1.25, 0)
 shape = SubResource("wall_east")
+
+; ── Sides (ID 8) ──────────────────────────────────────────────
+; Four side walls only — no top, no bottom. Use between stacked
+; tiles to avoid the green FloorTop line showing between levels.
+[node name="Sides" type="CSGCombiner3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 0, 0)
+
+[node name="North" type="CSGBox3D" parent="Sides"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.99)
+size = Vector3(2, 2.004, 0.02)
+material = SubResource("wall_mat")
+
+[node name="South" type="CSGBox3D" parent="Sides"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.99)
+size = Vector3(2, 2.004, 0.02)
+material = SubResource("wall_mat")
+
+[node name="East" type="CSGBox3D" parent="Sides"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.99, 0, 0)
+size = Vector3(0.02, 2.004, 2)
+material = SubResource("wall_mat")
+
+[node name="West" type="CSGBox3D" parent="Sides"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.99, 0, 0)
+size = Vector3(0.02, 2.004, 2)
+material = SubResource("wall_mat")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Sides"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Sides/StaticBody3D"]
+shape = SubResource("box_2x2x2")
