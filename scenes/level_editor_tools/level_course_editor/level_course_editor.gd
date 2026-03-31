@@ -15,6 +15,7 @@ var _grid_raycast: GridRaycast3D
 var _current_item: int = 0
 var _current_rotation_angle: float = 0.0
 var _current_floor: int = 0
+var _rect_preview: MeshInstance3D
 
 
 func _ready() -> void:
@@ -24,6 +25,20 @@ func _ready() -> void:
 	_grid_raycast = GridRaycast3D.new(grid_map, _floor_plane)
 	_tile_cursor.setup(grid_map)
 	_update_floor_plane()
+	_create_rect_preview()
+
+
+func _create_rect_preview() -> void:
+	_rect_preview = MeshInstance3D.new()
+	_rect_preview.mesh = PlaneMesh.new()
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.3, 0.7, 1.0, 0.25)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.no_depth_test = true
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_rect_preview.material_override = mat
+	_rect_preview.visible = false
+	add_child(_rect_preview)
 
 
 # -- Public API --
@@ -77,6 +92,28 @@ func erase_rect(from: Vector3i, to: Vector3i) -> void:
 	for x: int in range(min_x, max_x + 1):
 		for z: int in range(min_z, max_z + 1):
 			grid_map.set_cell_item(Vector3i(x, from.y, z), GridMap.INVALID_CELL_ITEM)
+
+
+func show_rect_preview(from: Vector3i, to: Vector3i) -> void:
+	var min_x := mini(from.x, to.x)
+	var max_x := maxi(from.x, to.x)
+	var min_z := mini(from.z, to.z)
+	var max_z := maxi(from.z, to.z)
+	var count_x := max_x - min_x + 1
+	var count_z := max_z - min_z + 1
+
+	var plane := _rect_preview.mesh as PlaneMesh
+	plane.size = Vector2(count_x * CELL_SIZE.x, count_z * CELL_SIZE.z)
+
+	var center_x := (min_x + max_x) / 2.0 * CELL_SIZE.x
+	var center_z := (min_z + max_z) / 2.0 * CELL_SIZE.z
+	var y := from.y * CELL_SIZE.y + CELL_SIZE.y / 2.0 + 0.02
+	_rect_preview.global_position = Vector3(center_x, y, center_z)
+	_rect_preview.visible = true
+
+
+func hide_rect_preview() -> void:
+	_rect_preview.visible = false
 
 
 func remove_at(screen_pos: Vector2, camera: Camera3D) -> void:

@@ -72,8 +72,9 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			var draw_end: Variant = _course_editor.get_floor_grid_pos(event.position, _camera)
 			if draw_end != null:
 				_course_editor.fill_rect(_draw_start, draw_end)
-			elif _draw_start != null:
+			else:
 				_course_editor.fill_rect(_draw_start, _draw_start)
+		_course_editor.hide_rect_preview()
 		_is_panning = false
 		_is_orbiting = false
 		_is_drawing = false
@@ -86,8 +87,9 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			var draw_end: Variant = _course_editor.get_floor_grid_pos(event.position, _camera)
 			if draw_end != null:
 				_course_editor.erase_rect(_draw_start, draw_end)
-			elif _draw_start != null:
+			else:
 				_course_editor.erase_rect(_draw_start, _draw_start)
+		_course_editor.hide_rect_preview()
 		_is_erasing = false
 		_draw_start = null
 	elif event.button_index == MOUSE_BUTTON_MIDDLE:
@@ -107,6 +109,9 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 		_gameplay_camera.global_translate(_camera.global_basis.y * delta.y)
 	else:
 		_course_editor.update_cursor(event.position, _camera)
+		if (_is_drawing or _is_erasing) and _draw_start != null:
+			var current_pos: Variant = _course_editor.get_floor_grid_pos(event.position, _camera)
+			if current_pos != null: _course_editor.show_rect_preview(_draw_start, current_pos)
 
 
 func _handle_pan_gesture(event: InputEventPanGesture) -> void:
