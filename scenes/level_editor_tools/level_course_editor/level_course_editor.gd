@@ -18,6 +18,10 @@ var _current_item: int = 0
 var _current_rotation_angle: float = 0.0
 var _current_floor: int = 0
 var _rect_preview: MeshInstance3D
+var _start_marker: MeshInstance3D
+var _goal_marker: MeshInstance3D
+var start_position: Vector3i = Vector3i.ZERO
+var hole_position: Vector3i = Vector3i.ZERO
 
 
 func _ready() -> void:
@@ -28,6 +32,8 @@ func _ready() -> void:
 	_tile_cursor.setup(grid_map)
 	_update_floor_plane()
 	_create_rect_preview()
+	_start_marker = _create_marker(Color(0.2, 0.8, 0.2, 0.5))
+	_goal_marker = _create_marker(Color(0.9, 0.2, 0.2, 0.5))
 
 
 func _create_rect_preview() -> void:
@@ -143,6 +149,22 @@ func hide_rect_preview() -> void:
 	_rect_preview.visible = false
 
 
+func set_start(screen_pos: Vector2, camera: Camera3D) -> void:
+	var grid_pos: Variant = get_smart_grid_pos(screen_pos, camera)
+	if grid_pos == null: return
+	start_position = grid_pos
+	_place_marker(_start_marker, grid_pos)
+	print("Start set to: ", grid_pos)
+
+
+func set_goal(screen_pos: Vector2, camera: Camera3D) -> void:
+	var grid_pos: Variant = get_smart_grid_pos(screen_pos, camera)
+	if grid_pos == null: return
+	hole_position = grid_pos
+	_place_marker(_goal_marker, grid_pos)
+	print("Goal set to: ", grid_pos)
+
+
 func remove_at(screen_pos: Vector2, camera: Camera3D) -> void:
 	var grid_pos: Variant = _grid_raycast.get_removal_position(screen_pos, camera, get_world_3d())
 	if grid_pos == null: return
@@ -163,6 +185,8 @@ func save_level(level_name: String, atmosphere: Atmosphere = null) -> void:
 	level_data.level_name = level_name
 	level_data.cell_size = grid_map.cell_size
 	level_data.atmosphere = atmosphere
+	level_data.start_position = Vector3(start_position.x, start_position.y, start_position.z)
+	level_data.hole_position = Vector3(hole_position.x, hole_position.y, hole_position.z)
 	for cell_pos: Vector3i in grid_map.get_used_cells():
 		level_data.add_tile(
 			cell_pos,
@@ -187,6 +211,15 @@ func load_level(level_path: String) -> void:
 	grid_map.clear()
 	for tile: TilePlacement in level_data.tiles:
 		grid_map.set_cell_item(tile.position, tile.item_id, tile.orientation)
+
+	var sp := level_data.start_position
+	start_position = Vector3i(int(sp.x), int(sp.y), int(sp.z))
+	_place_marker(_start_marker, start_position)
+
+	var hp := level_data.hole_position
+	hole_position = Vector3i(int(hp.x), int(hp.y), int(hp.z))
+	_place_marker(_goal_marker, hole_position)
+
 	level_loaded.emit(level_data)
 	print("Level loaded: ", level_data.level_name)
 
@@ -205,3 +238,26 @@ func _get_grid_orientation() -> int:
 func _update_floor_plane() -> void:
 	var y_pos := _current_floor * CELL_SIZE.y + FLOOR_Y_OFFSET
 	_floor_plane.position.y = y_pos
+
+
+func _create_marker(color: Color) -> MeshInstance3D:
+	var marker := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(CELL_SIZE.x * 0.8, CELL_SIZE.z * 0.8)
+	marker.mesh = plane
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.no_depth_test = true
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	marker.material_override = mat
+	marker.visible = false
+	add_child(marker)
+	return marker
+
+
+func _place_marker(marker: MeshInstance3D, grid_pos: Vector3i) -> void:
+	var world_pos := grid_map.map_to_local(grid_pos)
+	world_pos.y += CELL_SIZE.y / 2.0 + 0.03
+	marker.global_position = world_pos
+	marker.visible = true

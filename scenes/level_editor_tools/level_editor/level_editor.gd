@@ -19,6 +19,7 @@ var _is_drawing := false
 var _is_erasing := false
 var _draw_start: Variant = null  # Vector3i or null
 var _draw_screen_start: Vector2 = Vector2.ZERO
+var _last_mouse_pos: Vector2 = Vector2.ZERO
 const DRAG_THRESHOLD := 5.0  # pixels — below this it's a single click
 
 
@@ -116,6 +117,7 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 
 
 func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
+	_last_mouse_pos = event.position
 	if _is_orbiting:
 		_gameplay_camera.orbit_angle += event.relative.x * 0.5
 	elif _is_panning:
@@ -147,6 +149,12 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_N:
 			_reset_camera()
+			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_S:
+			_course_editor.set_start(_last_mouse_pos, _camera)
+			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_G:
+			_course_editor.set_goal(_last_mouse_pos, _camera)
 			get_viewport().set_input_as_handled()
 
 
