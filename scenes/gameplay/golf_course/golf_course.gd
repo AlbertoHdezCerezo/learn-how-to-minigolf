@@ -15,7 +15,8 @@ const BALL_SCENE_PATH := "res://scenes/gameplay/ball/ball.tscn"
 
 
 func _ready() -> void:
-	if atmosphere: _atmosphere_display.atmosphere = atmosphere
+	if level and level.atmosphere: _atmosphere_display.atmosphere = level.atmosphere
+	elif atmosphere: _atmosphere_display.atmosphere = atmosphere
 	if level: _load_level()
 
 

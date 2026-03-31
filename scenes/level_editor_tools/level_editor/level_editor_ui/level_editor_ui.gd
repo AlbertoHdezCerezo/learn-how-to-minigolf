@@ -42,7 +42,7 @@ func bind(course_editor: LevelCourseEditor) -> void:
 	tile_selected.connect(course_editor.select_tile)
 	rotation_changed.connect(course_editor.set_rotation_angle)
 	floor_changed.connect(course_editor.set_floor)
-	save_requested.connect(course_editor.save_level)
+	# save_requested is handled by the level_editor to include atmosphere
 	load_requested.connect(course_editor.load_level)
 	clear_requested.connect(course_editor.clear_level)
 

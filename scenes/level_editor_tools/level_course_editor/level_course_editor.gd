@@ -2,6 +2,8 @@ class_name LevelCourseEditor
 
 extends Node3D
 
+signal level_loaded(level_data: LevelData)
+
 const CELL_SIZE := Vector3(2, 2, 2)
 const FLOOR_Y_OFFSET := -0.5
 
@@ -131,10 +133,11 @@ func update_cursor(screen_pos: Vector2, camera: Camera3D) -> void:
 		_tile_cursor.hide_cursor()
 
 
-func save_level(level_name: String) -> void:
+func save_level(level_name: String, atmosphere: Atmosphere = null) -> void:
 	var level_data := LevelData.new()
 	level_data.level_name = level_name
 	level_data.cell_size = grid_map.cell_size
+	level_data.atmosphere = atmosphere
 	for cell_pos: Vector3i in grid_map.get_used_cells():
 		level_data.add_tile(
 			cell_pos,
@@ -159,6 +162,7 @@ func load_level(level_path: String) -> void:
 	grid_map.clear()
 	for tile: TilePlacement in level_data.tiles:
 		grid_map.set_cell_item(tile.position, tile.item_id, tile.orientation)
+	level_loaded.emit(level_data)
 	print("Level loaded: ", level_data.level_name)
 
 

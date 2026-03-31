@@ -31,6 +31,8 @@ func _ready() -> void:
 func _connect_editor_ui() -> void:
 	_ui.bind(_course_editor)
 	_ui.atmosphere_changed.connect(_on_atmosphere_changed)
+	_ui.save_requested.connect(func(name: String): _course_editor.save_level(name, _atmosphere))
+	_course_editor.level_loaded.connect(_on_level_loaded)
 
 
 func _connect_camera_ui() -> void:
@@ -157,6 +159,10 @@ func _toggle_ui() -> void:
 
 
 # -- UI signal handlers --
+
+func _on_level_loaded(level_data: LevelData) -> void:
+	if level_data.atmosphere: _on_atmosphere_changed(level_data.atmosphere)
+
 
 func _on_atmosphere_changed(atm: Atmosphere) -> void:
 	# Copy values into existing atmosphere so UI bindings stay valid
