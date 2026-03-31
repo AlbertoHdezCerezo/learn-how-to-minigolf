@@ -14,6 +14,10 @@ var _atmosphere: Atmosphere
 var _is_panning := false
 var _is_orbiting := false
 
+## Drawing state
+var _is_drawing := false
+var _is_erasing := false
+
 
 func _ready() -> void:
 	_connect_editor_ui()
@@ -56,12 +60,17 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 		elif event.meta_pressed:
 			_is_orbiting = true
 		else:
+			_is_drawing = true
 			_course_editor.place_at(event.position, _camera)
 	elif event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
 		_is_panning = false
 		_is_orbiting = false
+		_is_drawing = false
 	elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+		_is_erasing = true
 		_course_editor.remove_at(event.position, _camera)
+	elif event.button_index == MOUSE_BUTTON_RIGHT and not event.pressed:
+		_is_erasing = false
 	elif event.button_index == MOUSE_BUTTON_MIDDLE:
 		_is_panning = event.pressed
 	elif event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
@@ -79,6 +88,8 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 		_gameplay_camera.global_translate(_camera.global_basis.y * delta.y)
 	else:
 		_course_editor.update_cursor(event.position, _camera)
+		if _is_drawing: _course_editor.place_at(event.position, _camera)
+		elif _is_erasing: _course_editor.remove_at(event.position, _camera)
 
 
 func _handle_pan_gesture(event: InputEventPanGesture) -> void:

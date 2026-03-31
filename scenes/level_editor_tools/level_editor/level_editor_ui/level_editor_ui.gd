@@ -121,6 +121,12 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		elif event.keycode == KEY_BRACKETRIGHT:
 			_floor_spinbox.value = minf(_floor_spinbox.value + 1, _floor_spinbox.max_value)
 			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_MINUS or event.keycode == KEY_KP_SUBTRACT:
+			_floor_spinbox.value = maxf(_floor_spinbox.value - 1, _floor_spinbox.min_value)
+			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_EQUAL or event.keycode == KEY_KP_ADD:
+			_floor_spinbox.value = minf(_floor_spinbox.value + 1, _floor_spinbox.max_value)
+			get_viewport().set_input_as_handled()
 		elif event.keycode >= KEY_1 and event.keycode <= KEY_9:
 			_select_tile_by_index(event.keycode - KEY_1)
 			get_viewport().set_input_as_handled()
