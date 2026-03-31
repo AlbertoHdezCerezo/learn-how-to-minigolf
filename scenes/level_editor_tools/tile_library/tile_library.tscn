@@ -29,7 +29,7 @@ script = ExtResource("1_script")
 [node name="Flat" type="CSGCombiner3D" parent="." unique_id=1191309638]
 
 [node name="Body" type="CSGBox3D" parent="Flat" unique_id=1593497539]
-size = Vector3(2, 2, 2)
+size = Vector3(2, 2.004, 2)
 material = SubResource("wall_mat")
 
 [node name="FloorTop" type="CSGBox3D" parent="Flat" unique_id=110501104]
@@ -46,7 +46,7 @@ shape = SubResource("box_2x2x2")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 0)
 
 [node name="Body" type="CSGBox3D" parent="Hole" unique_id=216702233]
-size = Vector3(2, 2, 2)
+size = Vector3(2, 2.004, 2)
 material = SubResource("wall_mat")
 
 [node name="FloorTop" type="CSGBox3D" parent="Hole" unique_id=1814442947]
@@ -71,7 +71,7 @@ shape = SubResource("box_2x2x2")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 0)
 
 [node name="Body" type="CSGBox3D" parent="WallSingle" unique_id=1642827187]
-size = Vector3(2, 2, 2)
+size = Vector3(2, 2.004, 2)
 material = SubResource("wall_mat")
 
 [node name="FloorTop" type="CSGBox3D" parent="WallSingle" unique_id=783240475]
@@ -97,7 +97,7 @@ shape = SubResource("wall_north")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 0)
 
 [node name="Body" type="CSGBox3D" parent="WallCorner" unique_id=509650029]
-size = Vector3(2, 2, 2)
+size = Vector3(2, 2.004, 2)
 material = SubResource("wall_mat")
 
 [node name="FloorTop" type="CSGBox3D" parent="WallCorner" unique_id=1807811085]
@@ -132,7 +132,7 @@ shape = SubResource("wall_east")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 0)
 
 [node name="Body" type="CSGBox3D" parent="Corner" unique_id=2082015865]
-size = Vector3(2, 2, 2)
+size = Vector3(2, 2.004, 2)
 material = SubResource("wall_mat")
 
 [node name="FloorTop" type="CSGBox3D" parent="Corner" unique_id=80434611]
@@ -158,7 +158,7 @@ shape = SubResource("corner_prism")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 0)
 
 [node name="Body" type="CSGBox3D" parent="RoundedWall" unique_id=345996481]
-size = Vector3(2, 2, 2)
+size = Vector3(2, 2.004, 2)
 material = SubResource("wall_mat")
 
 [node name="FloorTop" type="CSGBox3D" parent="RoundedWall" unique_id=88594335]
@@ -200,7 +200,7 @@ shape = SubResource("wall_east")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0, 0)
 
 [node name="Body" type="CSGBox3D" parent="Ramp" unique_id=531560064]
-size = Vector3(2, 2, 2)
+size = Vector3(2, 2.004, 2)
 material = SubResource("wall_mat")
 
 [node name="SlopeCutter" type="CSGBox3D" parent="Ramp" unique_id=164332275]
@@ -222,7 +222,7 @@ shape = SubResource("ramp_shape")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, 0)
 
 [node name="Body" type="CSGBox3D" parent="ConcaveCurve" unique_id=284116981]
-size = Vector3(2, 2, 2)
+size = Vector3(2, 2.004, 2)
 material = SubResource("wall_mat")
 
 [node name="FloorTop" type="CSGBox3D" parent="ConcaveCurve" unique_id=366336432]
