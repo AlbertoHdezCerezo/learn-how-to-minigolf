@@ -99,7 +99,6 @@ func _update_atmosphere() -> void:
 
 func _connect_ui() -> void:
 	_ui.bind(_atmosphere)
-	# Also wire UI changes back through the export setters for @tool support
 	_ui.first_color_changed.connect(func(c: Color): first_color = c)
 	_ui.second_color_changed.connect(func(c: Color): second_color = c)
 	_ui.gradient_position_changed.connect(func(v: float): gradient_position = v)
@@ -112,3 +111,22 @@ func _connect_ui() -> void:
 	_ui.light_yaw_changed.connect(func(v: float): light_yaw = v)
 	_ui.light_pitch_changed.connect(func(v: float): light_pitch = v)
 	_ui.light_energy_changed.connect(func(v: float): light_energy = v)
+	_ui.load_requested.connect(_on_atmosphere_loaded)
+
+
+func _on_atmosphere_loaded(loaded: Atmosphere) -> void:
+	_atmosphere = loaded
+	first_color = _atmosphere.first_color
+	second_color = _atmosphere.second_color
+	gradient_position = _atmosphere.gradient_position
+	gradient_size = _atmosphere.gradient_size
+	angle = _atmosphere.angle
+	fog_enabled = _atmosphere.fog_enabled
+	fog_density = _atmosphere.fog_density
+	fog_height_density = _atmosphere.fog_height_density
+	fog_height = _atmosphere.fog_height
+	light_yaw = _atmosphere.light_yaw
+	light_pitch = _atmosphere.light_pitch
+	light_energy = _atmosphere.light_energy
+	_atmosphere_display.atmosphere = _atmosphere
+	_ui.sync_from(_atmosphere)
