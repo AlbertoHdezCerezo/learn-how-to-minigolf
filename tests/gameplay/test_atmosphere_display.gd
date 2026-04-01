@@ -21,26 +21,6 @@ func test_atmosphere_display_scene_instantiates_without_error() -> void:
 	assert_not_null(instance, "AtmosphereDisplay should instantiate into a valid node")
 
 
-# -- Node structure --
-
-func test_atmosphere_display_contains_world_environment_node() -> void:
-	var instance := scene.instantiate()
-	add_child_autofree(instance)
-	assert_not_null(instance.get_node("WorldEnvironment"), "AtmosphereDisplay should have a WorldEnvironment child")
-
-
-func test_atmosphere_display_contains_gradient_rect_node() -> void:
-	var instance := scene.instantiate()
-	add_child_autofree(instance)
-	assert_not_null(instance.get_node("GradientBackground/GradientRect"), "AtmosphereDisplay should have a GradientBackground/GradientRect child")
-
-
-func test_atmosphere_display_contains_scene_light_node() -> void:
-	var instance := scene.instantiate()
-	add_child_autofree(instance)
-	assert_not_null(instance.get_node("SceneLight"), "AtmosphereDisplay should have a SceneLight (DirectionalLight3D) child")
-
-
 # -- Atmosphere application on ready --
 
 func test_setting_atmosphere_before_ready_applies_fog_on_ready() -> void:

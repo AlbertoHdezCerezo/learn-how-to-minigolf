@@ -112,18 +112,10 @@ func test_save_to_file_with_name_creates_resource_at_expected_path() -> void:
 	DirAccess.remove_absolute(path)
 
 
-func test_save_to_file_with_empty_name_generates_timestamped_filename() -> void:
+func test_save_to_file_with_empty_name_returns_error() -> void:
 	var err := atmo.save_to_file("")
-	assert_eq(err, OK, "save_to_file with empty name should return OK")
-	# Clean up: find and remove the generated file
-	var dir := DirAccess.open(Atmosphere.SAVE_DIR)
-	if dir:
-		dir.list_dir_begin()
-		var file := dir.get_next()
-		while file != "":
-			if file.begins_with("atmosphere_") and file != "default_atmosphere.tres":
-				DirAccess.remove_absolute(Atmosphere.SAVE_DIR + file)
-			file = dir.get_next()
+	assert_push_error("resource_name cannot be empty")
+	assert_eq(err, ERR_INVALID_PARAMETER, "save_to_file with empty name should return ERR_INVALID_PARAMETER")
 
 
 # -- apply --
