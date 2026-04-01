@@ -23,59 +23,51 @@ func test_atmosphere_display_scene_instantiates_without_error() -> void:
 
 # -- Atmosphere application on ready --
 
-func test_setting_atmosphere_before_ready_applies_fog_on_ready() -> void:
+func test_atmosphere_is_applied_when_scene_becomes_ready() -> void:
 	var instance := scene.instantiate()
 	var atmo := Atmosphere.new()
 	atmo.fog_density = 0.07
 	atmo.fog_enabled = true
+	atmo.first_color = Color.RED
+	atmo.light_energy = 1.3
 	instance.atmosphere = atmo
 	add_child_autofree(instance)
 
+	assert_eq(instance.atmosphere, atmo, "Atmosphere should be set on the instance after _ready()")
 	var env: Environment = instance.get_node("WorldEnvironment").environment
 	assert_almost_eq(env.fog_density, 0.07, 0.001, "Environment fog_density should match atmosphere after _ready()")
 	assert_eq(env.fog_enabled, true, "Environment fog_enabled should match atmosphere after _ready()")
+	var rect: ColorRect = instance.get_node("GradientBackground/GradientRect")
+	var mat := rect.material as ShaderMaterial
+	assert_eq(mat.get_shader_parameter("first_color"), Color.RED, "Shader first_color should match atmosphere after _ready()")
+	var light: DirectionalLight3D = instance.get_node("SceneLight")
+	assert_almost_eq(light.light_energy, 1.3, 0.001, "SceneLight energy should match atmosphere after _ready()")
 
 
-# -- Setting atmosphere connects and applies --
+# -- Setting a new atmosphere applies it to the scene --
 
-func test_setting_atmosphere_after_ready_applies_fog_settings() -> void:
+func test_atmosphere_is_applied_after_setting_a_new_atmosphere_to_the_scene() -> void:
 	var instance := scene.instantiate()
 	add_child_autofree(instance)
 
 	var atmo := Atmosphere.new()
 	atmo.fog_density = 0.09
 	atmo.fog_enabled = true
-	instance.atmosphere = atmo
-
-	var env: Environment = instance.get_node("WorldEnvironment").environment
-	assert_almost_eq(env.fog_density, 0.09, 0.001, "Environment fog_density should update when atmosphere is set after ready")
-
-
-func test_setting_atmosphere_after_ready_applies_gradient_colors() -> void:
-	var instance := scene.instantiate()
-	add_child_autofree(instance)
-
-	var atmo := Atmosphere.new()
 	atmo.first_color = Color.YELLOW
 	atmo.second_color = Color.CYAN
-	instance.atmosphere = atmo
-
-	var rect: ColorRect = instance.get_node("GradientBackground/GradientRect")
-	var mat := rect.material as ShaderMaterial
-	assert_eq(mat.get_shader_parameter("first_color"), Color.YELLOW, "Shader first_color should match atmosphere after setting")
-	assert_eq(mat.get_shader_parameter("second_color"), Color.CYAN, "Shader second_color should match atmosphere after setting")
-
-
-func test_setting_atmosphere_after_ready_applies_light_energy() -> void:
-	var instance := scene.instantiate()
-	add_child_autofree(instance)
-
-	var atmo := Atmosphere.new()
 	atmo.light_energy = 1.5
 	instance.atmosphere = atmo
 
+	assert_eq(instance.atmosphere, atmo, "Atmosphere should be set on the instance")
+	var env: Environment = instance.get_node("WorldEnvironment").environment
+	assert_almost_eq(env.fog_density, 0.09, 0.001, "Environment fog_density should match the new atmosphere")
+	assert_eq(env.fog_enabled, true, "Environment fog_enabled should match the new atmosphere")
+	var rect: ColorRect = instance.get_node("GradientBackground/GradientRect")
+	var mat := rect.material as ShaderMaterial
+	assert_eq(mat.get_shader_parameter("first_color"), Color.YELLOW, "Shader first_color should match the new atmosphere")
+	assert_eq(mat.get_shader_parameter("second_color"), Color.CYAN, "Shader second_color should match the new atmosphere")
 	var light: DirectionalLight3D = instance.get_node("SceneLight")
-	assert_almost_eq(light.light_energy, 1.5, 0.001, "SceneLight energy should match atmosphere light_energy after setting")
+	assert_almost_eq(light.light_energy, 1.5, 0.001, "SceneLight energy should match the new atmosphere")
 
 
 # -- Changes in atmosphere trigger re-application --
