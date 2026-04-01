@@ -69,7 +69,8 @@ const SAVE_DIR := "res://resources/atmospheres/"
 
 func save_to_file(resource_name: String) -> Error:
 	if resource_name.is_empty():
-		resource_name = "atmosphere_%d" % Time.get_unix_time_from_system()
+		push_error("Atmosphere: resource_name cannot be empty.")
+		return ERR_INVALID_PARAMETER
 	var path := SAVE_DIR + resource_name + ".tres"
 	return ResourceSaver.save(self, path)
 
