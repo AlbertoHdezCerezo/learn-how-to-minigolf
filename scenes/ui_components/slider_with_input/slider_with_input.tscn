@@ -1,0 +1,19 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/ui_components/slider_with_input/slider_with_input.gd" id="1_script"]
+
+[node name="SliderWithInput" type="HBoxContainer"]
+script = ExtResource("1_script")
+
+[node name="Label" type="Label" parent="."]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "Label"
+
+[node name="HSlider" type="HSlider" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SpinBox" type="SpinBox" parent="."]
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
