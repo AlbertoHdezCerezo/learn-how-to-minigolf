@@ -13,6 +13,7 @@ text = "Label"
 [node name="HSlider" type="HSlider" parent="."]
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 4
 
 [node name="SpinBox" type="SpinBox" parent="."]
 custom_minimum_size = Vector2(75, 0)
