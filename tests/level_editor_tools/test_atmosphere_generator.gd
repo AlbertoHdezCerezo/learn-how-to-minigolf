@@ -30,19 +30,17 @@ func test_atmosphere_is_created_and_applied_to_display_on_ready() -> void:
 	assert_not_null(display.atmosphere, "AtmosphereDisplay should have an atmosphere assigned after ready")
 
 
-# -- Export property updates --
-
-func test_setting_export_property_updates_internal_atmosphere() -> void:
+func test_ui_is_bound_to_atmosphere_on_ready() -> void:
 	var instance := scene.instantiate()
 	add_child_autofree(instance)
-	instance.fog_density = 0.07
-	var display = instance.get_node("AtmosphereDisplay")
-	assert_almost_eq(display.atmosphere.fog_density, 0.07, 0.001, "Internal atmosphere fog_density should update when export property changes")
+	var ui = instance.get_node("AtmosphereUI")
+	assert_not_null(ui._atmosphere, "UI should have an atmosphere reference after ready")
 
 
-func test_setting_export_property_updates_atmosphere_display() -> void:
+func test_ui_changes_update_atmosphere_display() -> void:
 	var instance := scene.instantiate()
 	add_child_autofree(instance)
-	instance.first_color = Color.RED
 	var display = instance.get_node("AtmosphereDisplay")
-	assert_eq(display.atmosphere.first_color, Color.RED, "AtmosphereDisplay atmosphere should reflect export property change")
+	var ui = instance.get_node("AtmosphereUI")
+	ui.get_node("%FogDensity").get_node("HSlider").value = 0.07
+	assert_almost_eq(display.atmosphere.fog_density, 0.07, 0.001, "Changing UI slider should update the atmosphere shown in the display")
