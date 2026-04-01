@@ -21,120 +21,119 @@ func test_atmosphere_generator_ui_scene_instantiates_without_error() -> void:
 	assert_not_null(instance, "AtmosphereGeneratorUI should instantiate into a valid node")
 
 
-# -- Signal emission from slider components --
+# -- UI changes update atmosphere directly --
 
-func test_changing_gradient_position_emits_gradient_position_changed() -> void:
+func test_changing_gradient_position_updates_atmosphere_gradient_position() -> void:
 	var instance := scene.instantiate()
 	add_child_autofree(instance)
-	watch_signals(instance)
-	var slider: SliderWithInput = instance.get_node("%GradientPosition")
-	slider.get_node("HSlider").value = 0.25
-	assert_signal_emitted(instance, "gradient_position_changed", "Changing gradient position should emit gradient_position_changed")
+	var atmo := Atmosphere.new()
+	instance.bind(atmo)
+	instance.get_node("%GradientPosition").get_node("HSlider").value = 0.25
+	assert_almost_eq(atmo.gradient_position, 0.25, 0.001, "Atmosphere gradient_position should update when slider changes")
 
 
-func test_changing_gradient_size_emits_size_changed() -> void:
+func test_changing_gradient_size_updates_atmosphere_gradient_size() -> void:
 	var instance := scene.instantiate()
 	add_child_autofree(instance)
-	watch_signals(instance)
-	var slider: SliderWithInput = instance.get_node("%GradientSize")
-	slider.get_node("HSlider").value = 1.5
-	assert_signal_emitted(instance, "size_changed", "Changing gradient size should emit size_changed")
+	var atmo := Atmosphere.new()
+	instance.bind(atmo)
+	instance.get_node("%GradientSize").get_node("HSlider").value = 1.5
+	assert_almost_eq(atmo.gradient_size, 1.5, 0.001, "Atmosphere gradient_size should update when slider changes")
 
 
-func test_changing_gradient_angle_emits_angle_changed() -> void:
+func test_changing_gradient_angle_updates_atmosphere_angle() -> void:
 	var instance := scene.instantiate()
 	add_child_autofree(instance)
-	watch_signals(instance)
-	var slider: SliderWithInput = instance.get_node("%GradientAngle")
-	slider.get_node("HSlider").value = 180.0
-	assert_signal_emitted(instance, "angle_changed", "Changing gradient angle should emit angle_changed")
+	var atmo := Atmosphere.new()
+	instance.bind(atmo)
+	instance.get_node("%GradientAngle").get_node("HSlider").value = 180.0
+	assert_almost_eq(atmo.angle, 180.0, 0.001, "Atmosphere angle should update when slider changes")
 
 
-func test_changing_fog_density_emits_fog_density_changed() -> void:
+func test_changing_fog_density_updates_atmosphere_fog_density() -> void:
 	var instance := scene.instantiate()
 	add_child_autofree(instance)
-	watch_signals(instance)
-	var slider: SliderWithInput = instance.get_node("%FogDensity")
-	slider.get_node("HSlider").value = 0.05
-	assert_signal_emitted(instance, "fog_density_changed", "Changing fog density should emit fog_density_changed")
+	var atmo := Atmosphere.new()
+	instance.bind(atmo)
+	instance.get_node("%FogDensity").get_node("HSlider").value = 0.05
+	assert_almost_eq(atmo.fog_density, 0.05, 0.0001, "Atmosphere fog_density should update when slider changes")
 
 
-func test_changing_fog_height_density_emits_fog_height_density_changed() -> void:
+func test_changing_fog_height_density_updates_atmosphere_fog_height_density() -> void:
 	var instance := scene.instantiate()
 	add_child_autofree(instance)
-	watch_signals(instance)
-	var slider: SliderWithInput = instance.get_node("%FogHeightDensity")
-	slider.get_node("HSlider").value = 5.0
-	assert_signal_emitted(instance, "fog_height_density_changed", "Changing fog height density should emit fog_height_density_changed")
+	var atmo := Atmosphere.new()
+	instance.bind(atmo)
+	instance.get_node("%FogHeightDensity").get_node("HSlider").value = 5.0
+	assert_almost_eq(atmo.fog_height_density, 5.0, 0.001, "Atmosphere fog_height_density should update when slider changes")
 
 
-func test_changing_fog_height_emits_fog_height_changed() -> void:
+func test_changing_fog_height_updates_atmosphere_fog_height() -> void:
 	var instance := scene.instantiate()
 	add_child_autofree(instance)
-	watch_signals(instance)
-	var slider: SliderWithInput = instance.get_node("%FogHeight")
-	slider.get_node("HSlider").value = 10.0
-	assert_signal_emitted(instance, "fog_height_changed", "Changing fog height should emit fog_height_changed")
+	var atmo := Atmosphere.new()
+	instance.bind(atmo)
+	instance.get_node("%FogHeight").get_node("HSlider").value = 10.0
+	assert_almost_eq(atmo.fog_height, 10.0, 0.001, "Atmosphere fog_height should update when slider changes")
 
 
-func test_changing_light_yaw_emits_light_yaw_changed() -> void:
+func test_changing_light_yaw_updates_atmosphere_light_yaw() -> void:
 	var instance := scene.instantiate()
 	add_child_autofree(instance)
-	watch_signals(instance)
-	var slider: SliderWithInput = instance.get_node("%LightYaw")
-	slider.get_node("HSlider").value = 90.0
-	assert_signal_emitted(instance, "light_yaw_changed", "Changing light yaw should emit light_yaw_changed")
+	var atmo := Atmosphere.new()
+	instance.bind(atmo)
+	instance.get_node("%LightYaw").get_node("HSlider").value = 90.0
+	assert_almost_eq(atmo.light_yaw, 90.0, 0.001, "Atmosphere light_yaw should update when slider changes")
 
 
-func test_changing_light_pitch_emits_light_pitch_changed() -> void:
+func test_changing_light_pitch_updates_atmosphere_light_pitch() -> void:
 	var instance := scene.instantiate()
 	add_child_autofree(instance)
-	watch_signals(instance)
-	var slider: SliderWithInput = instance.get_node("%LightPitch")
-	slider.get_node("HSlider").value = 45.0
-	assert_signal_emitted(instance, "light_pitch_changed", "Changing light pitch should emit light_pitch_changed")
+	var atmo := Atmosphere.new()
+	instance.bind(atmo)
+	instance.get_node("%LightPitch").get_node("HSlider").value = 45.0
+	assert_almost_eq(atmo.light_pitch, 45.0, 0.001, "Atmosphere light_pitch should update when slider changes")
 
 
-func test_changing_light_energy_emits_light_energy_changed() -> void:
+func test_changing_light_energy_updates_atmosphere_light_energy() -> void:
 	var instance := scene.instantiate()
 	add_child_autofree(instance)
-	watch_signals(instance)
-	var slider: SliderWithInput = instance.get_node("%LightEnergy")
-	slider.get_node("HSlider").value = 1.5
-	assert_signal_emitted(instance, "light_energy_changed", "Changing light energy should emit light_energy_changed")
+	var atmo := Atmosphere.new()
+	instance.bind(atmo)
+	instance.get_node("%LightEnergy").get_node("HSlider").value = 1.5
+	assert_almost_eq(atmo.light_energy, 1.5, 0.001, "Atmosphere light_energy should update when slider changes")
 
 
 # -- Color pickers --
 
-func test_changing_first_color_picker_emits_first_color_changed() -> void:
+func test_changing_first_color_picker_updates_atmosphere_first_color() -> void:
 	var instance := scene.instantiate()
 	add_child_autofree(instance)
-	watch_signals(instance)
-	var picker: ColorPickerButton = instance.get_node("%FirstColorPicker")
-	picker.color = Color.RED
-	picker.color_changed.emit(Color.RED)
-	assert_signal_emitted(instance, "first_color_changed", "Changing first color should emit first_color_changed")
+	var atmo := Atmosphere.new()
+	instance.bind(atmo)
+	instance.get_node("%FirstColorPicker").color_changed.emit(Color.RED)
+	assert_eq(atmo.first_color, Color.RED, "Atmosphere first_color should update when color picker changes")
 
 
-func test_changing_second_color_picker_emits_second_color_changed() -> void:
+func test_changing_second_color_picker_updates_atmosphere_second_color() -> void:
 	var instance := scene.instantiate()
 	add_child_autofree(instance)
-	watch_signals(instance)
-	var picker: ColorPickerButton = instance.get_node("%SecondColorPicker")
-	picker.color = Color.BLUE
-	picker.color_changed.emit(Color.BLUE)
-	assert_signal_emitted(instance, "second_color_changed", "Changing second color should emit second_color_changed")
+	var atmo := Atmosphere.new()
+	instance.bind(atmo)
+	instance.get_node("%SecondColorPicker").color_changed.emit(Color.BLUE)
+	assert_eq(atmo.second_color, Color.BLUE, "Atmosphere second_color should update when color picker changes")
 
 
 # -- Fog checkbox --
 
-func test_toggling_fog_checkbox_emits_fog_enabled_changed() -> void:
+func test_toggling_fog_checkbox_updates_atmosphere_fog_enabled() -> void:
 	var instance := scene.instantiate()
 	add_child_autofree(instance)
-	watch_signals(instance)
-	var checkbox: CheckBox = instance.get_node("%FogEnabledCheckbox")
-	checkbox.button_pressed = true
-	assert_signal_emitted(instance, "fog_enabled_changed", "Toggling fog checkbox should emit fog_enabled_changed")
+	var atmo := Atmosphere.new()
+	atmo.fog_enabled = false
+	instance.bind(atmo)
+	instance.get_node("%FogEnabledCheckbox").button_pressed = true
+	assert_eq(atmo.fog_enabled, true, "Atmosphere fog_enabled should update when checkbox is toggled")
 
 
 # -- sync_from --
@@ -190,34 +189,32 @@ func test_sync_from_updates_fog_checkbox_to_match_atmosphere_fog_enabled() -> vo
 	assert_eq(instance.get_node("%FogEnabledCheckbox").button_pressed, false, "FogEnabledCheckbox should match atmosphere fog_enabled")
 
 
-func test_sync_from_does_not_emit_change_signals() -> void:
+func test_sync_from_does_not_modify_atmosphere() -> void:
 	var instance := scene.instantiate()
 	add_child_autofree(instance)
-	watch_signals(instance)
-
 	var atmo := Atmosphere.new()
-	atmo.gradient_position = 0.4
-	atmo.light_yaw = 180.0
-	instance.sync_from(atmo)
+	instance.bind(atmo)
 
-	assert_signal_not_emitted(instance, "gradient_position_changed", "sync_from should not emit gradient_position_changed")
-	assert_signal_not_emitted(instance, "light_yaw_changed", "sync_from should not emit light_yaw_changed")
-	assert_signal_not_emitted(instance, "first_color_changed", "sync_from should not emit first_color_changed")
-	assert_signal_not_emitted(instance, "fog_enabled_changed", "sync_from should not emit fog_enabled_changed")
+	var other := Atmosphere.new()
+	other.gradient_position = 0.4
+	other.light_yaw = 180.0
+	watch_signals(atmo)
+	instance.sync_from(other)
+
+	assert_signal_not_emitted(atmo, "changed", "sync_from should not modify the bound atmosphere")
 
 
 # -- bind --
 
-func test_after_bind_changing_slider_updates_atmosphere_property() -> void:
+func test_bind_stores_atmosphere_reference_and_syncs_ui() -> void:
 	var instance := scene.instantiate()
 	add_child_autofree(instance)
 
 	var atmo := Atmosphere.new()
+	atmo.fog_density = 0.07
 	instance.bind(atmo)
 
-	var slider: SliderWithInput = instance.get_node("%FogDensity")
-	slider.get_node("HSlider").value = 0.07
-	assert_almost_eq(atmo.fog_density, 0.07, 0.001, "Atmosphere fog_density should update after bind and slider change")
+	assert_almost_eq(instance.get_node("%FogDensity").value, 0.07, 0.001, "UI should sync to atmosphere values after bind")
 
 
 func test_after_bind_save_button_emits_save_requested_with_resource_name() -> void:
