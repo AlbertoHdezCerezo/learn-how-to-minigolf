@@ -261,69 +261,56 @@ With ball mechanics ready, the game needed actual levels to play on. The previou
 
 ### How we implemented it
 
-#### Per-face materials with SurfaceTool
+#### From SurfaceTool to CSG — a journey of simplification
 
-The core challenge was giving tiles a two-tone look: lighter teal on top surfaces (where the ball rolls) and darker teal on sides and walls. Godot's primitive meshes (`BoxMesh`, `PrismMesh`) apply a single material to the whole shape, so we couldn't just slap two materials on a `BoxMesh`.
+We started by building all tile meshes procedurally with SurfaceTool, generating per-face materials in two passes. This worked but produced 400+ lines of vertex code that was impossible to preview in the editor.
 
-The solution was building every tile with `SurfaceTool`, committing in two passes:
-1. First pass: add the top/floor faces, set floor material (`Color(0.30, 0.62, 0.58)`), commit to create the mesh
-2. Second pass: add sides, bottom, and wall faces, set wall material (`Color(0.18, 0.42, 0.40)`), commit to the same mesh
+The user pushed for CSG nodes instead: "Why don't you build the tiles with CSG boxes?" This was the key insight. We rebuilt the entire tile library using CSGCombiner3D with CSGBox3D, CSGCylinder3D, and CSGPolygon3D children — all visible and editable in the Godot editor. The script shrunk from ~400 lines of SurfaceTool code to ~45 lines that just reads CSG meshes and exports the MeshLibrary.
 
-This creates a mesh with two surfaces, each with its own material. The `st.commit(existing_mesh)` overload appends a new surface to an existing mesh — a pattern we hadn't used before.
+Each tile uses a two-material approach: a CSGBox3D body (darker teal, `Color(0.12, 0.30, 0.28)`) with a thin CSGBox3D overlay on top (lighter teal, `Color(0.30, 0.62, 0.58)`). Walls, holes, and special shapes are built by combining CSG primitives:
 
-#### The teal palette
+| Tile | CSG approach |
+|------|-------------|
+| Flat | Box body + thin top overlay |
+| Hole | Box + top overlay + CSGCylinder subtraction |
+| WallSingle/Corner | Box + top overlay + CSGBox walls |
+| Corner | Box + top overlay + CSGPolygon3D triangular wedge |
+| RoundedWall | Box + top overlay + CSGCylinder (trimmed to quarter circle) |
+| ConcaveCurve | Box + top overlay + full wall block + CSGCylinder subtraction |
+| Ramp | Box + CSGBox diagonal subtraction + rotated floor overlay |
+| Sides | 4 thin CSGBox walls only (no top/bottom) for stacking |
 
-We closely studied the IsoPutt reference image from the issue. The game uses a monochromatic teal palette — not green, not blue, but a specific desaturated teal. Everything is the same hue at different brightnesses: lighter for surfaces facing the light, darker for sides and recessed areas. We matched this with two `StandardMaterial3D` colors and a teal atmosphere with matching fog and gradient.
+The script was further simplified when the user pointed out that tile IDs could be inferred from child order, and collision shapes could be defined as StaticBody3D nodes in the scene. No more hardcoded dictionaries or collision generation code.
 
-#### 7 tile types
+#### Level editor improvements
 
-The tile library was simplified from the previous 9-tile set to 6 tiles matching the issue's requirements, plus a Ramp tile added after discussion:
+The bulk of the session was spent improving the level editor's usability. Key additions:
 
-| Tile | Approach |
-|------|----------|
-| Flat | SurfaceTool — green top quad, darker 5 side/bottom quads |
-| Hole | SurfaceTool — circular depression ring (floor mat) + cylinder walls + disc bottom (wall mat) |
-| WallSingle | Flat base + appended wall box on north face |
-| WallCorner | Flat base + two wall boxes (north + east) |
-| Corner | Triangular wedge prism on cube base |
-| RoundedWall | Flat base + curved wall segments along north edge |
-| Ramp | Slope quad (floor mat) + triangular side faces + bottom (wall mat) |
+**Trackpad controls**: The original editor assumed a mouse with middle-click and scroll wheel. We added Option+drag for pan, Command+drag for orbit, two-finger scroll (vertical=zoom, horizontal=orbit), and pinch-to-zoom.
 
-The Hole tile was the most complex — it reuses the circular depression technique from the old generator with the ring-to-square-edge projection algorithm, but now with per-face materials.
+**Rectangle fill**: Instead of clicking tile by tile, you can now click+drag to define a rectangle and release to fill it. The editor shows a semi-transparent preview plane during drag. Single clicks still support stacking (placing on top of existing tiles), distinguished from drags by a 5px screen distance threshold.
 
-#### GridMap orientation math
+**Smart Y-level detection**: When starting a drag on an existing tile, the rectangle fills at that tile's Y level — not the current floor. This lets you extend an existing floor without switching levels.
 
-The trickiest part of the level design was getting the GridMap orientation indices right. GridMap uses an opaque 0-23 index system from `get_orthogonal_index_from_basis()`. For Y-axis rotations, the mapping is:
+**Start/Goal markers**: Press S or G while hovering a tile to mark it as the start or goal position. Semi-transparent colored planes (green=start, red=goal) show the positions, which are saved with the level.
 
-| Angle | Index | WallSingle wall faces | WallCorner walls |
-|-------|-------|----------------------|------------------|
-| 0°    | 0     | North                | North + East (NE) |
-| 90°   | 22    | West                 | West + North (NW) |
-| 180°  | 10    | South                | South + West (SW) |
-| 270°  | 16    | East                 | East + South (SE) |
+**Atmosphere in levels**: The atmosphere resource is now stored in LevelData and saved/loaded with the level. The level editor copies values into the working atmosphere (rather than replacing the object) so UI signal bindings stay valid.
 
-This had to be derived from the rotation matrix — `Basis(Vector3.UP, angle)` rotates vertices and the wall positions follow. Getting this wrong meant walls facing the wrong direction, which was hard to spot without running the scene.
+**Light controls**: Added light_yaw, light_pitch, and light_energy to the Atmosphere resource, with UI sliders. This lets you control shadow direction and intensity per-level.
 
-For the ramp, orientation 270° (index 16) gives high-at-north, low-at-south — meaning the ball enters from the south (low end) and climbs northward (high end). This was counterintuitive at first because "270°" doesn't obviously mean "climbs north."
+#### Property naming gotchas
 
-#### The level layout
+The `size` property name caused repeated headaches. Both `Atmosphere` and the atmosphere generator script had `@export var size` which conflicts with built-in Godot properties. This caused silent parse errors when loading scenes and resources. We renamed to `gradient_size` everywhere — a painful multi-file rename that touched the resource, generator, UI, and all .tres files.
 
-The first level is an L-shape:
-- **Start area** (y=0, z=2): 3 tiles with south walls (SW corner, south wall, SE corner)
-- **Ramp corridor** (x=1): 3 ramp tiles at grid positions (1,1,1), (1,2,0), (1,3,-1) — climbing 3 cell heights from y=0 to y=3 with no side walls (falling off is part of the challenge)
-- **Upper platform** (y=3): 2×4 tile area with walls on the perimeter, hole at the far right
-
-The ramp connections had to be verified mathematically — each ramp's high-north end must match the next ramp's low-south end in both Y height and Z position. The final ramp's high end connects to the upper platform's south edge at the same world coordinates.
-
-#### Golf course scene
-
-Extended `golf_course.gd` with a `@export var level: LevelData`. On `_ready()`, it loads the MeshLibrary, creates a GridMap, populates it from the level's tile array, and instances the ball at `start_position` converted from grid to world coordinates (with ball radius offset so it sits on top of the surface).
+Similarly, moving `default_atmosphere.tres` to a subdirectory broke Godot's uid cache. The fix was removing the atmosphere reference from `atmosphere_display.tscn` entirely — parent scenes set it via their own exports.
 
 ### Key takeaways
 
-- **`SurfaceTool.commit(existing_mesh)` appends surfaces** — this is the key to per-face materials in procedural meshes. Build each material group separately and commit them to the same mesh. Not obvious from the docs.
-- **GridMap orientation indices are opaque but deterministic** — the 0/22/10/16 mapping for 0°/90°/180°/270° Y rotations is worth memorizing or keeping as named constants. The underlying math is just the Y-rotation matrix applied to face positions.
-- **Ramp connections require exact coordinate math** — cell center = `grid_pos * cell_size`, and the ramp's low/high ends are at `center ± half_cell`. Each ramp must connect at exact matching coordinates or the ball falls through gaps. Drawing it on paper first saved a lot of trial and error.
-- **Monochromatic palettes are powerful for minimalist games** — using just two brightness levels of the same teal hue (plus matching atmosphere) creates a surprisingly cohesive look with zero textures. The IsoPutt reference proved that flat colors + good lighting = clean visual style.
+- **CSG nodes are the right abstraction for tile libraries** — they're visual, editable, composable, and the `get_meshes()` method extracts the baked mesh for MeshLibrary export. SurfaceTool is powerful but produces opaque code that can't be previewed.
+- **Let the scene define the data, keep the script minimal** — tile IDs from child order, collision shapes from StaticBody3D nodes, meshes from CSG baking. The script just iterates and exports. Any new tile is added entirely in the scene.
+- **Avoid `size` as a property name in Godot** — it shadows built-in properties on multiple node types, causing silent parse failures. Use domain-specific names like `gradient_size`.
+- **Copy values into existing resources, don't replace the object** — when UI signal bindings capture a resource by reference (via lambdas in `bind()`), swapping the object breaks all connections. Copy values instead.
+- **Click-vs-drag distinction matters for editors** — using a screen distance threshold (5px) to distinguish single clicks from drags enables both "place one tile" and "fill rectangle" with the same mouse button.
+- **Trackpad support needs explicit gesture handling** — macOS trackpads emit `InputEventPanGesture` and `InputEventMagnifyGesture`, not scroll wheel events. Both need separate handlers.
 
 ---
