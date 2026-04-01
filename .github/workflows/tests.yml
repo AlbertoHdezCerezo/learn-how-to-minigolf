@@ -1,0 +1,29 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gut:
+    name: Run GUT tests
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.6.0
+          use-dotnet: false
+
+      - name: Import project
+        run: godot --headless --path . --import --quit 2>/dev/null || true
+
+      - name: Run tests
+        run: |
+          godot --headless --path . -d \
+            -s res://addons/gut/gut_cmdln.gd

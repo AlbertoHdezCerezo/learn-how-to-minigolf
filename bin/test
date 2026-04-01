@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+
+# Import the project so class_name scripts register
+godot --headless --path "$PROJECT_DIR" --import --quit 2>/dev/null || true
+
+# Run GUT tests, forwarding any extra arguments (e.g. -gselect=test_atmosphere)
+exec godot --headless \
+  --path "$PROJECT_DIR" \
+  -d \
+  -s res://addons/gut/gut_cmdln.gd \
+  "$@"
