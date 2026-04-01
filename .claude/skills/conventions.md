@@ -169,3 +169,44 @@ if drag_distance < min_drag_distance:
 
 - Do NOT expand single-statement if blocks to multiple lines
 - Multi-statement bodies still use the indented block form
+
+---
+
+## 5. Descriptive test names and assertion messages
+
+Test function names must describe **what is being tested** and **what the expected outcome is**. Every assertion must include a descriptive failure message.
+
+### Why
+
+When a test fails, the name alone should tell you what broke without reading the test body. Descriptive assertion messages make it clear which specific check failed and what value was expected.
+
+### DO
+
+```gdscript
+func test_fog_density_setter_updates_atmosphere_fog_density_property() -> void:
+    atmo.fog_density = 0.05
+    assert_eq(atmo.fog_density, 0.05, "fog_density should update to 0.05 after assignment")
+
+
+func test_modifying_first_color_emits_changed_signal() -> void:
+    watch_signals(atmo)
+    atmo.first_color = Color.GREEN
+    assert_signal_emitted(atmo, "changed", "Setting first_color should emit the changed signal")
+```
+
+### DON'T
+
+```gdscript
+func test_fog_density() -> void:
+    atmo.fog_density = 0.05
+    assert_eq(atmo.fog_density, 0.05)
+
+
+func test_color_emits() -> void:
+    watch_signals(atmo)
+    atmo.first_color = Color.GREEN
+    assert_signal_emitted(atmo, "changed")
+```
+
+- Do NOT use vague names like `test_fog_density` or `test_color_emits`
+- Do NOT omit assertion failure messages
