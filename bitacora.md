@@ -314,3 +314,70 @@ Similarly, moving `default_atmosphere.tres` to a subdirectory broke Godot's uid 
 - **Trackpad support needs explicit gesture handling** — macOS trackpads emit `InputEventPanGesture` and `InputEventMagnifyGesture`, not scroll wheel events. Both need separate handlers.
 
 ---
+
+## chore: Set Up Unit Testing
+
+> Date: 2026-04-01
+> Issue: #12 — https://github.com/AlbertoHdezCerezo/learn-how-to-minigolf/issues/12
+> PR: #14 — https://github.com/AlbertoHdezCerezo/learn-how-to-minigolf/pull/14
+> Branch: chore-spec-coverage-for-atmosphere-display
+
+### What we did
+
+Set up the full testing infrastructure for the project: a `bin/test` runner script for local development, a GitHub Actions CI pipeline with JUnit XML test reporting, and 56 specs covering three core areas — the `Atmosphere` resource (23 specs), `StateMachine` + `StateMachineState` (19 specs), and the `AtmosphereDisplay` scene (14 specs). All tests pass in headless mode.
+
+### Why
+
+The codebase was growing — atmosphere resources, state machines, editor tools, gameplay scenes — but had zero automated tests. GUT was already installed but unused. Before building more features, we needed a safety net to catch regressions, and a CI pipeline to enforce it on every PR.
+
+### How we implemented it
+
+#### GUT was already there — we just needed to wire it up
+
+GUT 9.6.0 was installed as an addon and enabled in `project.godot` since the project setup, but no tests existed. The first step was creating `.gutconfig.json` to configure CLI defaults (test directory, exit behavior, log level) and a `bin/test` bash script that runs `godot --headless` with the GUT command-line runner. The script first imports the project (`--import --quit`) to rebuild the `.godot/` cache — critical because `class_name` scripts won't resolve without it.
+
+#### Testing a Resource: property setters and signals
+
+Testing the `Atmosphere` resource was straightforward because it's a pure `Resource` subclass — no scene tree needed. Each of the 12 exported properties has a setter that calls `emit_changed()`, so we tested both the value update and the signal emission. GUT's `watch_signals()` + `assert_signal_emitted()` pattern works perfectly for this.
+
+The `apply()` method was testable by creating a `ShaderMaterial` with matching uniform names, an `Environment`, and a `DirectionalLight3D`. We verified that shader parameters, fog settings, and light energy/rotation were all set correctly.
+
+For `save_to_file()`, we write to `res://resources/atmospheres/`, verify the file exists, and clean up after the test. This works locally but might need adjustment for CI if the filesystem is read-only — something to watch.
+
+#### Testing a RefCounted utility: StateMachine
+
+`StateMachine` and `StateMachineState` extend `RefCounted`, not `Node`, so they don't need the scene tree at all. We test state registration, starting, transitions, signal emission, and error cases.
+
+The interesting discovery was how GUT handles `push_error()`. The StateMachine uses `push_error()` for invalid operations (transit before start, disallowed transitions). GUT treats any `push_error()` during a test as an unexpected failure — even if it's the behavior you're testing. The fix is `assert_push_error("expected text")`, which tells GUT to expect and consume the error.
+
+Another gotcha: GDScript lambdas cannot reassign outer local variables. Writing `var called_with := -99; sm.add_state(0, [], func(from): called_with = from)` silently doesn't work — the lambda captures by value, and assignment creates a new local. The workaround is capturing a dictionary: `var result := { "from": -99 }; ... func(from): result["from"] = from`. The dictionary is captured by reference, so mutation works.
+
+#### Testing a scene: AtmosphereDisplay
+
+This was the most involved test file. `AtmosphereDisplay` is a `@tool` scene with `WorldEnvironment`, `ColorRect` (gradient shader), and `DirectionalLight3D`. The script connects to `atmosphere.changed` and re-applies everything.
+
+The key pattern is `scene.instantiate()` + `add_child_autofree()`, which adds the node to the test scene tree (triggering `_ready()`) and auto-frees after each test. We tested:
+- Scene loads and has expected child nodes
+- Setting atmosphere before `_ready()` applies correctly when added to tree
+- Setting atmosphere after `_ready()` immediately applies
+- Modifying atmosphere properties triggers re-application via `changed` signal
+- Replacing atmosphere disconnects the old one (old changes are ignored)
+- Setting atmosphere to null doesn't crash
+
+#### CI pipeline with test reporting
+
+The GitHub Actions workflow uses `chickensoft-games/setup-godot@v2` to install Godot 4.6, imports the project, then runs GUT with `-gjunit_xml_file=results.xml`. The `mikepenz/action-junit-report@v5` action parses the XML and publishes a formatted test report as a GitHub check — showing passed/failed tests with expandable details.
+
+#### Convention: descriptive test names
+
+During review, we established a new project convention: test function names must describe **what is being tested** and **what the expected outcome is** (e.g., `test_modifying_first_color_emits_changed_signal` instead of `test_color_change_emits_changed`). Every assertion must include a descriptive failure message. This makes test output self-documenting — when something fails, you know exactly what broke from the name alone.
+
+### Key takeaways
+
+- **GUT's `assert_push_error()` is essential for testing error paths** — without it, any `push_error()` in your code under test causes a test failure, even when the error *is* the expected behavior. Call `assert_push_error("substring")` after the action that triggers it.
+- **GDScript lambdas capture local variables by value, not reference** — you can't reassign an outer `var` from inside a lambda. Use a Dictionary wrapper (`var result := { "key": value }`) if you need mutation.
+- **`add_child_autofree()` is the workhorse of scene testing in GUT** — it adds to the tree (so `_ready()` fires, signals connect, `is_node_ready()` returns true), and auto-cleans after each test. Without it, you'd leak nodes and get cascading failures.
+- **`assert_signal_emitted_with_parameters()` in GUT 9.6.0 doesn't accept a message string as the 4th argument** — it interprets it as an emission index. If you need a custom message, use separate `assert_signal_emitted()` + parameter checks.
+- **The `--import --quit` step is mandatory in CI** — Godot stores class_name registrations in `.godot/global_script_class_cache.cfg`, which is gitignored. Without the import step, all `class_name` references fail to resolve and every test crashes.
+
+---
