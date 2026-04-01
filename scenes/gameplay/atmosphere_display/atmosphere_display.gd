@@ -5,7 +5,9 @@ extends Node3D
 	set(value):
 		if atmosphere and atmosphere.changed.is_connected(_apply_atmosphere):
 			atmosphere.changed.disconnect(_apply_atmosphere)
+
 		atmosphere = value
+
 		if atmosphere:
 			atmosphere.changed.connect(_apply_atmosphere)
 			_apply_atmosphere()

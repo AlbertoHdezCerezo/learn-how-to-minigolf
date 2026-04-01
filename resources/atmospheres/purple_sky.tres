@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="Atmosphere" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/atmosphere.gd" id="1_nk3yq"]
+
+[resource]
+script = ExtResource("1_nk3yq")
+gradient_position = 0.21999999999999997
+gradient_size = 1.0
+angle = 270.0
+fog_density = 0.032
+fog_height_density = 0.3
