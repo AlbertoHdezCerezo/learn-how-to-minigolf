@@ -65,6 +65,7 @@ extends Node3D
 @onready var _ui = $AtmosphereUI
 
 var _atmosphere: Atmosphere
+var _syncing_exports := false
 
 
 func _ready() -> void:
@@ -76,8 +77,10 @@ func _ready() -> void:
 
 func _update_atmosphere() -> void:
 	if not is_node_ready(): return
+	if _syncing_exports: return
 	if not _atmosphere: _atmosphere = Atmosphere.new()
 
+	_syncing_exports = true
 	_atmosphere.first_color = first_color
 	_atmosphere.second_color = second_color
 	_atmosphere.gradient_position = gradient_position
@@ -90,6 +93,7 @@ func _update_atmosphere() -> void:
 	_atmosphere.light_yaw = light_yaw
 	_atmosphere.light_pitch = light_pitch
 	_atmosphere.light_energy = light_energy
+	_syncing_exports = false
 
 	_atmosphere_display.atmosphere = _atmosphere
 
@@ -99,23 +103,13 @@ func _update_atmosphere() -> void:
 
 func _connect_ui() -> void:
 	_ui.bind(_atmosphere)
-	_ui.first_color_changed.connect(func(c: Color): first_color = c)
-	_ui.second_color_changed.connect(func(c: Color): second_color = c)
-	_ui.gradient_position_changed.connect(func(v: float): gradient_position = v)
-	_ui.size_changed.connect(func(v: float): gradient_size = v)
-	_ui.angle_changed.connect(func(v: float): angle = v)
-	_ui.fog_enabled_changed.connect(func(v: bool): fog_enabled = v)
-	_ui.fog_density_changed.connect(func(v: float): fog_density = v)
-	_ui.fog_height_density_changed.connect(func(v: float): fog_height_density = v)
-	_ui.fog_height_changed.connect(func(v: float): fog_height = v)
-	_ui.light_yaw_changed.connect(func(v: float): light_yaw = v)
-	_ui.light_pitch_changed.connect(func(v: float): light_pitch = v)
-	_ui.light_energy_changed.connect(func(v: float): light_energy = v)
+	_atmosphere.changed.connect(_sync_exports_from_atmosphere)
 	_ui.load_requested.connect(_on_atmosphere_loaded)
 
 
-func _on_atmosphere_loaded(loaded: Atmosphere) -> void:
-	_atmosphere = loaded
+func _sync_exports_from_atmosphere() -> void:
+	if _syncing_exports: return
+	_syncing_exports = true
 	first_color = _atmosphere.first_color
 	second_color = _atmosphere.second_color
 	gradient_position = _atmosphere.gradient_position
@@ -128,5 +122,14 @@ func _on_atmosphere_loaded(loaded: Atmosphere) -> void:
 	light_yaw = _atmosphere.light_yaw
 	light_pitch = _atmosphere.light_pitch
 	light_energy = _atmosphere.light_energy
+	_syncing_exports = false
+
+
+func _on_atmosphere_loaded(loaded: Atmosphere) -> void:
+	if _atmosphere.changed.is_connected(_sync_exports_from_atmosphere):
+		_atmosphere.changed.disconnect(_sync_exports_from_atmosphere)
+	_atmosphere = loaded
+	_atmosphere.changed.connect(_sync_exports_from_atmosphere)
+	_sync_exports_from_atmosphere()
 	_atmosphere_display.atmosphere = _atmosphere
 	_ui.sync_from(_atmosphere)
