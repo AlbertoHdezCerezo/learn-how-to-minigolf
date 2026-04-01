@@ -26,4 +26,13 @@ jobs:
       - name: Run tests
         run: |
           godot --headless --path . -d \
-            -s res://addons/gut/gut_cmdln.gd
+            -s res://addons/gut/gut_cmdln.gd \
+            -gjunit_xml_file=results.xml
+
+      - name: Publish test report
+        uses: mikepenz/action-junit-report@v5
+        if: always()
+        with:
+          report_paths: results.xml
+          check_name: GUT Test Report
+          include_passed: true
