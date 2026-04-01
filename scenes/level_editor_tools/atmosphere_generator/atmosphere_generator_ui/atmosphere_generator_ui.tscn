@@ -11,8 +11,8 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -280.0
-offset_top = 10.0
-offset_bottom = 500.0
+offset_top = 210.0
+offset_bottom = 700.0
 grow_horizontal = 0
 
 [node name="SettingsPadding" type="MarginContainer" parent="SettingsPanel"]
@@ -151,16 +151,16 @@ text = "Density"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-max_value = 1.0
-step = 0.001
+max_value = 0.1
+step = 0.0005
 value = 0.02
 
 [node name="FogDensityInput" type="SpinBox" parent="SettingsPanel/SettingsPadding/SettingsList/FogDensityRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
-max_value = 1.0
-step = 0.001
+max_value = 0.1
+step = 0.0005
 value = 0.02
 
 [node name="FogHeightDensityRow" type="HBoxContainer" parent="SettingsPanel/SettingsPadding/SettingsList"]
@@ -169,23 +169,130 @@ layout_mode = 2
 [node name="FogHeightDensityLabel" type="Label" parent="SettingsPanel/SettingsPadding/SettingsList/FogHeightDensityRow"]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
-text = "Height"
+text = "H. Density"
 
 [node name="FogHeightDensitySlider" type="HSlider" parent="SettingsPanel/SettingsPadding/SettingsList/FogHeightDensityRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+min_value = -10.0
 max_value = 10.0
-step = 0.1
+step = 0.01
 value = 2.0
 
 [node name="FogHeightDensityInput" type="SpinBox" parent="SettingsPanel/SettingsPadding/SettingsList/FogHeightDensityRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
+min_value = -10.0
 max_value = 10.0
-step = 0.1
+step = 0.01
 value = 2.0
+
+[node name="FogHeightRow" type="HBoxContainer" parent="SettingsPanel/SettingsPadding/SettingsList"]
+layout_mode = 2
+
+[node name="FogHeightLabel" type="Label" parent="SettingsPanel/SettingsPadding/SettingsList/FogHeightRow"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "Height"
+
+[node name="FogHeightSlider" type="HSlider" parent="SettingsPanel/SettingsPadding/SettingsList/FogHeightRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = -50.0
+max_value = 50.0
+step = 0.5
+
+[node name="FogHeightInput" type="SpinBox" parent="SettingsPanel/SettingsPadding/SettingsList/FogHeightRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+min_value = -50.0
+max_value = 50.0
+step = 0.5
+
+[node name="LightSectionSeparator" type="HSeparator" parent="SettingsPanel/SettingsPadding/SettingsList"]
+layout_mode = 2
+
+[node name="LightTitle" type="Label" parent="SettingsPanel/SettingsPadding/SettingsList"]
+layout_mode = 2
+text = "Light"
+
+[node name="LightYawRow" type="HBoxContainer" parent="SettingsPanel/SettingsPadding/SettingsList"]
+layout_mode = 2
+
+[node name="LightYawLabel" type="Label" parent="SettingsPanel/SettingsPadding/SettingsList/LightYawRow"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "Direction"
+
+[node name="LightYawSlider" type="HSlider" parent="SettingsPanel/SettingsPadding/SettingsList/LightYawRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 360.0
+step = 1.0
+value = 225.0
+
+[node name="LightYawInput" type="SpinBox" parent="SettingsPanel/SettingsPadding/SettingsList/LightYawRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+max_value = 360.0
+step = 1.0
+value = 225.0
+
+[node name="LightPitchRow" type="HBoxContainer" parent="SettingsPanel/SettingsPadding/SettingsList"]
+layout_mode = 2
+
+[node name="LightPitchLabel" type="Label" parent="SettingsPanel/SettingsPadding/SettingsList/LightPitchRow"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "Pitch"
+
+[node name="LightPitchSlider" type="HSlider" parent="SettingsPanel/SettingsPadding/SettingsList/LightPitchRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 15.0
+max_value = 85.0
+step = 1.0
+value = 60.0
+
+[node name="LightPitchInput" type="SpinBox" parent="SettingsPanel/SettingsPadding/SettingsList/LightPitchRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+min_value = 15.0
+max_value = 85.0
+step = 1.0
+value = 60.0
+
+[node name="LightEnergyRow" type="HBoxContainer" parent="SettingsPanel/SettingsPadding/SettingsList"]
+layout_mode = 2
+
+[node name="LightEnergyLabel" type="Label" parent="SettingsPanel/SettingsPadding/SettingsList/LightEnergyRow"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "Intensity"
+
+[node name="LightEnergySlider" type="HSlider" parent="SettingsPanel/SettingsPadding/SettingsList/LightEnergyRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 2.0
+step = 0.05
+value = 0.8
+
+[node name="LightEnergyInput" type="SpinBox" parent="SettingsPanel/SettingsPadding/SettingsList/LightEnergyRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+max_value = 2.0
+step = 0.05
+value = 0.8
 
 [node name="SaveSectionSeparator" type="HSeparator" parent="SettingsPanel/SettingsPadding/SettingsList"]
 layout_mode = 2

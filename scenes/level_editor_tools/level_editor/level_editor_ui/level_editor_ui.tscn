@@ -28,16 +28,10 @@ theme_override_constants/margin_bottom = 10
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="TilePaletteLabel" type="Label" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
-layout_mode = 2
-text = "Tiles"
-
 [node name="TileButtons" type="HBoxContainer" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
 unique_name_in_owner = true
 layout_mode = 2
-
-[node name="TilePaletteSeparator" type="HSeparator" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
-layout_mode = 2
+visible = false
 
 [node name="AtmosphereLabel" type="Label" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
 layout_mode = 2
@@ -61,7 +55,7 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-max_value = 10.0
+max_value = 30.0
 
 [node name="RotateButton" type="Button" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout/FloorControlRow"]
 unique_name_in_owner = true
@@ -99,9 +93,11 @@ text = "Clear"
 
 [node name="KeyboardShortcutsHelp" type="Label" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
 layout_mode = 2
-text = "LMB: Place | RMB: Remove
-R: Rotate | [ ]: Floor +/-
-Scroll: Zoom | MMB: Pan"
+text = "1-9: Select tile | R: Rotate
+LMB: Place | RMB: Remove
+[ ]: Floor +/- | H: Toggle UI
+Opt+drag: Pan | Cmd+drag: Orbit
+Scroll: Zoom/Orbit | N: Reset cam"
 horizontal_alignment = 1
 
 [node name="LoadLevelDialog" type="FileDialog" parent="."]

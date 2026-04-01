@@ -2,6 +2,8 @@ class_name LevelCourseEditor
 
 extends Node3D
 
+signal level_loaded(level_data: LevelData)
+
 const CELL_SIZE := Vector3(2, 2, 2)
 const FLOOR_Y_OFFSET := -0.5
 
@@ -15,6 +17,11 @@ var _grid_raycast: GridRaycast3D
 var _current_item: int = 0
 var _current_rotation_angle: float = 0.0
 var _current_floor: int = 0
+var _rect_preview: MeshInstance3D
+var _start_marker: MeshInstance3D
+var _goal_marker: MeshInstance3D
+var start_position: Vector3i = Vector3i.ZERO
+var hole_position: Vector3i = Vector3i.ZERO
 
 
 func _ready() -> void:
@@ -24,6 +31,22 @@ func _ready() -> void:
 	_grid_raycast = GridRaycast3D.new(grid_map, _floor_plane)
 	_tile_cursor.setup(grid_map)
 	_update_floor_plane()
+	_create_rect_preview()
+	_start_marker = _create_marker(Color(0.2, 0.8, 0.2, 0.5))
+	_goal_marker = _create_marker(Color(0.9, 0.2, 0.2, 0.5))
+
+
+func _create_rect_preview() -> void:
+	_rect_preview = MeshInstance3D.new()
+	_rect_preview.mesh = PlaneMesh.new()
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.3, 0.7, 1.0, 0.25)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.no_depth_test = true
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_rect_preview.material_override = mat
+	_rect_preview.visible = false
+	add_child(_rect_preview)
 
 
 # -- Public API --
@@ -51,6 +74,97 @@ func place_at(screen_pos: Vector2, camera: Camera3D) -> void:
 	grid_map.set_cell_item(grid_pos, _current_item, orientation)
 
 
+func get_floor_grid_pos(screen_pos: Vector2, camera: Camera3D) -> Variant:
+	## Returns the grid position on the current floor, or null.
+	## Works whether the ray hits the floor plane or an existing tile.
+	var result := Raycast.from_screen(screen_pos, camera, get_world_3d())
+	if result.is_empty(): return null
+
+	var hit_local: Vector3 = grid_map.to_local(result.position)
+	var grid_pos: Vector3i = grid_map.local_to_map(hit_local)
+	grid_pos.y = _current_floor
+	return grid_pos
+
+
+func get_smart_grid_pos(screen_pos: Vector2, camera: Camera3D) -> Variant:
+	## Returns the grid position, using the tile's Y level if hitting a tile,
+	## or the current floor level if hitting the floor plane.
+	var result := Raycast.from_screen(screen_pos, camera, get_world_3d())
+	if result.is_empty(): return null
+
+	if result.collider == _floor_plane:
+		var hit_local: Vector3 = grid_map.to_local(result.position)
+		var grid_pos: Vector3i = grid_map.local_to_map(hit_local)
+		grid_pos.y = _current_floor
+		return grid_pos
+
+	# Hit a tile — offset inward to get the correct cell, then use its actual Y
+	var hit_pos: Vector3 = result.position - result.normal * 0.1
+	var hit_local: Vector3 = grid_map.to_local(hit_pos)
+	return grid_map.local_to_map(hit_local)
+
+
+func fill_rect(from: Vector3i, to: Vector3i) -> void:
+	## Fill a rectangle of tiles between two grid positions on the same floor.
+	var orientation := _get_grid_orientation()
+	var min_x := mini(from.x, to.x)
+	var max_x := maxi(from.x, to.x)
+	var min_z := mini(from.z, to.z)
+	var max_z := maxi(from.z, to.z)
+	for x: int in range(min_x, max_x + 1):
+		for z: int in range(min_z, max_z + 1):
+			grid_map.set_cell_item(Vector3i(x, from.y, z), _current_item, orientation)
+
+
+func erase_rect(from: Vector3i, to: Vector3i) -> void:
+	## Erase a rectangle of tiles between two grid positions on the same floor.
+	var min_x := mini(from.x, to.x)
+	var max_x := maxi(from.x, to.x)
+	var min_z := mini(from.z, to.z)
+	var max_z := maxi(from.z, to.z)
+	for x: int in range(min_x, max_x + 1):
+		for z: int in range(min_z, max_z + 1):
+			grid_map.set_cell_item(Vector3i(x, from.y, z), GridMap.INVALID_CELL_ITEM)
+
+
+func show_rect_preview(from: Vector3i, to: Vector3i) -> void:
+	var min_x := mini(from.x, to.x)
+	var max_x := maxi(from.x, to.x)
+	var min_z := mini(from.z, to.z)
+	var max_z := maxi(from.z, to.z)
+	var count_x := max_x - min_x + 1
+	var count_z := max_z - min_z + 1
+
+	var plane := _rect_preview.mesh as PlaneMesh
+	plane.size = Vector2(count_x * CELL_SIZE.x, count_z * CELL_SIZE.z)
+
+	var center_x := (min_x + max_x) / 2.0 * CELL_SIZE.x
+	var center_z := (min_z + max_z) / 2.0 * CELL_SIZE.z
+	var y := from.y * CELL_SIZE.y + CELL_SIZE.y / 2.0 + 0.02
+	_rect_preview.global_position = Vector3(center_x, y, center_z)
+	_rect_preview.visible = true
+
+
+func hide_rect_preview() -> void:
+	_rect_preview.visible = false
+
+
+func set_start(screen_pos: Vector2, camera: Camera3D) -> void:
+	var grid_pos: Variant = get_smart_grid_pos(screen_pos, camera)
+	if grid_pos == null: return
+	start_position = grid_pos
+	_place_marker(_start_marker, grid_pos)
+	print("Start set to: ", grid_pos)
+
+
+func set_goal(screen_pos: Vector2, camera: Camera3D) -> void:
+	var grid_pos: Variant = get_smart_grid_pos(screen_pos, camera)
+	if grid_pos == null: return
+	hole_position = grid_pos
+	_place_marker(_goal_marker, grid_pos)
+	print("Goal set to: ", grid_pos)
+
+
 func remove_at(screen_pos: Vector2, camera: Camera3D) -> void:
 	var grid_pos: Variant = _grid_raycast.get_removal_position(screen_pos, camera, get_world_3d())
 	if grid_pos == null: return
@@ -66,10 +180,13 @@ func update_cursor(screen_pos: Vector2, camera: Camera3D) -> void:
 		_tile_cursor.hide_cursor()
 
 
-func save_level(level_name: String) -> void:
+func save_level(level_name: String, atmosphere: Atmosphere = null) -> void:
 	var level_data := LevelData.new()
 	level_data.level_name = level_name
 	level_data.cell_size = grid_map.cell_size
+	level_data.atmosphere = atmosphere
+	level_data.start_position = Vector3(start_position.x, start_position.y, start_position.z)
+	level_data.hole_position = Vector3(hole_position.x, hole_position.y, hole_position.z)
 	for cell_pos: Vector3i in grid_map.get_used_cells():
 		level_data.add_tile(
 			cell_pos,
@@ -94,6 +211,16 @@ func load_level(level_path: String) -> void:
 	grid_map.clear()
 	for tile: TilePlacement in level_data.tiles:
 		grid_map.set_cell_item(tile.position, tile.item_id, tile.orientation)
+
+	var sp := level_data.start_position
+	start_position = Vector3i(int(sp.x), int(sp.y), int(sp.z))
+	_place_marker(_start_marker, start_position)
+
+	var hp := level_data.hole_position
+	hole_position = Vector3i(int(hp.x), int(hp.y), int(hp.z))
+	_place_marker(_goal_marker, hole_position)
+
+	level_loaded.emit(level_data)
 	print("Level loaded: ", level_data.level_name)
 
 
@@ -111,3 +238,26 @@ func _get_grid_orientation() -> int:
 func _update_floor_plane() -> void:
 	var y_pos := _current_floor * CELL_SIZE.y + FLOOR_Y_OFFSET
 	_floor_plane.position.y = y_pos
+
+
+func _create_marker(color: Color) -> MeshInstance3D:
+	var marker := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(CELL_SIZE.x * 0.8, CELL_SIZE.z * 0.8)
+	marker.mesh = plane
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.no_depth_test = true
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	marker.material_override = mat
+	marker.visible = false
+	add_child(marker)
+	return marker
+
+
+func _place_marker(marker: MeshInstance3D, grid_pos: Vector3i) -> void:
+	var world_pos := grid_map.map_to_local(grid_pos)
+	world_pos.y += CELL_SIZE.y / 2.0 + 0.03
+	marker.global_position = world_pos
+	marker.visible = true

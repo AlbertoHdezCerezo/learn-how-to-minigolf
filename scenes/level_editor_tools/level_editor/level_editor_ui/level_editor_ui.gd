@@ -42,7 +42,7 @@ func bind(course_editor: LevelCourseEditor) -> void:
 	tile_selected.connect(course_editor.select_tile)
 	rotation_changed.connect(course_editor.set_rotation_angle)
 	floor_changed.connect(course_editor.set_floor)
-	save_requested.connect(course_editor.save_level)
+	# save_requested is handled by the level_editor to include atmosphere
 	load_requested.connect(course_editor.load_level)
 	clear_requested.connect(course_editor.clear_level)
 
@@ -64,11 +64,17 @@ func _on_tile_button_pressed(item_id: int, pressed_btn: Button) -> void:
 		btn.button_pressed = (btn == pressed_btn)
 
 
+func _select_tile_by_index(index: int) -> void:
+	var buttons := _tile_buttons_container.get_children()
+	if index < 0 or index >= buttons.size(): return
+	_on_tile_button_pressed(index, buttons[index])
+
+
 func _populate_atmosphere_selector() -> void:
 	_atmosphere_paths.clear()
 	_atmosphere_selector.clear()
 
-	var default_path := "res://resources/default_atmosphere.tres"
+	var default_path := "res://resources/atmospheres/default_atmosphere.tres"
 	if ResourceLoader.exists(default_path):
 		_atmosphere_paths.append(default_path)
 		_atmosphere_selector.add_item("Default")
@@ -114,4 +120,16 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_BRACKETRIGHT:
 			_floor_spinbox.value = minf(_floor_spinbox.value + 1, _floor_spinbox.max_value)
+			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_MINUS or event.keycode == KEY_KP_SUBTRACT:
+			_floor_spinbox.value = maxf(_floor_spinbox.value - 1, _floor_spinbox.min_value)
+			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_EQUAL or event.keycode == KEY_KP_ADD:
+			_floor_spinbox.value = minf(_floor_spinbox.value + 1, _floor_spinbox.max_value)
+			get_viewport().set_input_as_handled()
+		elif event.keycode >= KEY_1 and event.keycode <= KEY_9:
+			_select_tile_by_index(event.keycode - KEY_1)
+			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_0:
+			_select_tile_by_index(9)
 			get_viewport().set_input_as_handled()

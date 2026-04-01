@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="Atmosphere" format=3 uid="uid://dmlggksrqtqrb"]
+
+[ext_resource type="Script" uid="uid://c7b874ivewvi3" path="res://scripts/resources/atmosphere.gd" id="1_atmosphere"]
+
+[resource]
+script = ExtResource("1_atmosphere")
+first_color = Color(0.15, 0.35, 0.35)
+second_color = Color(0.25, 0.55, 0.53)
+gradient_position = -0.1
+gradient_size = 0.7
+angle = 90.0
+fog_enabled = true
+fog_density = 0.015
+fog_height_density = 1.5

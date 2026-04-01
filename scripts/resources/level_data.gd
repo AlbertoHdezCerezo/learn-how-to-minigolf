@@ -10,6 +10,8 @@ extends Resource
 
 @export var cell_size: Vector3 = Vector3(2, 2, 2)
 
+@export var atmosphere: Atmosphere
+
 @export var tiles: Array[TilePlacement] = []:
 	set(value):
 		tiles = value

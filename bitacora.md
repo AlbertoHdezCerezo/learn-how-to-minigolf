@@ -243,3 +243,74 @@ We also reorganized the entire project to follow convention #1.
 - **`get_script().get_script_constant_map()`** lets you introspect a script's enums and constants at runtime — useful for auto-discovering state names without manual registration.
 
 ---
+
+## feat: Level Design
+
+> Date: 2026-03-30
+> Issue: #10 — https://github.com/AlbertoHdezCerezo/learn-how-to-minigolf/issues/10
+> PR: #11 — https://github.com/AlbertoHdezCerezo/learn-how-to-minigolf/pull/11
+> Branch: feat-level-design
+
+### What we did
+
+Replaced the procedural tile mesh generator with a scene-based tile library using a monochromatic teal color palette, built the gameplay golf course scene that loads level resources and instances the ball, and created the first playable level — an L-shaped course with a 3-story ramp and a right turn to the hole.
+
+### Why
+
+With ball mechanics ready, the game needed actual levels to play on. The previous tile generator was script-only — just code producing gray meshes with no visual identity. The issue asked for a scene-based approach where tile meshes are defined visually and the library is generated from them, with proper colors inspired by the IsoPutt reference game. We also needed the golf course scene to actually load levels and let the player hit the ball on them.
+
+### How we implemented it
+
+#### From SurfaceTool to CSG — a journey of simplification
+
+We started by building all tile meshes procedurally with SurfaceTool, generating per-face materials in two passes. This worked but produced 400+ lines of vertex code that was impossible to preview in the editor.
+
+The user pushed for CSG nodes instead: "Why don't you build the tiles with CSG boxes?" This was the key insight. We rebuilt the entire tile library using CSGCombiner3D with CSGBox3D, CSGCylinder3D, and CSGPolygon3D children — all visible and editable in the Godot editor. The script shrunk from ~400 lines of SurfaceTool code to ~45 lines that just reads CSG meshes and exports the MeshLibrary.
+
+Each tile uses a two-material approach: a CSGBox3D body (darker teal, `Color(0.12, 0.30, 0.28)`) with a thin CSGBox3D overlay on top (lighter teal, `Color(0.30, 0.62, 0.58)`). Walls, holes, and special shapes are built by combining CSG primitives:
+
+| Tile | CSG approach |
+|------|-------------|
+| Flat | Box body + thin top overlay |
+| Hole | Box + top overlay + CSGCylinder subtraction |
+| WallSingle/Corner | Box + top overlay + CSGBox walls |
+| Corner | Box + top overlay + CSGPolygon3D triangular wedge |
+| RoundedWall | Box + top overlay + CSGCylinder (trimmed to quarter circle) |
+| ConcaveCurve | Box + top overlay + full wall block + CSGCylinder subtraction |
+| Ramp | Box + CSGBox diagonal subtraction + rotated floor overlay |
+| Sides | 4 thin CSGBox walls only (no top/bottom) for stacking |
+
+The script was further simplified when the user pointed out that tile IDs could be inferred from child order, and collision shapes could be defined as StaticBody3D nodes in the scene. No more hardcoded dictionaries or collision generation code.
+
+#### Level editor improvements
+
+The bulk of the session was spent improving the level editor's usability. Key additions:
+
+**Trackpad controls**: The original editor assumed a mouse with middle-click and scroll wheel. We added Option+drag for pan, Command+drag for orbit, two-finger scroll (vertical=zoom, horizontal=orbit), and pinch-to-zoom.
+
+**Rectangle fill**: Instead of clicking tile by tile, you can now click+drag to define a rectangle and release to fill it. The editor shows a semi-transparent preview plane during drag. Single clicks still support stacking (placing on top of existing tiles), distinguished from drags by a 5px screen distance threshold.
+
+**Smart Y-level detection**: When starting a drag on an existing tile, the rectangle fills at that tile's Y level — not the current floor. This lets you extend an existing floor without switching levels.
+
+**Start/Goal markers**: Press S or G while hovering a tile to mark it as the start or goal position. Semi-transparent colored planes (green=start, red=goal) show the positions, which are saved with the level.
+
+**Atmosphere in levels**: The atmosphere resource is now stored in LevelData and saved/loaded with the level. The level editor copies values into the working atmosphere (rather than replacing the object) so UI signal bindings stay valid.
+
+**Light controls**: Added light_yaw, light_pitch, and light_energy to the Atmosphere resource, with UI sliders. This lets you control shadow direction and intensity per-level.
+
+#### Property naming gotchas
+
+The `size` property name caused repeated headaches. Both `Atmosphere` and the atmosphere generator script had `@export var size` which conflicts with built-in Godot properties. This caused silent parse errors when loading scenes and resources. We renamed to `gradient_size` everywhere — a painful multi-file rename that touched the resource, generator, UI, and all .tres files.
+
+Similarly, moving `default_atmosphere.tres` to a subdirectory broke Godot's uid cache. The fix was removing the atmosphere reference from `atmosphere_display.tscn` entirely — parent scenes set it via their own exports.
+
+### Key takeaways
+
+- **CSG nodes are the right abstraction for tile libraries** — they're visual, editable, composable, and the `get_meshes()` method extracts the baked mesh for MeshLibrary export. SurfaceTool is powerful but produces opaque code that can't be previewed.
+- **Let the scene define the data, keep the script minimal** — tile IDs from child order, collision shapes from StaticBody3D nodes, meshes from CSG baking. The script just iterates and exports. Any new tile is added entirely in the scene.
+- **Avoid `size` as a property name in Godot** — it shadows built-in properties on multiple node types, causing silent parse failures. Use domain-specific names like `gradient_size`.
+- **Copy values into existing resources, don't replace the object** — when UI signal bindings capture a resource by reference (via lambdas in `bind()`), swapping the object breaks all connections. Copy values instead.
+- **Click-vs-drag distinction matters for editors** — using a screen distance threshold (5px) to distinguish single clicks from drags enables both "place one tile" and "fill rectangle" with the same mouse button.
+- **Trackpad support needs explicit gesture handling** — macOS trackpads emit `InputEventPanGesture` and `InputEventMagnifyGesture`, not scroll wheel events. Both need separate handlers.
+
+---
