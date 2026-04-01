@@ -44,32 +44,32 @@ func _ready() -> void:
 	_sm.start(State.SYNCHED)
 
 	_first_color_picker.color_changed.connect(func(c: Color):
-		if _sm.is_in(State.SYNCHED): first_color_changed.emit(c))
+		if not _synching(): first_color_changed.emit(c))
 	_second_color_picker.color_changed.connect(func(c: Color):
-		if _sm.is_in(State.SYNCHED): second_color_changed.emit(c))
+		if not _synching(): second_color_changed.emit(c))
 
 	_gradient_position.value_changed.connect(func(v: float):
-		if _sm.is_in(State.SYNCHED): gradient_position_changed.emit(v))
+		if not _synching(): gradient_position_changed.emit(v))
 	_gradient_size.value_changed.connect(func(v: float):
-		if _sm.is_in(State.SYNCHED): size_changed.emit(v))
+		if not _synching(): size_changed.emit(v))
 	_gradient_angle.value_changed.connect(func(v: float):
-		if _sm.is_in(State.SYNCHED): angle_changed.emit(v))
+		if not _synching(): angle_changed.emit(v))
 
 	_fog_checkbox.toggled.connect(func(v: bool):
-		if _sm.is_in(State.SYNCHED): fog_enabled_changed.emit(v))
+		if not _synching(): fog_enabled_changed.emit(v))
 	_fog_density.value_changed.connect(func(v: float):
-		if _sm.is_in(State.SYNCHED): fog_density_changed.emit(v))
+		if not _synching(): fog_density_changed.emit(v))
 	_fog_height_density.value_changed.connect(func(v: float):
-		if _sm.is_in(State.SYNCHED): fog_height_density_changed.emit(v))
+		if not _synching(): fog_height_density_changed.emit(v))
 	_fog_height.value_changed.connect(func(v: float):
-		if _sm.is_in(State.SYNCHED): fog_height_changed.emit(v))
+		if not _synching(): fog_height_changed.emit(v))
 
 	_light_yaw.value_changed.connect(func(v: float):
-		if _sm.is_in(State.SYNCHED): light_yaw_changed.emit(v))
+		if not _synching(): light_yaw_changed.emit(v))
 	_light_pitch.value_changed.connect(func(v: float):
-		if _sm.is_in(State.SYNCHED): light_pitch_changed.emit(v))
+		if not _synching(): light_pitch_changed.emit(v))
 	_light_energy.value_changed.connect(func(v: float):
-		if _sm.is_in(State.SYNCHED): light_energy_changed.emit(v))
+		if not _synching(): light_energy_changed.emit(v))
 
 	_save_button.pressed.connect(func(): save_requested.emit(_name_input.text.strip_edges()))
 	_load_button.pressed.connect(func(): _file_dialog.popup_centered())
@@ -89,15 +89,19 @@ func bind(atmosphere: Atmosphere) -> void:
 	light_yaw_changed.connect(func(v: float) -> void: atmosphere.light_yaw = v)
 	light_pitch_changed.connect(func(v: float) -> void: atmosphere.light_pitch = v)
 	light_energy_changed.connect(func(v: float) -> void: atmosphere.light_energy = v)
-	save_requested.connect(func(name: String) -> void:
-		var error := atmosphere.save_to_file(name)
-		if error == OK: print("Saved atmosphere: ", name)
+	save_requested.connect(func(resource_name: String) -> void:
+		var error := atmosphere.save_to_file(resource_name)
+		if error == OK: print("Saved atmosphere: ", resource_name)
 		else: print("Failed to save atmosphere: ", error))
 	sync_from(atmosphere)
 
 
+func _synching() -> bool:
+	return _sm.is_in(State.SYNCHING)
+
+
 func sync_from(atmosphere: Atmosphere) -> void:
-	if _sm.is_in(State.SYNCHING): return
+	if _synching(): return
 	_sm.transit(State.SYNCHING)
 	_first_color_picker.color = atmosphere.first_color
 	_second_color_picker.color = atmosphere.second_color
