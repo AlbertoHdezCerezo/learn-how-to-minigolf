@@ -381,3 +381,83 @@ During review, we established a new project convention: test function names must
 - **The `--import --quit` step is mandatory in CI** — Godot stores class_name registrations in `.godot/global_script_class_cache.cfg`, which is gitignored. Without the import step, all `class_name` references fail to resolve and every test crashes.
 
 ---
+
+## chore: Unit Testing & Refactor of Atmosphere Generator
+
+> Date: 2026-04-01
+> Issue: #13 — https://github.com/AlbertoHdezCerezo/learn-how-to-minigolf/issues/13
+> PR: #15 — https://github.com/AlbertoHdezCerezo/learn-how-to-minigolf/pull/15
+> Branch: chore-refactor-and-spec-coverage-atmosphere-generator
+
+### What we did
+
+Extracted the repeated slider+input UI pattern into a reusable `SliderWithInput` scene, refactored `AtmosphereGeneratorUI` to use it, replaced the ad-hoc `_syncing` boolean with the project's `StateMachine` utility, added a "Load Atmosphere" button for loading `.tres` presets, redesigned the preview platforms as a centered gray tower, eliminated all 12 individual change signals in favor of the atmosphere's built-in `changed` signal, stripped out the redundant export vars from `AtmosphereGenerator` (136 lines → 19), and added 31 new test specs.
+
+### Why
+
+The `AtmosphereGeneratorUI` had 9 manually wired slider+input pairs — each one a `Label` + `HSlider` + `SpinBox` inside an `HBoxContainer`, with duplicated signal connection code and a shared `_syncing` flag to prevent feedback loops. The `AtmosphereGenerator` had 12 export vars that duplicated what the atmosphere resource already held. The issue asked to extract reusable components, formalize the sync logic, add file loading, and write proper specs. Through the review process, we went further — questioning the signal architecture and the export var redundancy led to a much cleaner design.
+
+### How we implemented it
+
+#### SliderWithInput: one component to rule them all
+
+The core extraction was creating `scenes/ui_components/slider_with_input/` — an `HBoxContainer` scene with `Label`, `HSlider`, and `SpinBox` children. The script exposes `@export` properties for `label_text`, `min_value`, `max_value`, and `step`, plus a `value` property and `value_changed` signal.
+
+Each instance manages its own internal `_syncing` flag. When the slider changes, it updates the spinbox (guarded by the flag) and emits `value_changed`. The spinbox does the same in reverse. Setting `value` programmatically updates both controls but does NOT emit the signal — this distinction is critical for external sync operations.
+
+The `@export` setters include null guards (`if _slider:`) because Godot fires export setters during scene loading before `_ready()`, when child nodes don't exist yet. The actual values are applied to children in `_ready()`.
+
+#### From 12 signals to zero: let the atmosphere be the source of truth
+
+The initial refactor kept the 12 individual change signals (`first_color_changed`, `gradient_position_changed`, etc.) from the original code. During review, we questioned this: why emit 12 signals when the UI could just write to the atmosphere directly?
+
+The first simplification collapsed the signals. `bind()` stores the atmosphere reference, and each UI handler sets the property directly: `_atmosphere.fog_density = v`. The atmosphere's built-in `changed` signal handles propagation — the `AtmosphereDisplay` already listens to it.
+
+But this exposed a second redundancy: the `AtmosphereGenerator` had 12 export vars with setters that called `_update_atmosphere()`, plus a `_sync_exports_from_atmosphere()` that copied values back. The exports only existed for @tool inspector editing, but the UI handles everything at runtime. Removing them collapsed the generator from 136 lines to 19:
+
+```gdscript
+extends Node3D
+
+func _ready() -> void:
+    _atmosphere = Atmosphere.new()
+    _atmosphere_display.atmosphere = _atmosphere
+    _ui.bind(_atmosphere)
+    _ui.load_requested.connect(_on_atmosphere_loaded)
+
+func _on_atmosphere_loaded(loaded: Atmosphere) -> void:
+    _atmosphere = loaded
+    _atmosphere_display.atmosphere = _atmosphere
+    _ui.sync_from(_atmosphere)
+```
+
+The journey from "12 signals + 12 exports + sync flags" to "atmosphere is the single source of truth" happened through three review iterations, each one questioning what the previous step left behind.
+
+#### From boolean to StateMachine
+
+The `_syncing` boolean in the UI was a miniature state machine hiding in plain sight. We made it explicit using the project's `StateMachine` utility with two states (`SYNCHED` / `SYNCHING`). A `_synching()` helper keeps the signal handler lambdas clean: `if not _synching(): _atmosphere.fog_density = v`.
+
+#### Load from file
+
+Added a `FileDialog` node and a "Load Atmosphere" button. When a file is selected, the handler loads the `.tres` resource, pre-fills the save name input with the filename (so saving overwrites the loaded file), and emits `load_requested`. The generator swaps the atmosphere reference and syncs the display and UI.
+
+#### Preview tower redesign
+
+The preview platforms went through several iterations based on live feedback: original full-width teal blocks → smaller → thinner → neutral grays for fog/light testing → taller centered tower → final proportions. The final tower uses three stacked blocks (2x3.5x2, 1x7x1, 0.5x2x0.5) in neutral grays (0.45, 0.65, 0.55) centered at X=0, Z=0, starting from the bottom of the scene. The gray palette makes fog tinting and light direction immediately visible.
+
+#### Test coverage
+
+Three new test files, 31 tests total:
+
+- **`test_slider_with_input.gd`** (10 tests) — scene loading, export application, programmatic value setting (no signal emission), slider/spinbox interaction (sync + signal emission).
+- **`test_atmosphere_generator_ui.gd`** (21 tests) — UI changes update atmosphere directly, color pickers, fog checkbox, `sync_from()` correctness, `bind()` wiring, save button, load button.
+- **`test_atmosphere_generator.gd`** (5 tests) — scene loading, atmosphere initialization, UI binding, end-to-end UI-to-display updates.
+
+### Key takeaways
+
+- **Question the signal architecture during review** — the initial plan kept 12 individual signals because that's what the old code had. Asking "does it make sense to emit a signal for each input?" led to a much simpler design where the atmosphere's own `changed` signal is the single notification mechanism. Don't carry forward patterns just because they existed before.
+- **Export vars that mirror a resource are redundant** — the `AtmosphereGenerator` had 12 exports that duplicated the atmosphere's properties. They existed for @tool inspector editing, but once the UI drives everything, they're dead weight. Removing them eliminated 117 lines and two sync flags.
+- **Iterative review beats big-bang planning** — the final architecture (UI writes to atmosphere, atmosphere emits `changed`, display reacts) emerged through three review rounds, not from the initial plan. Each round removed a layer of indirection that the previous round left behind.
+- **`ColorPickerButton.color = x` doesn't emit `color_changed`** — unlike `HSlider.value = x` which does emit `value_changed`, the color picker only emits on user interaction. This asymmetry matters for testing.
+- **Neutral gray platforms are better for atmosphere preview** — teal platforms blend with teal atmospheres. Gray surfaces reveal fog tinting, light color, and shadow direction clearly.
+
+---
