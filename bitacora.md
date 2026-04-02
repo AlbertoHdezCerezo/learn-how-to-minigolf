@@ -461,3 +461,44 @@ Three new test files, 31 tests total:
 - **Neutral gray platforms are better for atmosphere preview** — teal platforms blend with teal atmospheres. Gray surfaces reveal fog tinting, light color, and shadow direction clearly.
 
 ---
+
+## chore: Refactor Level Editor
+
+> Date: 2026-04-02 ~15:00
+> Issue: #16 — https://github.com/AlbertoHdezCerezo/learn-how-to-minigolf/issues/16
+> Branch: chore-refactor-and-spec-coverage-level-editor
+
+### What we did
+
+Comprehensively refactored the level editor across 7 scenes/scripts, extracted all inline materials to `.tres` resource files, unified the tile placement API from 4 methods down to 2, replaced the dual grid-position methods with a single face-normal-based approach, swapped the flat rectangle preview for actual tile mesh previews, introduced a StateMachine to manage editor input states, and added GUT specs for every editor component (GameplayCamera, TileCursor, CameraControlUI, TileLibrary, LevelData, LevelCourseEditor, LevelEditor).
+
+### Why
+
+The level editor had accumulated significant technical debt since it was first built. Materials were created inline in code (making them impossible to tweak in the Godot inspector), the tile API had four nearly-identical methods for what was really two operations, two separate grid position methods produced inconsistent results between drawing and erasing, and the input handling used four boolean flags that made the state flow hard to follow. Most critically, there were zero tests for any editor component — every change was a manual test-and-pray affair.
+
+### How we implemented it
+
+We followed an incremental, dependency-ordered approach — starting with leaf nodes and working up to the main LevelEditor scene. This let us verify each change before building on it.
+
+**Materials extraction** was straightforward: we created `.tres` files in `resources/materials/` matching the exact properties of the inline `StandardMaterial3D` instances (albedo color, transparency, no_depth_test, cull_mode), then replaced the code with `load()` calls. This pattern was applied to the tile cursor, rect preview, start marker, and goal marker materials.
+
+**CameraControlUI** was a satisfying refactor — the existing `SliderWithInput` component (built in issue #13) already handled the slider/spinbox synchronization internally, so we could replace 3 pairs of manually-wired HSlider+SpinBox with 3 SliderWithInput instances and delete all the sync boilerplate. The `bind()` method now directly sets camera properties instead of emitting intermediate signals.
+
+**The tile API unification** replaced `place_at`/`fill_rect`/`remove_at`/`erase_rect` with `put_tiles(positions)` and `erase_tiles(positions)`. Single-tile placement is just `put_tiles([pos])` — same code path, no special cases. A `rect_positions()` static helper computes the cell array from two corners.
+
+**The grid position unification** was the most impactful change. The old code had `get_smart_grid_pos` (used for placement start) and `get_floor_grid_pos` (used for drag end), which meant placement and drag used different level logic. The new `get_grid_position()` checks the hit normal: top face → tile level + 1, bottom face → tile level - 1, side face → adjacent cell at same level, floor → current floor level. This gives consistent behavior everywhere.
+
+**The multi-cell preview** replaces a flat transparent `PlaneMesh` with a pool of `MeshInstance3D` instances that show actual tile meshes at each target cell with the cursor material. The pool grows as needed and reuses instances, so dragging a large rectangle is efficient. The single-tile cursor also uses this system via `show_tile_preview([pos])`, eliminating the separate TileCursor node entirely.
+
+**The StateMachine** replaced four boolean flags with an enum-driven state machine using the project's existing `StateMachine` class. States are IDLE, DRAWING, ERASING, PANNING, and ORBITING, with clear transition rules. The input handler reads much more clearly now — each state handles its own subset of events. We also changed erasing from right-click to ctrl+left-click, matching the issue's specification.
+
+**Save/load delegation** to `LevelData` mirrors what we did with `Atmosphere` in issue #13: the resource class owns `load_from_file()` (static) and `populate_from_grid_map()`, so `LevelCourseEditor` just orchestrates.
+
+### Key takeaways
+
+- **Unify before you test** — writing specs for the old 4-method tile API would have meant rewriting them all after the refactor. By doing the API unification first and writing specs after, we avoided double work. The exception is leaf nodes (like GameplayCamera) where specs-first makes sense because the API won't change.
+- **Object pools solve the preview problem elegantly** — instead of one flat plane or instantiating/freeing meshes each frame, a simple `Array[MeshInstance3D]` pool that grows-but-never-shrinks gives zero-allocation previews. The key insight: show visible meshes up to the needed count, hide the rest.
+- **State machines make input code reviewable** — the boolean flag version was correct but hard to verify by reading. With the StateMachine, you can look at the transition table and know exactly which states are reachable from where. The `_finish_drawing` and `_finish_erasing` extractions also make the release-handler logic scannable.
+- **Face normals are the natural level selector** — instead of two grid position methods with different Y-axis strategies, a single method that reads the hit normal (`normal.y > 0.5` → top, `< -0.5` → bottom, else → side) gives intuitive stacking behavior. Clicking the top of a tile places above it; clicking the side places next to it.
+
+---
