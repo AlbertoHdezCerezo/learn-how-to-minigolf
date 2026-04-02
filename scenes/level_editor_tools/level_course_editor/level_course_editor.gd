@@ -64,29 +64,37 @@ func set_floor(level: int) -> void:
 	_update_floor_plane()
 
 
-func place_at(screen_pos: Vector2, camera: Camera3D) -> void:
-	var grid_pos: Variant = _grid_raycast.get_placement_position(screen_pos, camera, get_world_3d(), _current_floor)
-	if grid_pos == null: return
-
+func put_tiles(positions: Array[Vector3i]) -> void:
+	## Place the current tile at each position with the current rotation.
 	var orientation := _get_grid_orientation()
-	grid_map.set_cell_item(grid_pos, _current_item, orientation)
+	for pos: Vector3i in positions:
+		grid_map.set_cell_item(pos, _current_item, orientation)
 
 
-func get_floor_grid_pos(screen_pos: Vector2, camera: Camera3D) -> Variant:
-	## Returns the grid position on the current floor, or null.
-	## Works whether the ray hits the floor plane or an existing tile.
-	var result := Raycast.from_screen(screen_pos, camera, get_world_3d())
-	if result.is_empty(): return null
-
-	var hit_local: Vector3 = grid_map.to_local(result.position)
-	var grid_pos: Vector3i = grid_map.local_to_map(hit_local)
-	grid_pos.y = _current_floor
-	return grid_pos
+func erase_tiles(positions: Array[Vector3i]) -> void:
+	## Remove tiles at each position.
+	for pos: Vector3i in positions:
+		grid_map.set_cell_item(pos, GridMap.INVALID_CELL_ITEM)
 
 
-func get_smart_grid_pos(screen_pos: Vector2, camera: Camera3D) -> Variant:
-	## Returns the grid position, using the tile's Y level if hitting a tile,
-	## or the current floor level if hitting the floor plane.
+static func rect_positions(from: Vector3i, to: Vector3i) -> Array[Vector3i]:
+	## Returns all grid cells in the XZ rectangle at from.y.
+	var positions: Array[Vector3i] = []
+	var min_x := mini(from.x, to.x)
+	var max_x := maxi(from.x, to.x)
+	var min_z := mini(from.z, to.z)
+	var max_z := maxi(from.z, to.z)
+	for x: int in range(min_x, max_x + 1):
+		for z: int in range(min_z, max_z + 1):
+			positions.append(Vector3i(x, from.y, z))
+	return positions
+
+
+func get_grid_position(screen_pos: Vector2, camera: Camera3D) -> Variant:
+	## Returns the grid position for placement based on what the ray hits.
+	## Floor hit: uses current floor level.
+	## Tile hit: top face → tile level + 1, bottom face → tile level - 1,
+	## side face → same tile level.
 	var result := Raycast.from_screen(screen_pos, camera, get_world_3d())
 	if result.is_empty(): return null
 
@@ -96,33 +104,17 @@ func get_smart_grid_pos(screen_pos: Vector2, camera: Camera3D) -> Variant:
 		grid_pos.y = _current_floor
 		return grid_pos
 
-	# Hit a tile — offset inward to get the correct cell, then use its actual Y
+	# Hit a tile — determine level based on which face was hit
 	var hit_pos: Vector3 = result.position - result.normal * 0.1
 	var hit_local: Vector3 = grid_map.to_local(hit_pos)
-	return grid_map.local_to_map(hit_local)
+	var tile_pos: Vector3i = grid_map.local_to_map(hit_local)
+	var normal: Vector3 = result.normal
 
-
-func fill_rect(from: Vector3i, to: Vector3i) -> void:
-	## Fill a rectangle of tiles between two grid positions on the same floor.
-	var orientation := _get_grid_orientation()
-	var min_x := mini(from.x, to.x)
-	var max_x := maxi(from.x, to.x)
-	var min_z := mini(from.z, to.z)
-	var max_z := maxi(from.z, to.z)
-	for x: int in range(min_x, max_x + 1):
-		for z: int in range(min_z, max_z + 1):
-			grid_map.set_cell_item(Vector3i(x, from.y, z), _current_item, orientation)
-
-
-func erase_rect(from: Vector3i, to: Vector3i) -> void:
-	## Erase a rectangle of tiles between two grid positions on the same floor.
-	var min_x := mini(from.x, to.x)
-	var max_x := maxi(from.x, to.x)
-	var min_z := mini(from.z, to.z)
-	var max_z := maxi(from.z, to.z)
-	for x: int in range(min_x, max_x + 1):
-		for z: int in range(min_z, max_z + 1):
-			grid_map.set_cell_item(Vector3i(x, from.y, z), GridMap.INVALID_CELL_ITEM)
+	if normal.y > 0.5: return Vector3i(tile_pos.x, tile_pos.y + 1, tile_pos.z)
+	if normal.y < -0.5: return Vector3i(tile_pos.x, tile_pos.y - 1, tile_pos.z)
+	# Side face — place adjacent tile at same level using the normal direction
+	var offset := Vector3i(roundi(normal.x), 0, roundi(normal.z))
+	return tile_pos + offset
 
 
 func show_rect_preview(from: Vector3i, to: Vector3i) -> void:
@@ -148,7 +140,7 @@ func hide_rect_preview() -> void:
 
 
 func set_start(screen_pos: Vector2, camera: Camera3D) -> void:
-	var grid_pos: Variant = get_smart_grid_pos(screen_pos, camera)
+	var grid_pos: Variant = get_grid_position(screen_pos, camera)
 	if grid_pos == null: return
 	start_position = grid_pos
 	_place_marker(_start_marker, grid_pos)
@@ -156,26 +148,17 @@ func set_start(screen_pos: Vector2, camera: Camera3D) -> void:
 
 
 func set_goal(screen_pos: Vector2, camera: Camera3D) -> void:
-	var grid_pos: Variant = get_smart_grid_pos(screen_pos, camera)
+	var grid_pos: Variant = get_grid_position(screen_pos, camera)
 	if grid_pos == null: return
 	hole_position = grid_pos
 	_place_marker(_goal_marker, grid_pos)
 	print("Goal set to: ", grid_pos)
 
 
-func remove_at(screen_pos: Vector2, camera: Camera3D) -> void:
-	var grid_pos: Variant = _grid_raycast.get_removal_position(screen_pos, camera, get_world_3d())
-	if grid_pos == null: return
-
-	grid_map.set_cell_item(grid_pos, GridMap.INVALID_CELL_ITEM)
-
-
 func update_cursor(screen_pos: Vector2, camera: Camera3D) -> void:
-	var grid_pos: Variant = _grid_raycast.get_placement_position(screen_pos, camera, get_world_3d(), _current_floor)
-	if grid_pos != null:
-		_tile_cursor.move_to(grid_pos)
-	else:
-		_tile_cursor.hide_cursor()
+	var grid_pos: Variant = get_grid_position(screen_pos, camera)
+	if grid_pos != null: _tile_cursor.move_to(grid_pos)
+	else: _tile_cursor.hide_cursor()
 
 
 func save_level(level_name: String, atmosphere: Atmosphere = null) -> void:
