@@ -183,31 +183,18 @@ func update_cursor(screen_pos: Vector2, camera: Camera3D) -> void:
 func save_level(level_name: String, atmosphere: Atmosphere = null) -> void:
 	var level_data := LevelData.new()
 	level_data.level_name = level_name
-	level_data.cell_size = grid_map.cell_size
-	level_data.atmosphere = atmosphere
-	level_data.start_position = Vector3(start_position.x, start_position.y, start_position.z)
-	level_data.hole_position = Vector3(hole_position.x, hole_position.y, hole_position.z)
-	for cell_pos: Vector3i in grid_map.get_used_cells():
-		level_data.add_tile(
-			cell_pos,
-			grid_map.get_cell_item(cell_pos),
-			grid_map.get_cell_item_orientation(cell_pos)
-		)
+	level_data.populate_from_grid_map(grid_map, start_position, hole_position, atmosphere)
 	var error := level_data.save_to_file(level_name)
-	if error == OK:
-		print("Level saved: ", level_name)
-	else:
-		print("Failed to save level: ", error)
+	if error == OK: print("Level saved: ", level_name)
+	else: print("Failed to save level: ", error)
 
 
 func load_level(level_path: String) -> void:
-	if not ResourceLoader.exists(level_path):
-		print("Level file not found: ", level_path)
-		return
-	var level_data: LevelData = ResourceLoader.load(level_path, "", ResourceLoader.CACHE_MODE_IGNORE)
+	var level_data := LevelData.load_from_file(level_path)
 	if not level_data:
 		print("Failed to load level: ", level_path)
 		return
+
 	grid_map.clear()
 	for tile: TilePlacement in level_data.tiles:
 		grid_map.set_cell_item(tile.position, tile.item_id, tile.orientation)
