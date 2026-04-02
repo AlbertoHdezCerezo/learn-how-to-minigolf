@@ -15,87 +15,101 @@ func before_each() -> void:
 	grid_map.cell_size = Vector3(2, 2, 2)
 	add_child_autofree(grid_map)
 
-	cursor = TileCursor.new()
+	cursor = load("res://scenes/level_editor_tools/level_course_editor/tile_cursor/tile_cursor.tscn").instantiate()
 	add_child_autofree(cursor)
 	cursor.setup(grid_map)
 
 
 # -- Setup --
 
-func test_setup_hides_cursor_by_default() -> void:
-	assert_false(cursor.visible, "Cursor should be hidden after setup")
+func test_setup_initializes_material() -> void:
+	assert_not_null(cursor._material, "Cursor should have a material after setup")
 
 
-func test_setup_assigns_material_override() -> void:
-	assert_not_null(cursor.material_override, "Cursor should have a material override after setup")
+func test_setup_starts_with_empty_preview_pool() -> void:
+	assert_eq(cursor._preview_meshes.size(), 0, "Preview pool should be empty after setup")
 
 
-func test_setup_assigns_transparent_material() -> void:
-	var mat: StandardMaterial3D = cursor.material_override
-	assert_eq(mat.transparency, BaseMaterial3D.TRANSPARENCY_ALPHA, "Cursor material should use alpha transparency")
+# -- set_tile --
 
-
-func test_setup_assigns_material_with_no_depth_test() -> void:
-	var mat: StandardMaterial3D = cursor.material_override
-	assert_true(mat.no_depth_test, "Cursor material should have no_depth_test enabled")
-
-
-func test_setup_sets_initial_mesh_from_first_library_item() -> void:
-	assert_not_null(cursor.mesh, "Cursor should have a mesh after setup")
-
-
-# -- set_tile_mesh --
-
-func test_set_tile_mesh_updates_mesh_from_library() -> void:
-	var item_ids := mesh_library.get_item_list()
-	if item_ids.size() < 2: return
-	var second_id: int = item_ids[1]
-	cursor.set_tile_mesh(second_id)
-	var expected_mesh := mesh_library.get_item_mesh(second_id)
-	assert_eq(cursor.mesh, expected_mesh, "Cursor mesh should match the library item mesh")
+func test_set_tile_stores_item_id() -> void:
+	cursor.set_tile(3)
+	assert_eq(cursor._current_item, 3, "set_tile should store the item ID")
 
 
 # -- set_rotation_angle --
 
-func test_set_rotation_angle_stores_rotation_value() -> void:
+func test_set_rotation_angle_stores_angle() -> void:
 	cursor.set_rotation_angle(90.0)
-	# Verify by making cursor visible and checking basis
-	cursor.move_to(Vector3i.ZERO)
+	assert_eq(cursor._rotation_angle, 90.0, "set_rotation_angle should store the angle")
+
+
+# -- show_at --
+
+func test_show_at_single_position_creates_one_visible_mesh() -> void:
+	cursor.show_at([Vector3i(0, 0, 0)] as Array[Vector3i])
+	assert_eq(cursor._preview_meshes.size(), 1, "Pool should have 1 mesh after showing 1 position")
+	assert_true(cursor._preview_meshes[0].visible, "Preview mesh should be visible")
+
+
+func test_show_at_multiple_positions_creates_matching_meshes() -> void:
+	var positions: Array[Vector3i] = [Vector3i(0, 0, 0), Vector3i(1, 0, 0), Vector3i(2, 0, 0)]
+	cursor.show_at(positions)
+	assert_eq(cursor._preview_meshes.size(), 3, "Pool should have 3 meshes after showing 3 positions")
+	for i: int in range(3):
+		assert_true(cursor._preview_meshes[i].visible, "Preview mesh %d should be visible" % i)
+
+
+func test_show_at_positions_mesh_at_correct_grid_locations() -> void:
+	var pos := Vector3i(2, 0, 3)
+	cursor.show_at([pos] as Array[Vector3i])
+	var expected := grid_map.map_to_local(pos)
+	assert_almost_eq(cursor._preview_meshes[0].global_position, expected, Vector3(0.01, 0.01, 0.01), "Preview should be at grid cell position")
+
+
+func test_show_at_applies_rotation() -> void:
+	cursor.set_rotation_angle(90.0)
+	cursor.show_at([Vector3i(0, 0, 0)] as Array[Vector3i])
 	var expected_basis := Basis(Vector3.UP, deg_to_rad(90.0))
-	assert_almost_eq(cursor.basis.x, expected_basis.x, Vector3(0.01, 0.01, 0.01), "Cursor basis X should match 90 degree rotation")
+	assert_almost_eq(cursor._preview_meshes[0].basis.x, expected_basis.x, Vector3(0.01, 0.01, 0.01), "Preview should have rotated basis")
 
 
-func test_set_rotation_angle_applies_immediately_when_visible() -> void:
-	cursor.move_to(Vector3i.ZERO)
-	cursor.set_rotation_angle(180.0)
-	var expected_basis := Basis(Vector3.UP, deg_to_rad(180.0))
-	assert_almost_eq(cursor.basis.x, expected_basis.x, Vector3(0.01, 0.01, 0.01), "Cursor basis should update immediately when visible")
+func test_show_at_applies_correct_mesh_from_library() -> void:
+	cursor.set_tile(1)
+	cursor.show_at([Vector3i(0, 0, 0)] as Array[Vector3i])
+	var expected_mesh := mesh_library.get_item_mesh(1)
+	assert_eq(cursor._preview_meshes[0].mesh, expected_mesh, "Preview should use mesh from library for selected tile")
 
 
-# -- move_to --
-
-func test_move_to_makes_cursor_visible() -> void:
-	cursor.move_to(Vector3i.ZERO)
-	assert_true(cursor.visible, "Cursor should become visible after move_to")
+func test_show_at_applies_cursor_material() -> void:
+	cursor.show_at([Vector3i(0, 0, 0)] as Array[Vector3i])
+	assert_eq(cursor._preview_meshes[0].material_override, cursor._material, "Preview should use the cursor material")
 
 
-func test_move_to_positions_cursor_at_grid_cell() -> void:
-	var grid_pos := Vector3i(2, 0, 3)
-	cursor.move_to(grid_pos)
-	var expected_pos := grid_map.map_to_local(grid_pos)
-	assert_almost_eq(cursor.global_position, expected_pos, Vector3(0.01, 0.01, 0.01), "Cursor should be positioned at the grid cell's local position")
+func test_show_at_hides_excess_pool_meshes() -> void:
+	cursor.show_at([Vector3i(0, 0, 0), Vector3i(1, 0, 0)] as Array[Vector3i])
+	cursor.show_at([Vector3i(0, 0, 0)] as Array[Vector3i])
+	assert_true(cursor._preview_meshes[0].visible, "First mesh should be visible")
+	assert_false(cursor._preview_meshes[1].visible, "Second mesh should be hidden when only 1 position shown")
 
 
-func test_move_to_applies_stored_rotation() -> void:
-	cursor.set_rotation_angle(270.0)
-	cursor.move_to(Vector3i(1, 0, 1))
-	var expected_basis := Basis(Vector3.UP, deg_to_rad(270.0))
-	assert_almost_eq(cursor.basis.x, expected_basis.x, Vector3(0.01, 0.01, 0.01), "Cursor should apply stored rotation when moving to position")
+func test_show_at_reuses_pool_instead_of_growing() -> void:
+	cursor.show_at([Vector3i(0, 0, 0), Vector3i(1, 0, 0)] as Array[Vector3i])
+	var first_mesh := cursor._preview_meshes[0]
+	cursor.show_at([Vector3i(2, 0, 0)] as Array[Vector3i])
+	assert_eq(cursor._preview_meshes[0], first_mesh, "Pool should reuse existing mesh instances")
+	assert_eq(cursor._preview_meshes.size(), 2, "Pool should not shrink")
 
 
-# -- hide_cursor --
+# -- hide_all --
 
-func test_hide_cursor_makes_cursor_invisible() -> void:
-	cursor.move_to(Vector3i.ZERO)
-	cursor.hide_cursor()
-	assert_false(cursor.visible, "Cursor should be hidden after hide_cursor")
+func test_hide_all_hides_all_preview_meshes() -> void:
+	cursor.show_at([Vector3i(0, 0, 0), Vector3i(1, 0, 0)] as Array[Vector3i])
+	cursor.hide_all()
+	for m: MeshInstance3D in cursor._preview_meshes:
+		assert_false(m.visible, "All preview meshes should be hidden after hide_all")
+
+
+func test_hide_all_on_empty_pool_does_not_error() -> void:
+	cursor.hide_all()
+	assert_eq(cursor._preview_meshes.size(), 0, "hide_all on empty pool should be a no-op")
