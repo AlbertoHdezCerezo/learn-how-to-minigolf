@@ -230,6 +230,23 @@ func test_after_bind_save_button_emits_save_requested_with_resource_name() -> vo
 	assert_signal_emitted(instance, "save_requested", "Pressing save button should emit save_requested")
 
 
+# -- sync_from updates atmosphere reference --
+
+func test_after_sync_from_new_atmosphere_ui_changes_update_the_new_atmosphere() -> void:
+	var instance := scene.instantiate()
+	add_child_autofree(instance)
+
+	var original := Atmosphere.new()
+	instance.bind(original)
+
+	var loaded := Atmosphere.new()
+	instance.sync_from(loaded)
+
+	instance.get_node("%FogDensity").get_node("HSlider").value = 0.09
+	assert_almost_eq(loaded.fog_density, 0.09, 0.001, "UI should update the new atmosphere after sync_from")
+	assert_almost_ne(original.fog_density, 0.09, 0.001, "UI should no longer update the old atmosphere after sync_from")
+
+
 # -- Load button --
 
 func test_load_atmosphere_button_exists_and_is_accessible() -> void:

@@ -80,6 +80,7 @@ func _synching() -> bool:
 
 func sync_from(atmosphere: Atmosphere) -> void:
 	if _synching(): return
+	_atmosphere = atmosphere
 	_sm.transit(State.SYNCHING)
 	_first_color_picker.color = atmosphere.first_color
 	_second_color_picker.color = atmosphere.second_color
