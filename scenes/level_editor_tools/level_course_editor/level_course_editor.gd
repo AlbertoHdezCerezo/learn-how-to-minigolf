@@ -6,21 +6,19 @@ signal level_loaded(level_data: LevelData)
 
 const CELL_SIZE := Vector3(2, 2, 2)
 const FLOOR_Y_OFFSET := -0.5
-const CURSOR_MATERIAL_PATH := "res://resources/materials/tile_cursor_material.tres"
 const START_MARKER_MATERIAL_PATH := "res://resources/materials/start_marker_material.tres"
 const GOAL_MARKER_MATERIAL_PATH := "res://resources/materials/goal_marker_material.tres"
 
 @export var mesh_library: MeshLibrary
 
 @onready var grid_map: GridMap = $GridMap
+@onready var _tile_cursor: TileCursor = $TileCursor
 @onready var _floor_plane: StaticBody3D = $FloorPlane
 
 var _grid_raycast: GridRaycast3D
 var _current_item: int = 0
 var _current_rotation_angle: float = 0.0
 var _current_floor: int = 0
-var _preview_meshes: Array[MeshInstance3D] = []
-var _cursor_material: StandardMaterial3D
 var _start_marker: MeshInstance3D
 var _goal_marker: MeshInstance3D
 var start_position: Vector3i = Vector3i.ZERO
@@ -32,7 +30,7 @@ func _ready() -> void:
 	grid_map.cell_size = CELL_SIZE
 
 	_grid_raycast = GridRaycast3D.new(grid_map, _floor_plane)
-	_cursor_material = load(CURSOR_MATERIAL_PATH)
+	_tile_cursor.setup(grid_map)
 	_update_floor_plane()
 	_start_marker = _create_marker(load(START_MARKER_MATERIAL_PATH))
 	_goal_marker = _create_marker(load(GOAL_MARKER_MATERIAL_PATH))
@@ -42,10 +40,12 @@ func _ready() -> void:
 
 func select_tile(item_id: int) -> void:
 	_current_item = item_id
+	_tile_cursor.set_tile(item_id)
 
 
 func set_rotation_angle(angle: float) -> void:
 	_current_rotation_angle = angle
+	_tile_cursor.set_rotation_angle(angle)
 
 
 func set_floor(level: int) -> void:
@@ -82,8 +82,8 @@ static func rect_positions(from: Vector3i, to: Vector3i) -> Array[Vector3i]:
 func get_grid_position(screen_pos: Vector2, camera: Camera3D) -> Variant:
 	## Returns the grid position for placement based on what the ray hits.
 	## Floor hit: uses current floor level.
-	## Tile hit: top face → tile level + 1, bottom face → tile level - 1,
-	## side face → same tile level.
+	## Tile hit: top face -> tile level + 1, bottom face -> tile level - 1,
+	## side face -> same tile level.
 	var result := Raycast.from_screen(screen_pos, camera, get_world_3d())
 	if result.is_empty(): return null
 
@@ -107,34 +107,11 @@ func get_grid_position(screen_pos: Vector2, camera: Camera3D) -> Variant:
 
 
 func show_tile_preview(positions: Array[Vector3i]) -> void:
-	## Show cursor-style tile meshes at each position. Reuses pooled instances.
-	var current_mesh := mesh_library.get_item_mesh(_current_item) if mesh_library else null
-	var rot_basis := Basis(Vector3.UP, deg_to_rad(_current_rotation_angle))
-
-	# Grow pool if needed
-	while _preview_meshes.size() < positions.size():
-		var m := MeshInstance3D.new()
-		m.material_override = _cursor_material
-		m.visible = false
-		add_child(m)
-		_preview_meshes.append(m)
-
-	# Position visible previews
-	for i: int in range(positions.size()):
-		var m := _preview_meshes[i]
-		m.mesh = current_mesh
-		m.global_position = grid_map.map_to_local(positions[i])
-		m.basis = rot_basis
-		m.visible = true
-
-	# Hide unused previews
-	for i: int in range(positions.size(), _preview_meshes.size()):
-		_preview_meshes[i].visible = false
+	_tile_cursor.show_at(positions)
 
 
 func hide_tile_preview() -> void:
-	for m: MeshInstance3D in _preview_meshes:
-		m.visible = false
+	_tile_cursor.hide_all()
 
 
 func set_start(screen_pos: Vector2, camera: Camera3D) -> void:

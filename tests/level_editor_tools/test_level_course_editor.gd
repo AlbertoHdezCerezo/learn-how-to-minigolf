@@ -153,33 +153,21 @@ func test_rect_positions_covers_all_cells_in_rectangle() -> void:
 
 # -- show_tile_preview / hide_tile_preview --
 
-func test_show_tile_preview_creates_preview_meshes() -> void:
+func test_show_tile_preview_delegates_to_tile_cursor() -> void:
 	var positions: Array[Vector3i] = [Vector3i(0, 0, 0), Vector3i(1, 0, 0)]
 	editor.show_tile_preview(positions)
-	var visible_count := 0
-	for child: Node in editor.get_children():
-		if child is MeshInstance3D and child.visible and child != editor.get_node_or_null("_start_marker") and child != editor.get_node_or_null("_goal_marker"):
-			visible_count += 1
-	assert_gte(visible_count, 2, "show_tile_preview should make at least 2 preview meshes visible")
+	var cursor: TileCursor = editor.get_node("TileCursor")
+	assert_eq(cursor._preview_meshes.size(), 2, "TileCursor should have 2 preview meshes after show_tile_preview")
+	assert_true(cursor._preview_meshes[0].visible, "First preview mesh should be visible")
+	assert_true(cursor._preview_meshes[1].visible, "Second preview mesh should be visible")
 
 
-func test_hide_tile_preview_hides_all_preview_meshes() -> void:
-	var positions: Array[Vector3i] = [Vector3i(0, 0, 0), Vector3i(1, 0, 0)]
-	editor.show_tile_preview(positions)
+func test_hide_tile_preview_delegates_to_tile_cursor() -> void:
+	editor.show_tile_preview([Vector3i(0, 0, 0)] as Array[Vector3i])
 	editor.hide_tile_preview()
-	for child: Node in editor.get_children():
-		if child is MeshInstance3D and child != editor._start_marker and child != editor._goal_marker:
-			assert_false(child.visible, "All preview meshes should be hidden after hide_tile_preview")
-
-
-func test_show_tile_preview_reuses_pooled_meshes() -> void:
-	editor.show_tile_preview([Vector3i(0, 0, 0)] as Array[Vector3i])
-	editor.show_tile_preview([Vector3i(0, 0, 0), Vector3i(1, 0, 0)] as Array[Vector3i])
-	editor.show_tile_preview([Vector3i(0, 0, 0)] as Array[Vector3i])
-	# Pool should have grown to 2 but only 1 should be visible
-	assert_eq(editor._preview_meshes.size(), 2, "Pool should have 2 meshes after showing 2 at once")
-	assert_true(editor._preview_meshes[0].visible, "First preview mesh should be visible")
-	assert_false(editor._preview_meshes[1].visible, "Second preview mesh should be hidden when only 1 is needed")
+	var cursor: TileCursor = editor.get_node("TileCursor")
+	for m: MeshInstance3D in cursor._preview_meshes:
+		assert_false(m.visible, "All preview meshes should be hidden after hide_tile_preview")
 
 
 # -- clear_level --
