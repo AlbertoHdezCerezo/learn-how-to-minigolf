@@ -1,5 +1,7 @@
 extends Node3D
 
+enum State { IDLE, DRAWING, ERASING, PANNING, ORBITING }
+
 @onready var _course_editor: LevelCourseEditor = $LevelCourseEditor
 @onready var _gameplay_camera: GameplayCamera = $GameplayCamera
 @onready var _camera: Camera3D = $GameplayCamera/Camera3D
@@ -9,14 +11,8 @@ extends Node3D
 @onready var _atmosphere_ui: CanvasLayer = $AtmosphereUI
 
 var _atmosphere: Atmosphere
+var _sm: StateMachine
 
-## Camera pan/orbit state
-var _is_panning := false
-var _is_orbiting := false
-
-## Drawing state
-var _is_drawing := false
-var _is_erasing := false
 var _draw_start: Variant = null  # Vector3i or null
 var _draw_screen_start: Vector2 = Vector2.ZERO
 var _last_mouse_pos: Vector2 = Vector2.ZERO
@@ -24,9 +20,20 @@ const DRAG_THRESHOLD := 5.0  # pixels — below this it's a single click
 
 
 func _ready() -> void:
+	_setup_state_machine()
 	_connect_editor_ui()
 	_connect_camera_ui()
 	_connect_atmosphere_ui()
+
+
+func _setup_state_machine() -> void:
+	_sm = StateMachine.new(self)
+	_sm.add_state(State.IDLE, [State.DRAWING, State.ERASING, State.PANNING, State.ORBITING] as Array[int])
+	_sm.add_state(State.DRAWING, [State.IDLE] as Array[int])
+	_sm.add_state(State.ERASING, [State.IDLE] as Array[int])
+	_sm.add_state(State.PANNING, [State.IDLE] as Array[int])
+	_sm.add_state(State.ORBITING, [State.IDLE] as Array[int])
+	_sm.start(State.IDLE)
 
 
 func _connect_editor_ui() -> void:
@@ -53,92 +60,102 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
 		get_viewport().gui_release_focus()
 
-	if event is InputEventMouseButton:
-		_handle_mouse_button(event)
-	elif event is InputEventMouseMotion:
-		_handle_mouse_motion(event)
-	elif event is InputEventPanGesture:
-		_handle_pan_gesture(event)
-	elif event is InputEventMagnifyGesture:
-		_handle_magnify_gesture(event)
+	if event is InputEventMouseButton: _handle_mouse_button(event)
+	elif event is InputEventMouseMotion: _handle_mouse_motion(event)
+	elif event is InputEventPanGesture: _handle_pan_gesture(event)
+	elif event is InputEventMagnifyGesture: _handle_magnify_gesture(event)
 
 
 func _handle_mouse_button(event: InputEventMouseButton) -> void:
+	# -- Left button press --
 	if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		if event.alt_pressed:
-			_is_panning = true
+			_sm.transit(State.PANNING)
 		elif event.meta_pressed:
-			_is_orbiting = true
+			_sm.transit(State.ORBITING)
 		elif event.ctrl_pressed:
-			_is_erasing = true
+			_sm.transit(State.ERASING)
 			_draw_start = _course_editor.get_grid_position(event.position, _camera)
 			_draw_screen_start = event.position
 		else:
-			_is_drawing = true
+			_sm.transit(State.DRAWING)
 			_draw_start = _course_editor.get_grid_position(event.position, _camera)
 			_draw_screen_start = event.position
+
+	# -- Left button release --
 	elif event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
-		if _is_drawing:
-			var is_click := event.position.distance_to(_draw_screen_start) < DRAG_THRESHOLD
-			if is_click and _draw_start != null:
-				_course_editor.put_tiles([_draw_start] as Array[Vector3i])
-			elif _draw_start != null:
-				var draw_end: Variant = _course_editor.get_grid_position(event.position, _camera)
-				if draw_end != null:
-					draw_end.y = _draw_start.y
-					_course_editor.put_tiles(LevelCourseEditor.rect_positions(_draw_start, draw_end))
-				else:
-					_course_editor.put_tiles([_draw_start] as Array[Vector3i])
-		elif _is_erasing:
-			var is_click := event.position.distance_to(_draw_screen_start) < DRAG_THRESHOLD
-			if is_click and _draw_start != null:
-				_course_editor.erase_tiles([_draw_start] as Array[Vector3i])
-			elif _draw_start != null:
-				var draw_end: Variant = _course_editor.get_grid_position(event.position, _camera)
-				if draw_end != null:
-					draw_end.y = _draw_start.y
-					_course_editor.erase_tiles(LevelCourseEditor.rect_positions(_draw_start, draw_end))
-				else:
-					_course_editor.erase_tiles([_draw_start] as Array[Vector3i])
+		if _sm.is_in(State.DRAWING):
+			_finish_drawing(event.position)
+		elif _sm.is_in(State.ERASING):
+			_finish_erasing(event.position)
 		_course_editor.hide_tile_preview()
-		_is_panning = false
-		_is_orbiting = false
-		_is_drawing = false
-		_is_erasing = false
+		if not _sm.is_in(State.IDLE): _sm.transit(State.IDLE)
 		_draw_start = null
+
+	# -- Middle button --
 	elif event.button_index == MOUSE_BUTTON_MIDDLE:
-		_is_panning = event.pressed
+		if event.pressed and _sm.is_in(State.IDLE): _sm.transit(State.PANNING)
+		elif not event.pressed and _sm.is_in(State.PANNING): _sm.transit(State.IDLE)
+
+	# -- Scroll wheel --
 	elif event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
 		_gameplay_camera.orthographic_size -= 2.0
 	elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
 		_gameplay_camera.orthographic_size += 2.0
 
 
+func _finish_drawing(release_pos: Vector2) -> void:
+	if _draw_start == null: return
+	var is_click := release_pos.distance_to(_draw_screen_start) < DRAG_THRESHOLD
+	if is_click:
+		_course_editor.put_tiles([_draw_start] as Array[Vector3i])
+	else:
+		var draw_end: Variant = _course_editor.get_grid_position(release_pos, _camera)
+		if draw_end != null:
+			draw_end.y = _draw_start.y
+			_course_editor.put_tiles(LevelCourseEditor.rect_positions(_draw_start, draw_end))
+		else:
+			_course_editor.put_tiles([_draw_start] as Array[Vector3i])
+
+
+func _finish_erasing(release_pos: Vector2) -> void:
+	if _draw_start == null: return
+	var is_click := release_pos.distance_to(_draw_screen_start) < DRAG_THRESHOLD
+	if is_click:
+		_course_editor.erase_tiles([_draw_start] as Array[Vector3i])
+	else:
+		var draw_end: Variant = _course_editor.get_grid_position(release_pos, _camera)
+		if draw_end != null:
+			draw_end.y = _draw_start.y
+			_course_editor.erase_tiles(LevelCourseEditor.rect_positions(_draw_start, draw_end))
+		else:
+			_course_editor.erase_tiles([_draw_start] as Array[Vector3i])
+
+
 func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	_last_mouse_pos = event.position
-	if _is_orbiting:
+
+	if _sm.is_in(State.ORBITING):
 		_gameplay_camera.orbit_angle += event.relative.x * 0.5
-	elif _is_panning:
+	elif _sm.is_in(State.PANNING):
 		var delta := event.relative * _gameplay_camera.orthographic_size * 0.002
 		_gameplay_camera.global_translate(-_camera.global_basis.x * delta.x)
 		_gameplay_camera.global_translate(_camera.global_basis.y * delta.y)
-	else:
+	elif _sm.is_in(State.IDLE):
 		_course_editor.update_cursor(event.position, _camera)
-		if (_is_drawing or _is_erasing) and _draw_start != null:
-			var current_pos: Variant = _course_editor.get_grid_position(event.position, _camera)
-			if current_pos != null:
-				current_pos.y = _draw_start.y
-				_course_editor.show_tile_preview(LevelCourseEditor.rect_positions(_draw_start, current_pos))
+	elif (_sm.is_in(State.DRAWING) or _sm.is_in(State.ERASING)) and _draw_start != null:
+		var current_pos: Variant = _course_editor.get_grid_position(event.position, _camera)
+		if current_pos != null:
+			current_pos.y = _draw_start.y
+			_course_editor.show_tile_preview(LevelCourseEditor.rect_positions(_draw_start, current_pos))
 
 
 func _handle_pan_gesture(event: InputEventPanGesture) -> void:
-	## Two-finger scroll on trackpad — vertical: zoom, horizontal: orbit
 	_gameplay_camera.orthographic_size += event.delta.y * 0.5
 	_gameplay_camera.orbit_angle += event.delta.x * 2.0
 
 
 func _handle_magnify_gesture(event: InputEventMagnifyGesture) -> void:
-	## Pinch to zoom on trackpad
 	_gameplay_camera.orthographic_size /= event.factor
 
 
@@ -179,7 +196,6 @@ func _on_level_loaded(level_data: LevelData) -> void:
 
 
 func _on_atmosphere_changed(atm: Atmosphere) -> void:
-	# Copy values into existing atmosphere so UI bindings stay valid
 	_atmosphere.first_color = atm.first_color
 	_atmosphere.second_color = atm.second_color
 	_atmosphere.gradient_position = atm.gradient_position
