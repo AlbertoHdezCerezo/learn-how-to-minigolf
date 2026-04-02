@@ -27,6 +27,7 @@ A minigolf game built with Godot 4.x using GDScript.
 - **Naming**: `snake_case` for files, folders, variables, and functions; `PascalCase` for class/node names
 - **Signals**: prefer signals over direct references for decoupling
 - **Node structure**: keep scene trees shallow where possible
+- **Materials**: always define as `.tres` resource files in `resources/materials/`, never create `StandardMaterial3D` inline in GDScript
 - **Godot 4 syntax rules**:
   - `@export`, `@onready`, `@tool` (not `export`, `onready`, `tool`)
   - `signal_name.connect(callable)` (not `connect("signal_name", ...)`)
