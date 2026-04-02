@@ -69,43 +69,41 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			_is_panning = true
 		elif event.meta_pressed:
 			_is_orbiting = true
+		elif event.ctrl_pressed:
+			_is_erasing = true
+			_draw_start = _course_editor.get_grid_position(event.position, _camera)
+			_draw_screen_start = event.position
 		else:
 			_is_drawing = true
-			_draw_start = _course_editor.get_smart_grid_pos(event.position, _camera)
+			_draw_start = _course_editor.get_grid_position(event.position, _camera)
 			_draw_screen_start = event.position
 	elif event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
 		if _is_drawing:
 			var is_click := event.position.distance_to(_draw_screen_start) < DRAG_THRESHOLD
-			if is_click:
-				_course_editor.place_at(event.position, _camera)
+			if is_click and _draw_start != null:
+				_course_editor.put_tiles([_draw_start] as Array[Vector3i])
 			elif _draw_start != null:
-				var draw_end: Variant = _course_editor.get_floor_grid_pos(event.position, _camera)
+				var draw_end: Variant = _course_editor.get_grid_position(event.position, _camera)
 				if draw_end != null:
 					draw_end.y = _draw_start.y
-					_course_editor.fill_rect(_draw_start, draw_end)
+					_course_editor.put_tiles(LevelCourseEditor.rect_positions(_draw_start, draw_end))
 				else:
-					_course_editor.fill_rect(_draw_start, _draw_start)
+					_course_editor.put_tiles([_draw_start] as Array[Vector3i])
+		elif _is_erasing:
+			var is_click := event.position.distance_to(_draw_screen_start) < DRAG_THRESHOLD
+			if is_click and _draw_start != null:
+				_course_editor.erase_tiles([_draw_start] as Array[Vector3i])
+			elif _draw_start != null:
+				var draw_end: Variant = _course_editor.get_grid_position(event.position, _camera)
+				if draw_end != null:
+					draw_end.y = _draw_start.y
+					_course_editor.erase_tiles(LevelCourseEditor.rect_positions(_draw_start, draw_end))
+				else:
+					_course_editor.erase_tiles([_draw_start] as Array[Vector3i])
 		_course_editor.hide_rect_preview()
 		_is_panning = false
 		_is_orbiting = false
 		_is_drawing = false
-		_draw_start = null
-	elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-		_is_erasing = true
-		_draw_start = _course_editor.get_floor_grid_pos(event.position, _camera)
-		_draw_screen_start = event.position
-	elif event.button_index == MOUSE_BUTTON_RIGHT and not event.pressed:
-		if _is_erasing:
-			var is_click := event.position.distance_to(_draw_screen_start) < DRAG_THRESHOLD
-			if is_click:
-				_course_editor.remove_at(event.position, _camera)
-			elif _draw_start != null:
-				var draw_end: Variant = _course_editor.get_floor_grid_pos(event.position, _camera)
-				if draw_end != null:
-					_course_editor.erase_rect(_draw_start, draw_end)
-				else:
-					_course_editor.erase_rect(_draw_start, _draw_start)
-		_course_editor.hide_rect_preview()
 		_is_erasing = false
 		_draw_start = null
 	elif event.button_index == MOUSE_BUTTON_MIDDLE:
@@ -127,8 +125,10 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	else:
 		_course_editor.update_cursor(event.position, _camera)
 		if (_is_drawing or _is_erasing) and _draw_start != null:
-			var current_pos: Variant = _course_editor.get_floor_grid_pos(event.position, _camera)
-			if current_pos != null: _course_editor.show_rect_preview(_draw_start, current_pos)
+			var current_pos: Variant = _course_editor.get_grid_position(event.position, _camera)
+			if current_pos != null:
+				current_pos.y = _draw_start.y
+				_course_editor.show_rect_preview(_draw_start, current_pos)
 
 
 func _handle_pan_gesture(event: InputEventPanGesture) -> void:
