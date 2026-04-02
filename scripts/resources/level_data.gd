@@ -59,3 +59,19 @@ func save_to_file(resource_name: String) -> Error:
 		resource_name = "level_%d" % Time.get_unix_time_from_system()
 	var path := SAVE_DIR + resource_name + ".tres"
 	return ResourceSaver.save(self, path)
+
+
+static func load_from_file(path: String) -> LevelData:
+	if not ResourceLoader.exists(path): return null
+	var res: LevelData = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE)
+	return res
+
+
+func populate_from_grid_map(grid_map: GridMap, start: Vector3i, hole: Vector3i, atmo: Atmosphere = null) -> void:
+	cell_size = grid_map.cell_size
+	start_position = Vector3(start.x, start.y, start.z)
+	hole_position = Vector3(hole.x, hole.y, hole.z)
+	atmosphere = atmo
+	tiles.clear()
+	for cell_pos: Vector3i in grid_map.get_used_cells():
+		add_tile(cell_pos, grid_map.get_cell_item(cell_pos), grid_map.get_cell_item_orientation(cell_pos))
