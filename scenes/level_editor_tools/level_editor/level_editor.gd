@@ -100,7 +100,7 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 					_course_editor.erase_tiles(LevelCourseEditor.rect_positions(_draw_start, draw_end))
 				else:
 					_course_editor.erase_tiles([_draw_start] as Array[Vector3i])
-		_course_editor.hide_rect_preview()
+		_course_editor.hide_tile_preview()
 		_is_panning = false
 		_is_orbiting = false
 		_is_drawing = false
@@ -128,7 +128,7 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 			var current_pos: Variant = _course_editor.get_grid_position(event.position, _camera)
 			if current_pos != null:
 				current_pos.y = _draw_start.y
-				_course_editor.show_rect_preview(_draw_start, current_pos)
+				_course_editor.show_tile_preview(LevelCourseEditor.rect_positions(_draw_start, current_pos))
 
 
 func _handle_pan_gesture(event: InputEventPanGesture) -> void:
