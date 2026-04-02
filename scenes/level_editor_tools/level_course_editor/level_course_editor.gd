@@ -6,6 +6,9 @@ signal level_loaded(level_data: LevelData)
 
 const CELL_SIZE := Vector3(2, 2, 2)
 const FLOOR_Y_OFFSET := -0.5
+const RECT_PREVIEW_MATERIAL_PATH := "res://resources/materials/rect_preview_material.tres"
+const START_MARKER_MATERIAL_PATH := "res://resources/materials/start_marker_material.tres"
+const GOAL_MARKER_MATERIAL_PATH := "res://resources/materials/goal_marker_material.tres"
 
 @export var mesh_library: MeshLibrary
 
@@ -32,19 +35,14 @@ func _ready() -> void:
 	_tile_cursor.setup(grid_map)
 	_update_floor_plane()
 	_create_rect_preview()
-	_start_marker = _create_marker(Color(0.2, 0.8, 0.2, 0.5))
-	_goal_marker = _create_marker(Color(0.9, 0.2, 0.2, 0.5))
+	_start_marker = _create_marker(load(START_MARKER_MATERIAL_PATH))
+	_goal_marker = _create_marker(load(GOAL_MARKER_MATERIAL_PATH))
 
 
 func _create_rect_preview() -> void:
 	_rect_preview = MeshInstance3D.new()
 	_rect_preview.mesh = PlaneMesh.new()
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.3, 0.7, 1.0, 0.25)
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.no_depth_test = true
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	_rect_preview.material_override = mat
+	_rect_preview.material_override = load(RECT_PREVIEW_MATERIAL_PATH)
 	_rect_preview.visible = false
 	add_child(_rect_preview)
 
@@ -227,16 +225,11 @@ func _update_floor_plane() -> void:
 	_floor_plane.position.y = y_pos
 
 
-func _create_marker(color: Color) -> MeshInstance3D:
+func _create_marker(mat: StandardMaterial3D) -> MeshInstance3D:
 	var marker := MeshInstance3D.new()
 	var plane := PlaneMesh.new()
 	plane.size = Vector2(CELL_SIZE.x * 0.8, CELL_SIZE.z * 0.8)
 	marker.mesh = plane
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = color
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.no_depth_test = true
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	marker.material_override = mat
 	marker.visible = false
 	add_child(marker)
