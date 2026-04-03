@@ -9,9 +9,10 @@ const CURSOR_MATERIAL_PATH := "res://resources/materials/tile_cursor_material.tr
 
 var _grid_map: GridMap
 var _material: StandardMaterial3D
-var _current_item: int = 0
-var _rotation_angle: float = 0.0
 var _preview_meshes: Array[MeshInstance3D] = []
+
+var current_item: int = 0
+var rotation_angle: float = 0.0
 
 
 func setup(grid_map: GridMap) -> void:
@@ -19,18 +20,10 @@ func setup(grid_map: GridMap) -> void:
 	_material = load(CURSOR_MATERIAL_PATH)
 
 
-func set_tile(item_id: int) -> void:
-	_current_item = item_id
-
-
-func set_rotation_angle(angle: float) -> void:
-	_rotation_angle = angle
-
-
 func show_at(positions: Array[Vector3i]) -> void:
 	## Show tile previews at each position. Reuses pooled MeshInstance3D nodes.
-	var current_mesh := _grid_map.mesh_library.get_item_mesh(_current_item) if _grid_map.mesh_library else null
-	var rot_basis := Basis(Vector3.UP, deg_to_rad(_rotation_angle))
+	var current_mesh := _grid_map.mesh_library.get_item_mesh(current_item) if _grid_map.mesh_library else null
+	var rot_basis := Basis(Vector3.UP, deg_to_rad(rotation_angle))
 
 	_ensure_pool_size(positions.size())
 
