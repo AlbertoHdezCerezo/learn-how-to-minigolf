@@ -5,15 +5,40 @@
 [sub_resource type="PlaneMesh" id="PlaneMesh_marker"]
 size = Vector2(1.6, 1.6)
 
+[sub_resource type="ViewportTexture" id="ViewportTexture_label"]
+viewport_path = NodePath("LabelViewport")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_label"]
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_texture = SubResource("ViewportTexture_label")
+
 [node name="TileMarker" type="Node3D"]
 script = ExtResource("1_script")
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
 mesh = SubResource("PlaneMesh_marker")
 
-[node name="Label" type="Label3D" parent="."]
+[node name="LabelViewport" type="SubViewport" parent="."]
+transparent_bg = true
+size = Vector2i(256, 64)
+
+[node name="Panel" type="PanelContainer" parent="LabelViewport"]
+offset_right = 256.0
+offset_bottom = 64.0
+
+[node name="Label" type="Label" parent="LabelViewport/Panel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "Marker"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LabelSprite" type="Sprite3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 billboard = 1
 no_depth_test = true
-text = "Marker"
-font_size = 48
+pixel_size = 0.005
+texture = SubResource("ViewportTexture_label")
