@@ -2,30 +2,50 @@
 class_name TileMarker
 extends Node3D
 
-## A marker that highlights a grid cell with a colored overlay and a floating label.
-## Used to indicate start position, goal, or other special tiles in the editor.
-## Use @tool so the label and mesh are visible in the Godot editor for preview.
+## A marker that highlights a grid cell with a colored shader overlay and a
+## floating tooltip label. In the editor, a flat PlaneMesh previews the color.
+## At runtime, the overlay is applied to the actual tile mesh geometry.
+
+const OVERLAY_SHADER_PATH := "res://shaders/tile_overlay.gdshader"
 
 @export var marker_name: String = "Marker":
 	set(value):
 		marker_name = value
 		if _label: _label.text = value
 
-@export var material: StandardMaterial3D:
+@export var overlay_color: Color = Color(0.2, 0.8, 0.2, 0.5):
 	set(value):
-		material = value
-		if _mesh: _mesh.material_override = value
+		overlay_color = value
+		if _overlay_material: _overlay_material.set_shader_parameter("overlay_color", value)
+		if Engine.is_editor_hint() and _mesh:
+			if not _mesh.material_override: _mesh.material_override = StandardMaterial3D.new()
+			(_mesh.material_override as StandardMaterial3D).albedo_color = value
+			(_mesh.material_override as StandardMaterial3D).transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 
 @onready var _mesh: MeshInstance3D = $Mesh
-@onready var _label: Label3D = $Label
+@onready var _label: Label = $LabelViewport/Panel/Label
+@onready var _label_sprite: Sprite3D = $LabelSprite
 
 var _grid_map: GridMap
+var _overlay_material: ShaderMaterial
 var grid_position: Vector3i
 
 
 func _ready() -> void:
 	_label.text = marker_name
-	if material: _mesh.material_override = material
+	_overlay_material = ShaderMaterial.new()
+	_overlay_material.shader = load(OVERLAY_SHADER_PATH)
+	_overlay_material.set_shader_parameter("overlay_color", overlay_color)
+
+	if Engine.is_editor_hint():
+		# Editor preview: show a flat colored plane
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = overlay_color
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_mesh.material_override = mat
+	else:
+		# Runtime: hide the preview plane (overlay mesh created in place_at)
+		_mesh.visible = false
 
 
 func setup(grid_map: GridMap) -> void:
@@ -33,7 +53,7 @@ func setup(grid_map: GridMap) -> void:
 	visible = false
 	var cell_size := grid_map.cell_size
 	(_mesh.mesh as PlaneMesh).size = Vector2(cell_size.x * 0.8, cell_size.z * 0.8)
-	_label.position.y = cell_size.y * 0.75
+	_label_sprite.position.y = cell_size.y * 0.75
 
 
 func place_at(pos: Vector3i) -> void:
@@ -42,7 +62,24 @@ func place_at(pos: Vector3i) -> void:
 	world_pos.y += _grid_map.cell_size.y / 2.0 + 0.03
 	global_position = world_pos
 	visible = true
+	_apply_overlay(pos)
 
 
 func remove() -> void:
 	visible = false
+
+
+func _apply_overlay(pos: Vector3i) -> void:
+	## Copy the tile mesh from the GridMap and apply the overlay shader to it.
+	if Engine.is_editor_hint(): return
+	var item_id := _grid_map.get_cell_item(pos)
+	if item_id == GridMap.INVALID_CELL_ITEM:
+		_mesh.visible = false
+		return
+	var tile_mesh := _grid_map.mesh_library.get_item_mesh(item_id)
+	_mesh.mesh = tile_mesh
+	_mesh.material_override = _overlay_material
+	_mesh.position = Vector3.ZERO
+	var orientation := _grid_map.get_cell_item_orientation(pos)
+	_mesh.basis = _grid_map.get_basis_with_orthogonal_index(orientation)
+	_mesh.visible = true
