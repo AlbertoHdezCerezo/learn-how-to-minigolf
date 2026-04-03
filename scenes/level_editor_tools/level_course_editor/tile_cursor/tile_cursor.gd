@@ -21,13 +21,16 @@ func setup(grid_map: GridMap) -> void:
 
 
 func show_at(positions: Array[Vector3i]) -> void:
-	## Show tile previews at each position. Reuses pooled MeshInstance3D nodes.
+	## Show tile previews at each position. Creates new pool nodes on demand.
 	var current_mesh := _grid_map.mesh_library.get_item_mesh(current_item) if _grid_map.mesh_library else null
 	var rot_basis := Basis(Vector3.UP, deg_to_rad(rotation_angle))
 
-	_ensure_pool_size(positions.size())
-
 	for i: int in range(positions.size()):
+		if i >= _preview_meshes.size():
+			var m := MeshInstance3D.new()
+			m.material_override = _material
+			add_child(m)
+			_preview_meshes.append(m)
 		var m := _preview_meshes[i]
 		m.mesh = current_mesh
 		m.global_position = _grid_map.map_to_local(positions[i])
@@ -41,12 +44,3 @@ func show_at(positions: Array[Vector3i]) -> void:
 func hide_all() -> void:
 	for m: MeshInstance3D in _preview_meshes:
 		m.visible = false
-
-
-func _ensure_pool_size(needed: int) -> void:
-	while _preview_meshes.size() < needed:
-		var m := MeshInstance3D.new()
-		m.material_override = _material
-		m.visible = false
-		add_child(m)
-		_preview_meshes.append(m)
