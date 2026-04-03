@@ -29,11 +29,14 @@ var floor_level: int = 0:
 		floor_level = value
 		if _grid_raycast: _grid_raycast.floor_level = value
 
+const MAX_UNDO_STEPS := 5
+
 var _grid_raycast: GridRaycast3D
 var _start_marker: TileMarker
 var _goal_marker: TileMarker
 var start_position: Vector3i = Vector3i.ZERO
 var hole_position: Vector3i = Vector3i.ZERO
+var _undo_stack: Array[Dictionary] = []
 
 
 func _ready() -> void:
@@ -55,15 +58,26 @@ func raycast(screen_pos: Vector2, camera: Camera3D, exclude_floor: bool = false)
 
 
 func put_tiles(positions: Array[Vector3i]) -> void:
+	_push_undo_snapshot()
 	var orientation := _get_grid_orientation()
 	for pos: Vector3i in positions:
 		grid_map.set_cell_item(pos, current_item, orientation)
 
 
 func erase_tiles(positions: Array[Vector3i]) -> void:
+	_push_undo_snapshot()
 	for pos: Vector3i in positions:
 		grid_map.set_cell_item(pos, GridMap.INVALID_CELL_ITEM)
 	_hide_markers_at(positions)
+
+
+func undo() -> void:
+	if _undo_stack.is_empty(): return
+	var snapshot: Dictionary = _undo_stack.pop_back()
+	grid_map.clear()
+	for pos_key: Vector3i in snapshot:
+		var cell: Vector2i = snapshot[pos_key]
+		grid_map.set_cell_item(pos_key, cell.x, cell.y)
 
 
 func show_tile_preview(positions: Array[Vector3i]) -> void:
@@ -132,6 +146,14 @@ func clear_level() -> void:
 
 
 # -- Internal --
+
+func _push_undo_snapshot() -> void:
+	var snapshot: Dictionary = {}
+	for pos: Vector3i in grid_map.get_used_cells():
+		snapshot[pos] = Vector2i(grid_map.get_cell_item(pos), grid_map.get_cell_item_orientation(pos))
+	_undo_stack.append(snapshot)
+	if _undo_stack.size() > MAX_UNDO_STEPS: _undo_stack.pop_front()
+
 
 func _get_grid_orientation() -> int:
 	var rot_basis := Basis(Vector3.UP, deg_to_rad(rotation_angle))
