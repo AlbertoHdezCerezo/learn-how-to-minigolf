@@ -22,16 +22,16 @@ mesh = SubResource("PlaneMesh_marker")
 
 [node name="LabelViewport" type="SubViewport" parent="."]
 transparent_bg = true
-size = Vector2i(256, 64)
+size = Vector2i(512, 128)
 
 [node name="Panel" type="PanelContainer" parent="LabelViewport"]
-offset_right = 256.0
-offset_bottom = 64.0
+offset_right = 512.0
+offset_bottom = 128.0
 
 [node name="Label" type="Label" parent="LabelViewport/Panel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 56
 text = "Marker"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -40,5 +40,5 @@ vertical_alignment = 1
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 billboard = 1
 no_depth_test = true
-pixel_size = 0.005
+pixel_size = 0.01
 texture = SubResource("ViewportTexture_label")
