@@ -231,17 +231,66 @@ func test_finish_erasing_drag_removes_rectangle_of_tiles() -> void:
 		assert_eq(editor._course_editor.grid_map.get_cell_item(pos), GridMap.INVALID_CELL_ITEM, "Drag erase should remove tile at %s" % str(pos))
 
 
-func test_erase_start_on_floor_sets_draw_start_to_null() -> void:
-	# Simulate what happens when the erase raycast hits the floor
-	var floor_hit := GridRaycast3D.Hit.new(Vector3i(0, 0, 0), Vector3i(0, 0, 0), Vector3.UP, true)
-	var draw_start = floor_hit.tile if not floor_hit.is_floor else null
-	assert_null(draw_start, "Erase start on floor should produce null draw_start")
-
-
 func test_erase_start_on_tile_sets_draw_start_to_tile_position() -> void:
 	var tile_hit := GridRaycast3D.Hit.new(Vector3i(3, 0, 2), Vector3i(3, 1, 2), Vector3.UP, false)
-	var draw_start = tile_hit.tile if not tile_hit.is_floor else null
-	assert_eq(draw_start, Vector3i(3, 0, 2), "Erase start on tile should use the tile position")
+	assert_eq(tile_hit.tile, Vector3i(3, 0, 2), "Erase start on tile should use the tile position")
+
+
+func test_erase_uses_exclude_floor_so_tiles_below_floor_are_reachable() -> void:
+	# Place a tile at level -1, which is below the default floor (level 0)
+	editor._course_editor.current_item = 0
+	editor._course_editor.put_tiles([Vector3i(0, -1, 0)] as Array[Vector3i])
+	# Verify it's there
+	assert_eq(editor._course_editor.grid_map.get_cell_item(Vector3i(0, -1, 0)), 0, "Tile should exist at level -1")
+	# Erase it directly (simulating what _finish_erasing does)
+	editor._draw_start = Vector3i(0, -1, 0)
+	editor._draw_screen_start = Vector2(100, 100)
+	editor._finish_erasing(Vector2(100, 100))
+	assert_eq(editor._course_editor.grid_map.get_cell_item(Vector3i(0, -1, 0)), GridMap.INVALID_CELL_ITEM, "Should be able to erase tiles below floor level")
+
+
+func test_finish_erasing_drag_with_vertical_levels_erases_block() -> void:
+	editor._course_editor.current_item = 0
+	# Place a 2x1x2 block
+	var positions: Array[Vector3i] = [
+		Vector3i(0, 0, 0), Vector3i(1, 0, 0),
+		Vector3i(0, 1, 0), Vector3i(1, 1, 0),
+	]
+	editor._course_editor.put_tiles(positions)
+	# Set up erase with vertical levels
+	editor._draw_start = Vector3i(0, 0, 0)
+	editor._draw_end = Vector3i(1, 0, 0)
+	editor._vertical_levels = 1
+	editor._draw_screen_start = Vector2(50, 50)
+	editor._finish_erasing(Vector2(200, 200))
+	for pos: Vector3i in positions:
+		assert_eq(editor._course_editor.grid_map.get_cell_item(pos), GridMap.INVALID_CELL_ITEM, "Block erase should remove tile at %s" % str(pos))
+
+
+# -- Vertical drawing --
+
+func test_finish_drawing_with_vertical_levels_places_block() -> void:
+	editor._course_editor.current_item = 0
+	editor._draw_start = Vector3i(0, 0, 0)
+	editor._draw_end = Vector3i(1, 0, 1)
+	editor._vertical_levels = 2
+	editor._draw_screen_start = Vector2(50, 50)
+	editor._finish_drawing(Vector2(200, 200))
+	# 2x2 XZ * 3 levels = 12 tiles
+	for y: int in range(3):
+		for x: int in range(2):
+			for z: int in range(2):
+				assert_eq(editor._course_editor.grid_map.get_cell_item(Vector3i(x, y, z)), 0, "Block draw should place tile at (%d,%d,%d)" % [x, y, z])
+
+
+func test_finish_drawing_single_click_ignores_vertical_levels() -> void:
+	editor._course_editor.current_item = 0
+	editor._draw_start = Vector3i(0, 0, 0)
+	editor._vertical_levels = 3
+	editor._draw_screen_start = Vector2(100, 100)
+	editor._finish_drawing(Vector2(100, 100))
+	assert_eq(editor._course_editor.grid_map.get_cell_item(Vector3i(0, 0, 0)), 0, "Single click should place one tile")
+	assert_eq(editor._course_editor.grid_map.get_cell_item(Vector3i(0, 1, 0)), GridMap.INVALID_CELL_ITEM, "Single click should not place tiles on other levels")
 
 
 # -- block_positions --
