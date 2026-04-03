@@ -13,9 +13,22 @@ const GOAL_MARKER_MATERIAL_PATH := "res://resources/materials/goal_marker_materi
 @onready var grid_map: GridMap = $GridMap
 @onready var _tile_cursor: TileCursor = $TileCursor
 
+var current_item: int = 0:
+	set(value):
+		current_item = value
+		if _tile_cursor: _tile_cursor.current_item = value
+
+var rotation_angle: float = 0.0:
+	set(value):
+		rotation_angle = value
+		if _tile_cursor: _tile_cursor.rotation_angle = value
+
+var floor_level: int = 0:
+	set(value):
+		floor_level = value
+		if _grid_raycast: _grid_raycast.floor_level = value
+
 var _grid_raycast: GridRaycast3D
-var _current_item: int = 0
-var _current_rotation_angle: float = 0.0
 var _start_marker: MeshInstance3D
 var _goal_marker: MeshInstance3D
 var start_position: Vector3i = Vector3i.ZERO
@@ -35,20 +48,6 @@ func _ready() -> void:
 
 # -- Public API --
 
-func select_tile(item_id: int) -> void:
-	_current_item = item_id
-	_tile_cursor.current_item = item_id
-
-
-func set_rotation_angle(angle: float) -> void:
-	_current_rotation_angle = angle
-	_tile_cursor.rotation_angle = angle
-
-
-func set_floor(level: int) -> void:
-	_grid_raycast.floor_level = level
-
-
 func raycast(screen_pos: Vector2, camera: Camera3D) -> GridRaycast3D.Hit:
 	return _grid_raycast.cast(screen_pos, camera, get_world_3d())
 
@@ -56,7 +55,7 @@ func raycast(screen_pos: Vector2, camera: Camera3D) -> GridRaycast3D.Hit:
 func put_tiles(positions: Array[Vector3i]) -> void:
 	var orientation := _get_grid_orientation()
 	for pos: Vector3i in positions:
-		grid_map.set_cell_item(pos, _current_item, orientation)
+		grid_map.set_cell_item(pos, current_item, orientation)
 
 
 func erase_tiles(positions: Array[Vector3i]) -> void:
@@ -144,7 +143,7 @@ func clear_level() -> void:
 # -- Internal --
 
 func _get_grid_orientation() -> int:
-	var rot_basis := Basis(Vector3.UP, deg_to_rad(_current_rotation_angle))
+	var rot_basis := Basis(Vector3.UP, deg_to_rad(rotation_angle))
 	return grid_map.get_orthogonal_index_from_basis(rot_basis)
 
 
