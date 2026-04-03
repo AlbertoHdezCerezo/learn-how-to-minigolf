@@ -58,6 +58,7 @@ func _connect_atmosphere_ui() -> void:
 	_atmosphere_display.atmosphere = _atmosphere
 	_atmosphere_ui.bind(_atmosphere)
 	_atmosphere_ui.sync_from(_atmosphere)
+	_atmosphere_ui.load_requested.connect(_on_atmosphere_changed)
 
 
 # -- Input --
@@ -289,7 +290,10 @@ func _on_save_requested(level_name: String, save_path: String) -> void:
 
 func _on_level_loaded(level_data: LevelData) -> void:
 	_ui.set_level_name(level_data.level_name)
-	if level_data.atmosphere: _on_atmosphere_changed(level_data.atmosphere)
+	if level_data.atmosphere:
+		_on_atmosphere_changed(level_data.atmosphere)
+	else:
+		print("Warning: loaded level has no atmosphere")
 
 
 func _on_atmosphere_changed(atm: Atmosphere) -> void:
