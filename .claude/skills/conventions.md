@@ -210,3 +210,45 @@ func test_color_emits() -> void:
 
 - Do NOT use vague names like `test_fog_density` or `test_color_emits`
 - Do NOT omit assertion failure messages
+
+---
+
+## 6. Property setters over set_* methods
+
+When a class needs to expose a mutable value, use a `var` with an optional setter — not a `set_*()` method. This keeps the API consistent with Godot's own nodes and allows natural assignment syntax.
+
+### Why
+
+GDScript has first-class setter support. Using `set_*()` methods duplicates what the language already provides, adds unnecessary indirection, and creates an inconsistent API where some values are set via `=` and others via method calls.
+
+### DO
+
+```gdscript
+var current_item: int = 0
+
+var rotation_angle: float = 0.0:
+    set(value):
+        rotation_angle = value
+        _update_visual()
+```
+
+```gdscript
+# Callers use natural assignment:
+cursor.current_item = 3
+cursor.rotation_angle = 90.0
+```
+
+### DON'T
+
+```gdscript
+var _current_item: int = 0
+
+func set_tile(item_id: int) -> void:
+    _current_item = item_id
+
+func set_rotation_angle(angle: float) -> void:
+    _rotation_angle = angle
+```
+
+- Do NOT write `set_*()` methods for simple property updates
+- Do NOT prefix properties with `_` if they need to be accessed externally — use a public var instead
