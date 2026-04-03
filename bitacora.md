@@ -505,3 +505,40 @@ We followed an incremental, dependency-ordered approach — starting with leaf n
 - **Floor planes block raycasts from below** — the infinite `WorldBoundaryShape3D` floor plane prevents clicking tiles underneath it. Adding an `exclude_floor` option to the raycast was essential for erasing tiles built below the current floor level.
 
 ---
+
+## feat: Level Scene
+
+> Date: 2026-04-03 ~afternoon
+> Issue: #18 — https://github.com/AlbertoHdezCerezo/learn-how-to-minigolf/issues/18
+> Branch: feat-level-scene
+> PR: #19 — https://github.com/AlbertoHdezCerezo/learn-how-to-minigolf/pull/19
+
+### What we did
+
+Built the first playable level infrastructure. GolfCourse was refactored into a pure course renderer, a new HoleTrigger scene detects when the ball falls into the hole, and LevelScene ties everything together — ball, course, hole detection, and shot counting. We also added a sandbox level with ramps for manual playtesting.
+
+### Why
+
+Until now, the project had a level editor, ball physics, and a course renderer — but no way to actually *play* a level. This issue bridges that gap: load a level, hit the ball, and have the game detect when you've sunk it. It's the foundation for the full game flow (scoring, level completion, replaying), which will come in a follow-up issue.
+
+### How we implemented it
+
+The key architectural decision was **separation of concerns**: GolfCourse renders the course (GridMap, atmosphere, camera), while LevelScene orchestrates gameplay (ball placement, hole detection, shot tracking). This means GolfCourse can be reused for level previews in the editor without carrying game logic.
+
+**GolfCourse refactoring** was straightforward — we pulled out the ball instantiation code and added three public methods: `get_grid_map()` to access the GridMap, `get_course()` to access the container node (so LevelScene can add children to it), and `grid_to_world()` for coordinate conversion. The grid-to-world formula places objects at the center of a cell, on top of the tile surface: `y = grid_y * cell_size_y + cell_size_y / 2.0`.
+
+**HoleTrigger** is an Area3D with a small CylinderShape3D (radius 0.3, height 0.5) positioned slightly below the tile surface. When any RigidBody3D enters the trigger zone, it emits a `ball_entered` signal. We considered whether Area3D + RigidBody3D detection would be reliable — there are known reports of `body_entered` being flaky in Godot 4 with fast-moving bodies. But our ball has continuous collision detection enabled and slows down significantly before reaching the hole, so the signal approach should work. If it doesn't, the fallback is polling `get_overlapping_bodies()` in `_physics_process`.
+
+**LevelScene** is the composer. In `_ready()`, it instantiates GolfCourse with the level resource, then adds the Ball and HoleTrigger as children of the Course node. Shot counting connects to the ball's existing state machine — each `IDLE → MOVING` transition represents one shot. When `ball_entered` fires from the trigger, LevelScene emits `level_completed`.
+
+One interesting discovery: the **hole tile's collision shape is a solid 2×2×2 box**, which means the ball would just roll right over it instead of falling in. We identified two solutions — (a) modify the collision shape in the MeshLibrary to have an opening at the top, or (b) programmatically remove the collision at runtime. We went with option (a) because it's simpler and more correct — the tile should just have the right physics shape. This needs to be done manually in the Godot editor (editing the TileLibrary scene and re-exporting).
+
+The **sandbox level** (`scenes/sandbox/level_sandbox.tscn`) provides a quick way to test everything: a flat starting area, a turn, a ramp climbing one level, flat tiles at the upper level, and the hole at the end.
+
+### Key takeaways
+
+- **Separate rendering from gameplay** — making GolfCourse a pure renderer and LevelScene the gameplay orchestrator was the right call. It keeps both scenes testable in isolation and makes GolfCourse reusable for non-gameplay contexts (editor previews, thumbnails).
+- **MeshLibrary collision shapes matter** — it's easy to give every tile a simple box collision and forget about it. But gameplay tiles like the hole need physics shapes that match their gameplay role. A solid box on a hole tile defeats the purpose. This is the kind of thing you only catch when you actually try to play the game.
+- **State machine signals are great for cross-system communication** — instead of the ball needing to know about shot counting, LevelScene just listens to the state machine's `state_changed` signal. The ball doesn't know or care that shots are being counted.
+
+---
