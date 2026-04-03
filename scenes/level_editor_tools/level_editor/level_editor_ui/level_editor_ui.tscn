@@ -65,6 +65,11 @@ text = "Rotate (R)"
 [node name="FloorControlSeparator" type="HSeparator" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
 layout_mode = 2
 
+[node name="LevelNameInput" type="LineEdit" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Level name..."
+
 [node name="SavePathLabel" type="Label" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
 layout_mode = 2
 text = "Save Path (relative to levels/)"
