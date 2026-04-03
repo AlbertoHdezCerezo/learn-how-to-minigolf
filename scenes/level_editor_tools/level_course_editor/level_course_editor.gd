@@ -49,7 +49,7 @@ func set_floor(level: int) -> void:
 	_grid_raycast.floor_level = level
 
 
-func raycast(screen_pos: Vector2, camera: Camera3D) -> GridRaycastHit:
+func raycast(screen_pos: Vector2, camera: Camera3D) -> GridRaycast3D.Hit:
 	return _grid_raycast.cast(screen_pos, camera, get_world_3d())
 
 

@@ -14,6 +14,27 @@ extends Node3D
 ##   if hit.is_floor: place(hit.adjacent)
 ##   else: erase(hit.tile)
 
+
+class Hit:
+	## Result of a GridRaycast3D.cast() call.
+	##
+	## tile:     The occupied grid cell that was hit (or the floor cell).
+	## adjacent: The empty neighbor cell next to the hit surface.
+	## normal:   The surface normal at the hit point.
+	## is_floor: True if the ray hit the floor plane, false if it hit a tile.
+
+	var tile: Vector3i
+	var adjacent: Vector3i
+	var normal: Vector3
+	var is_floor: bool
+
+	func _init(p_tile: Vector3i, p_adjacent: Vector3i, p_normal: Vector3, p_is_floor: bool) -> void:
+		tile = p_tile
+		adjacent = p_adjacent
+		normal = p_normal
+		is_floor = p_is_floor
+
+
 var _grid_map: GridMap
 var _floor_body: StaticBody3D
 var _cell_size: Vector3
@@ -31,8 +52,8 @@ func _init(grid_map: GridMap) -> void:
 	add_child(_floor_body)
 
 
-## Casts a ray and returns a GridRaycastHit, or null if nothing was hit.
-func cast(screen_pos: Vector2, camera: Camera3D, world: World3D) -> GridRaycastHit:
+## Casts a ray and returns a Hit, or null if nothing was hit.
+func cast(screen_pos: Vector2, camera: Camera3D, world: World3D) -> Hit:
 	var result := Raycast.from_screen(screen_pos, camera, world)
 	if result.is_empty(): return null
 
@@ -42,11 +63,11 @@ func cast(screen_pos: Vector2, camera: Camera3D, world: World3D) -> GridRaycastH
 		var hit_local: Vector3 = _grid_map.to_local(result.position)
 		var grid_pos: Vector3i = _grid_map.local_to_map(hit_local)
 		grid_pos.y = floor_level
-		return GridRaycastHit.new(grid_pos, grid_pos, normal, true)
+		return Hit.new(grid_pos, grid_pos, normal, true)
 
 	var tile := _get_cell_at_offset(result, -0.1)
 	var adjacent := _get_cell_at_offset(result, _cell_size.x * 0.5)
-	return GridRaycastHit.new(tile, adjacent, normal, false)
+	return Hit.new(tile, adjacent, normal, false)
 
 
 func _get_cell_at_offset(result: Dictionary, offset: float) -> Vector3i:
