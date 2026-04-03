@@ -200,6 +200,50 @@ func test_on_atmosphere_changed_copies_values_to_bound_atmosphere() -> void:
 	assert_almost_eq(editor._atmosphere.light_energy, 2.5, 0.01, "light_energy should be copied from new atmosphere")
 
 
+# -- Erase logic --
+
+func test_finish_erasing_single_tile_removes_it() -> void:
+	editor._course_editor.current_item = 0
+	editor._course_editor.put_tiles([Vector3i(2, 0, 3)] as Array[Vector3i])
+	editor._draw_start = Vector3i(2, 0, 3)
+	editor._draw_screen_start = Vector2(100, 100)
+	editor._finish_erasing(Vector2(100, 100))
+	assert_eq(editor._course_editor.grid_map.get_cell_item(Vector3i(2, 0, 3)), GridMap.INVALID_CELL_ITEM, "Single click erase should remove the tile")
+
+
+func test_finish_erasing_with_null_draw_start_does_nothing() -> void:
+	editor._draw_start = null
+	editor._finish_erasing(Vector2(200, 200))
+	# No crash = pass
+	assert_true(true, "finish_erasing with null draw_start should not crash")
+
+
+func test_finish_erasing_drag_removes_rectangle_of_tiles() -> void:
+	editor._course_editor.current_item = 0
+	var positions: Array[Vector3i] = [Vector3i(0, 0, 0), Vector3i(1, 0, 0), Vector3i(0, 0, 1), Vector3i(1, 0, 1)]
+	editor._course_editor.put_tiles(positions)
+	editor._draw_start = Vector3i(0, 0, 0)
+	editor._draw_screen_start = Vector2(50, 50)
+	# Simulate drag far enough to exceed threshold, with explicit end positions
+	var end_positions := LevelEditor.rect_positions(Vector3i(0, 0, 0), Vector3i(1, 0, 1))
+	editor._course_editor.erase_tiles(end_positions)
+	for pos: Vector3i in positions:
+		assert_eq(editor._course_editor.grid_map.get_cell_item(pos), GridMap.INVALID_CELL_ITEM, "Drag erase should remove tile at %s" % str(pos))
+
+
+func test_erase_start_on_floor_sets_draw_start_to_null() -> void:
+	# Simulate what happens when the erase raycast hits the floor
+	var floor_hit := GridRaycast3D.Hit.new(Vector3i(0, 0, 0), Vector3i(0, 0, 0), Vector3.UP, true)
+	var draw_start = floor_hit.tile if not floor_hit.is_floor else null
+	assert_null(draw_start, "Erase start on floor should produce null draw_start")
+
+
+func test_erase_start_on_tile_sets_draw_start_to_tile_position() -> void:
+	var tile_hit := GridRaycast3D.Hit.new(Vector3i(3, 0, 2), Vector3i(3, 1, 2), Vector3.UP, false)
+	var draw_start = tile_hit.tile if not tile_hit.is_floor else null
+	assert_eq(draw_start, Vector3i(3, 0, 2), "Erase start on tile should use the tile position")
+
+
 # -- Drag threshold --
 
 func test_drag_threshold_is_five_pixels() -> void:

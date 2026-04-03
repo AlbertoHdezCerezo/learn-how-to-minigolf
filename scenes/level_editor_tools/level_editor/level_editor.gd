@@ -74,11 +74,6 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			_sm.transit(State.PANNING)
 		elif event.meta_pressed:
 			_sm.transit(State.ORBITING)
-		elif event.ctrl_pressed:
-			_sm.transit(State.ERASING)
-			var hit := _course_editor.raycast(event.position, _camera)
-			_draw_start = hit.tile if hit and not hit.is_floor else null
-			_draw_screen_start = event.position
 		else:
 			_sm.transit(State.DRAWING)
 			var hit := _course_editor.raycast(event.position, _camera)
@@ -88,7 +83,19 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 	# -- Left button release --
 	elif event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
 		if _sm.is_in(State.DRAWING): _finish_drawing(event.position)
-		elif _sm.is_in(State.ERASING): _finish_erasing(event.position)
+		_course_editor.hide_tile_preview()
+		if not _sm.is_in(State.IDLE): _sm.transit(State.IDLE)
+		_draw_start = null
+
+	# -- Right button (erase) — also triggered by Ctrl+click on macOS --
+	elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+		_sm.transit(State.ERASING)
+		var hit := _course_editor.raycast(event.position, _camera)
+		_draw_start = hit.tile if hit and not hit.is_floor else null
+		_draw_screen_start = event.position
+
+	elif event.button_index == MOUSE_BUTTON_RIGHT and not event.pressed:
+		if _sm.is_in(State.ERASING): _finish_erasing(event.position)
 		_course_editor.hide_tile_preview()
 		if not _sm.is_in(State.IDLE): _sm.transit(State.IDLE)
 		_draw_start = null
@@ -124,7 +131,7 @@ func _finish_erasing(release_pos: Vector2) -> void:
 		_course_editor.erase_tiles([_draw_start] as Array[Vector3i])
 	else:
 		var hit := _course_editor.raycast(release_pos, _camera)
-		var draw_end: Vector3i = hit.tile if hit and not hit.is_floor else _draw_start
+		var draw_end: Vector3i = hit.adjacent if hit else _draw_start
 		draw_end.y = _draw_start.y
 		_course_editor.erase_tiles(rect_positions(_draw_start, draw_end))
 
