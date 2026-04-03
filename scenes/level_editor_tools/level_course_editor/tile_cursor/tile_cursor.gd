@@ -10,6 +10,7 @@ const CURSOR_MATERIAL_PATH := "res://resources/materials/tile_cursor_material.tr
 var _grid_map: GridMap
 var _material: StandardMaterial3D
 var _preview_meshes: Array[MeshInstance3D] = []
+var _visible_positions: Array[Vector3i] = []
 
 var current_item: int = 0:
 	set(value):
@@ -29,6 +30,7 @@ func setup(grid_map: GridMap) -> void:
 
 func show_at(positions: Array[Vector3i]) -> void:
 	## Show tile previews at each position. Creates new pool nodes on demand.
+	_visible_positions = positions
 	for i: int in range(positions.size()):
 		_draw_tile_preview(i, positions[i])
 
@@ -55,10 +57,5 @@ func hide_all() -> void:
 
 
 func _refresh_visible() -> void:
-	if not _grid_map or not _grid_map.mesh_library: return
-	var mesh: Mesh = _grid_map.mesh_library.get_item_mesh(current_item)
-	var basis := Basis(Vector3.UP, deg_to_rad(rotation_angle))
-	for m: MeshInstance3D in _preview_meshes:
-		if not m.visible: continue
-		m.mesh = mesh
-		m.basis = basis
+	if _visible_positions.is_empty(): return
+	show_at(_visible_positions)
