@@ -25,60 +25,60 @@ func test_level_course_editor_instantiates_without_error() -> void:
 	assert_not_null(editor, "LevelCourseEditor should instantiate into a valid node")
 
 
-# -- select_tile --
+# -- current_item --
 
-func test_select_tile_updates_current_item() -> void:
-	editor.select_tile(3)
+func test_setting_current_item_updates_placed_tile() -> void:
+	editor.current_item = 3
 	editor.put_tiles([Vector3i(0, 0, 0)] as Array[Vector3i])
 	assert_eq(editor.grid_map.get_cell_item(Vector3i(0, 0, 0)), 3, "Placed tile should use the selected item ID")
 
 
-func test_select_tile_changes_which_tile_is_placed() -> void:
-	editor.select_tile(0)
+func test_changing_current_item_affects_subsequent_placements() -> void:
+	editor.current_item = 0
 	editor.put_tiles([Vector3i(0, 0, 0)] as Array[Vector3i])
-	editor.select_tile(2)
+	editor.current_item = 2
 	editor.put_tiles([Vector3i(1, 0, 0)] as Array[Vector3i])
 	assert_eq(editor.grid_map.get_cell_item(Vector3i(0, 0, 0)), 0, "First tile should be item 0")
 	assert_eq(editor.grid_map.get_cell_item(Vector3i(1, 0, 0)), 2, "Second tile should be item 2")
 
 
-# -- set_rotation_angle --
+# -- rotation_angle --
 
-func test_set_rotation_angle_affects_placed_tile_orientation() -> void:
-	editor.select_tile(0)
-	editor.set_rotation_angle(0.0)
+func test_setting_rotation_angle_affects_placed_tile_orientation() -> void:
+	editor.current_item = 0
+	editor.rotation_angle = 0.0
 	editor.put_tiles([Vector3i(0, 0, 0)] as Array[Vector3i])
 	var orient_a := editor.grid_map.get_cell_item_orientation(Vector3i(0, 0, 0))
 
-	editor.set_rotation_angle(90.0)
+	editor.rotation_angle = 90.0
 	editor.put_tiles([Vector3i(1, 0, 0)] as Array[Vector3i])
 	var orient_b := editor.grid_map.get_cell_item_orientation(Vector3i(1, 0, 0))
 	assert_ne(orient_a, orient_b, "Different rotation angles should produce different GridMap orientations")
 
 
-# -- set_floor --
+# -- floor_level --
 
-func test_set_floor_updates_raycast_floor_level() -> void:
-	editor.set_floor(2)
-	assert_eq(editor._grid_raycast.floor_level, 2, "set_floor should update the raycast's floor_level")
+func test_setting_floor_level_updates_raycast_floor_level() -> void:
+	editor.floor_level = 2
+	assert_eq(editor._grid_raycast.floor_level, 2, "floor_level should update the raycast's floor_level")
 
 
-func test_set_floor_zero_sets_raycast_floor_level_to_zero() -> void:
-	editor.set_floor(3)
-	editor.set_floor(0)
-	assert_eq(editor._grid_raycast.floor_level, 0, "set_floor(0) should set raycast floor_level to 0")
+func test_setting_floor_level_to_zero_resets_raycast() -> void:
+	editor.floor_level = 3
+	editor.floor_level = 0
+	assert_eq(editor._grid_raycast.floor_level, 0, "floor_level = 0 should set raycast floor_level to 0")
 
 
 # -- put_tiles --
 
 func test_put_tiles_places_single_tile() -> void:
-	editor.select_tile(1)
+	editor.current_item = 1
 	editor.put_tiles([Vector3i(2, 0, 3)] as Array[Vector3i])
 	assert_eq(editor.grid_map.get_cell_item(Vector3i(2, 0, 3)), 1, "put_tiles with one position should place tile at that position")
 
 
 func test_put_tiles_places_multiple_tiles() -> void:
-	editor.select_tile(0)
+	editor.current_item = 0
 	var positions: Array[Vector3i] = [Vector3i(0, 0, 0), Vector3i(1, 0, 0), Vector3i(2, 0, 0)]
 	editor.put_tiles(positions)
 	for pos: Vector3i in positions:
@@ -86,8 +86,8 @@ func test_put_tiles_places_multiple_tiles() -> void:
 
 
 func test_put_tiles_uses_current_rotation() -> void:
-	editor.select_tile(0)
-	editor.set_rotation_angle(90.0)
+	editor.current_item = 0
+	editor.rotation_angle = 90.0
 	editor.put_tiles([Vector3i(0, 0, 0)] as Array[Vector3i])
 	var orient := editor.grid_map.get_cell_item_orientation(Vector3i(0, 0, 0))
 	assert_ne(orient, 0, "Tile placed at 90 degrees should have non-zero orientation")
@@ -96,14 +96,14 @@ func test_put_tiles_uses_current_rotation() -> void:
 # -- erase_tiles --
 
 func test_erase_tiles_removes_single_tile() -> void:
-	editor.select_tile(0)
+	editor.current_item = 0
 	editor.put_tiles([Vector3i(1, 0, 1)] as Array[Vector3i])
 	editor.erase_tiles([Vector3i(1, 0, 1)] as Array[Vector3i])
 	assert_eq(editor.grid_map.get_cell_item(Vector3i(1, 0, 1)), GridMap.INVALID_CELL_ITEM, "erase_tiles should remove the tile")
 
 
 func test_erase_tiles_removes_multiple_tiles() -> void:
-	editor.select_tile(0)
+	editor.current_item = 0
 	var positions: Array[Vector3i] = [Vector3i(0, 0, 0), Vector3i(1, 0, 0)]
 	editor.put_tiles(positions)
 	editor.erase_tiles(positions)
@@ -171,7 +171,7 @@ func test_hide_tile_preview_delegates_to_tile_cursor() -> void:
 # -- clear_level --
 
 func test_clear_level_removes_all_tiles_from_grid_map() -> void:
-	editor.select_tile(0)
+	editor.current_item = 0
 	editor.put_tiles([Vector3i(0, 0, 0), Vector3i(1, 0, 0)] as Array[Vector3i])
 	editor.clear_level()
 	assert_eq(editor.grid_map.get_used_cells().size(), 0, "GridMap should be empty after clear_level")
@@ -180,7 +180,7 @@ func test_clear_level_removes_all_tiles_from_grid_map() -> void:
 # -- save_level / load_level round-trip --
 
 func test_save_and_load_level_preserves_tiles() -> void:
-	editor.select_tile(2)
+	editor.current_item = 2
 	editor.put_tiles([Vector3i(0, 0, 0), Vector3i(1, 0, 0)] as Array[Vector3i])
 	editor.start_position = Vector3i(0, 0, 0)
 	editor.hole_position = Vector3i(1, 0, 0)
@@ -195,7 +195,7 @@ func test_save_and_load_level_preserves_tiles() -> void:
 
 
 func test_load_level_emits_level_loaded_signal() -> void:
-	editor.select_tile(0)
+	editor.current_item = 0
 	editor.put_tiles([Vector3i(0, 0, 0)] as Array[Vector3i])
 	editor.save_level("test_course_editor_signal")
 

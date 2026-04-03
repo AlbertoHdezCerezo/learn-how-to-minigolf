@@ -39,9 +39,9 @@ func _ready() -> void:
 
 func bind(course_editor: LevelCourseEditor) -> void:
 	_create_tile_buttons(course_editor.mesh_library)
-	tile_selected.connect(course_editor.select_tile)
-	rotation_changed.connect(course_editor.set_rotation_angle)
-	floor_changed.connect(course_editor.set_floor)
+	tile_selected.connect(func(id: int): course_editor.current_item = id)
+	rotation_changed.connect(func(angle: float): course_editor.rotation_angle = angle)
+	floor_changed.connect(func(level: int): course_editor.floor_level = level)
 	# save_requested is handled by the level_editor to include atmosphere
 	load_requested.connect(course_editor.load_level)
 	clear_requested.connect(course_editor.clear_level)
