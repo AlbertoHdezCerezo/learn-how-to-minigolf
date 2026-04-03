@@ -76,21 +76,16 @@ func _populate_atmosphere_selector() -> void:
 	_atmosphere_paths.clear()
 	_atmosphere_selector.clear()
 
-	var default_path := "res://resources/atmospheres/default_atmosphere.tres"
-	if ResourceLoader.exists(default_path):
-		_atmosphere_paths.append(default_path)
-		_atmosphere_selector.add_item("Default")
-
 	var dir := DirAccess.open("res://resources/atmospheres/")
-	if dir:
-		dir.list_dir_begin()
-		var file_name := dir.get_next()
-		while file_name != "":
-			if file_name.ends_with(".tres"):
-				var path := "res://resources/atmospheres/" + file_name
-				_atmosphere_paths.append(path)
-				_atmosphere_selector.add_item(file_name.get_basename().capitalize())
-			file_name = dir.get_next()
+	if not dir: return
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	while file_name != "":
+		if file_name.ends_with(".tres") and not file_name.begins_with("test"):
+			var path := "res://resources/atmospheres/" + file_name
+			_atmosphere_paths.append(path)
+			_atmosphere_selector.add_item(file_name.get_basename().capitalize())
+		file_name = dir.get_next()
 
 
 func _on_atmosphere_selected(index: int) -> void:
