@@ -5,41 +5,22 @@
 [sub_resource type="PlaneMesh" id="PlaneMesh_marker"]
 size = Vector2(1.6, 1.6)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0, 0, 0, 1)
-content_margin_left = 12.0
-content_margin_top = 12.0
-content_margin_right = 12.0
-content_margin_bottom = 12.0
-
-[sub_resource type="ViewportTexture" id="ViewportTexture_label"]
-viewport_path = NodePath("LabelViewport")
-
 [node name="TileMarker" type="Node3D"]
 script = ExtResource("1_script")
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
 mesh = SubResource("PlaneMesh_marker")
 
-[node name="LabelViewport" type="SubViewport" parent="."]
-transparent_bg = true
-size = Vector2i(512, 128)
-
-[node name="Panel" type="PanelContainer" parent="LabelViewport"]
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
-
-[node name="Label" type="Label" parent="LabelViewport/Panel"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 56
-text = "Marker"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="LabelSprite" type="Sprite3D" parent="."]
+[node name="Label" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 billboard = 1
 no_depth_test = true
 shaded = false
-pixel_size = 0.02
-texture = SubResource("ViewportTexture_label")
+double_sided = true
+render_priority = 10
+outline_render_priority = 9
+modulate = Color(1, 1, 1, 1)
+outline_modulate = Color(0, 0, 0, 1)
+outline_size = 24
+text = "Marker"
+font_size = 64
