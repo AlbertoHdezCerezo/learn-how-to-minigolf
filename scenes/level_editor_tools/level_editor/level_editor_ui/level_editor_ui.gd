@@ -3,7 +3,7 @@ extends CanvasLayer
 signal tile_selected(item_id: int)
 signal rotation_changed(angle: float)
 signal floor_changed(level: int)
-signal save_requested(level_name: String)
+signal save_requested(save_path: String)
 signal load_requested(level_path: String)
 signal clear_requested
 signal atmosphere_changed(atmosphere: Atmosphere)
@@ -12,11 +12,12 @@ signal atmosphere_changed(atmosphere: Atmosphere)
 @onready var _floor_spinbox: SpinBox = %FloorSpinBox
 @onready var _rotate_button: Button = %RotateButton
 @onready var _atmosphere_selector: OptionButton = %AtmosphereSelector
-@onready var _name_input: LineEdit = %LevelNameInput
+@onready var _path_input: LineEdit = %SavePathInput
 @onready var _save_button: Button = %SaveButton
 @onready var _load_button: Button = %LoadButton
 @onready var _clear_button: Button = %ClearButton
 @onready var _file_dialog: FileDialog = %LoadLevelDialog
+@onready var _status_label: Label = %StatusLabel
 
 const ROTATION_ANGLES: Array[float] = [0.0, 90.0, 180.0, 270.0]
 
@@ -31,10 +32,10 @@ func _ready() -> void:
 	_floor_spinbox.value_changed.connect(func(v: float): floor_changed.emit(int(v)))
 	_rotate_button.pressed.connect(_cycle_rotation)
 	_atmosphere_selector.item_selected.connect(_on_atmosphere_selected)
-	_save_button.pressed.connect(func(): save_requested.emit(_name_input.text.strip_edges()))
+	_save_button.pressed.connect(func(): save_requested.emit(_path_input.text.strip_edges()))
 	_load_button.pressed.connect(_show_load_dialog)
 	_clear_button.pressed.connect(func(): clear_requested.emit())
-	_file_dialog.file_selected.connect(func(path: String): load_requested.emit(path))
+	_file_dialog.file_selected.connect(_on_file_selected)
 
 
 func bind(course_editor: LevelCourseEditor) -> void:
@@ -104,6 +105,21 @@ func _cycle_rotation() -> void:
 	var angle := ROTATION_ANGLES[_current_rotation_index]
 	_rotate_button.text = "Rotate (%d°)" % int(angle)
 	rotation_changed.emit(angle)
+
+
+func show_status(text: String) -> void:
+	_status_label.text = text
+
+
+func set_save_path(save_path: String) -> void:
+	_path_input.text = save_path
+
+
+func _on_file_selected(path: String) -> void:
+	## Extract the relative path from the full resource path for the save input.
+	var relative := path.trim_prefix(LevelData.SAVE_DIR).trim_suffix(".tres")
+	_path_input.text = relative
+	load_requested.emit(path)
 
 
 func _show_load_dialog() -> void:

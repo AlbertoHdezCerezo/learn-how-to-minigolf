@@ -65,10 +65,14 @@ text = "Rotate (R)"
 [node name="FloorControlSeparator" type="HSeparator" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
 layout_mode = 2
 
-[node name="LevelNameInput" type="LineEdit" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
+[node name="SavePathLabel" type="Label" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
+layout_mode = 2
+text = "Save Path (relative to levels/)"
+
+[node name="SavePathInput" type="LineEdit" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
 unique_name_in_owner = true
 layout_mode = 2
-placeholder_text = "Level name..."
+placeholder_text = "e.g. world1/level_01"
 
 [node name="FileActionsRow" type="HBoxContainer" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
 layout_mode = 2
@@ -97,7 +101,13 @@ text = "1-9: Select tile | R: Rotate
 LMB: Place | RMB: Remove
 [ ]: Floor +/- | H: Toggle UI
 Opt+drag: Pan | Cmd+drag: Orbit
-Scroll: Zoom/Orbit | N: Reset cam"
+Scroll: Zoom/Orbit | N: Reset cam
+Cmd+Z: Undo"
+horizontal_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="ToolPanel/ToolPanelMargin/ToolPanelLayout"]
+unique_name_in_owner = true
+layout_mode = 2
 horizontal_alignment = 1
 
 [node name="LoadLevelDialog" type="FileDialog" parent="."]
