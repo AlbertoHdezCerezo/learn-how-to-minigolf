@@ -1,5 +1,4 @@
 class_name GridRaycastHit
-extends RefCounted
 
 ## Result of a GridRaycast3D.cast() call.
 ##
