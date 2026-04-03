@@ -5,14 +5,15 @@
 [sub_resource type="PlaneMesh" id="PlaneMesh_marker"]
 size = Vector2(1.6, 1.6)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0, 0, 0, 1)
+content_margin_left = 12.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
+
 [sub_resource type="ViewportTexture" id="ViewportTexture_label"]
 viewport_path = NodePath("LabelViewport")
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_label"]
-transparency = 1
-cull_mode = 2
-shading_mode = 0
-albedo_texture = SubResource("ViewportTexture_label")
 
 [node name="TileMarker" type="Node3D"]
 script = ExtResource("1_script")
@@ -25,8 +26,7 @@ transparent_bg = true
 size = Vector2i(512, 128)
 
 [node name="Panel" type="PanelContainer" parent="LabelViewport"]
-offset_right = 512.0
-offset_bottom = 128.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="Label" type="Label" parent="LabelViewport/Panel"]
 layout_mode = 2
@@ -40,5 +40,6 @@ vertical_alignment = 1
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 billboard = 1
 no_depth_test = true
-pixel_size = 0.01
+shaded = false
+pixel_size = 0.02
 texture = SubResource("ViewportTexture_label")
