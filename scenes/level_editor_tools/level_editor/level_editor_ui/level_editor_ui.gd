@@ -3,7 +3,7 @@ extends CanvasLayer
 signal tile_selected(item_id: int)
 signal rotation_changed(angle: float)
 signal floor_changed(level: int)
-signal save_requested(save_path: String)
+signal save_requested(level_name: String, save_path: String)
 signal load_requested(level_path: String)
 signal clear_requested
 signal atmosphere_changed(atmosphere: Atmosphere)
@@ -12,6 +12,7 @@ signal atmosphere_changed(atmosphere: Atmosphere)
 @onready var _floor_spinbox: SpinBox = %FloorSpinBox
 @onready var _rotate_button: Button = %RotateButton
 @onready var _atmosphere_selector: OptionButton = %AtmosphereSelector
+@onready var _name_input: LineEdit = %LevelNameInput
 @onready var _path_input: LineEdit = %SavePathInput
 @onready var _save_button: Button = %SaveButton
 @onready var _load_button: Button = %LoadButton
@@ -32,7 +33,7 @@ func _ready() -> void:
 	_floor_spinbox.value_changed.connect(func(v: float): floor_changed.emit(int(v)))
 	_rotate_button.pressed.connect(_cycle_rotation)
 	_atmosphere_selector.item_selected.connect(_on_atmosphere_selected)
-	_save_button.pressed.connect(func(): save_requested.emit(_path_input.text.strip_edges()))
+	_save_button.pressed.connect(func(): save_requested.emit(_name_input.text.strip_edges(), _path_input.text.strip_edges()))
 	_load_button.pressed.connect(_show_load_dialog)
 	_clear_button.pressed.connect(func(): clear_requested.emit())
 	_file_dialog.file_selected.connect(_on_file_selected)
@@ -109,6 +110,10 @@ func _cycle_rotation() -> void:
 
 func show_status(text: String) -> void:
 	_status_label.text = text
+
+
+func set_level_name(level_name: String) -> void:
+	_name_input.text = level_name
 
 
 func set_save_path(save_path: String) -> void:

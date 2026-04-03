@@ -278,13 +278,14 @@ func _toggle_ui() -> void:
 
 # -- UI signal handlers --
 
-func _on_save_requested(save_path: String) -> void:
-	_course_editor.save_level(save_path, _atmosphere)
+func _on_save_requested(level_name: String, save_path: String) -> void:
+	_course_editor.save_level(save_path, _atmosphere, level_name)
 	var full_path := LevelData.SAVE_DIR + save_path + ".tres"
 	_ui.show_status("Saved: " + full_path)
 
 
 func _on_level_loaded(level_data: LevelData) -> void:
+	_ui.set_level_name(level_data.level_name)
 	if level_data.atmosphere: _on_atmosphere_changed(level_data.atmosphere)
 
 

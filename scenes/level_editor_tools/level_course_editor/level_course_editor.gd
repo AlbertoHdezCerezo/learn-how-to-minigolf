@@ -108,12 +108,12 @@ func update_cursor(screen_pos: Vector2, camera: Camera3D) -> void:
 	else: hide_tile_preview()
 
 
-func save_level(level_name: String, atmosphere: Atmosphere = null) -> void:
+func save_level(save_path: String, atmosphere: Atmosphere = null, level_name: String = "") -> void:
 	var level_data := LevelData.new()
-	level_data.level_name = level_name
+	level_data.level_name = level_name if not level_name.is_empty() else save_path.get_file()
 	level_data.populate_from_grid_map(grid_map, start_position, hole_position, atmosphere)
-	var error := level_data.save_to_file(level_name)
-	if error == OK: print("Level saved: ", level_name)
+	var error := level_data.save_to_file(save_path)
+	if error == OK: print("Level saved: ", save_path)
 	else: print("Failed to save level: ", error)
 
 
