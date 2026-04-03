@@ -1,34 +1,39 @@
+@tool
 class_name TileMarker
 extends Node3D
 
 ## A marker that highlights a grid cell with a colored overlay and a floating label.
 ## Used to indicate start position, goal, or other special tiles in the editor.
+## Use @tool so the label and mesh are visible in the Godot editor for preview.
 
-var _mesh: MeshInstance3D
-var _label: Label3D
+@export var marker_name: String = "Marker":
+	set(value):
+		marker_name = value
+		if _label: _label.text = value
+
+@export var material: StandardMaterial3D:
+	set(value):
+		material = value
+		if _mesh: _mesh.material_override = value
+
+@onready var _mesh: MeshInstance3D = $Mesh
+@onready var _label: Label3D = $Label
+
 var _grid_map: GridMap
 var grid_position: Vector3i
 
 
-func _init(grid_map: GridMap, marker_name: String, material: StandardMaterial3D) -> void:
+func _ready() -> void:
+	_label.text = marker_name
+	if material: _mesh.material_override = material
+
+
+func setup(grid_map: GridMap) -> void:
 	_grid_map = grid_map
 	visible = false
-
-	_mesh = MeshInstance3D.new()
-	var plane := PlaneMesh.new()
 	var cell_size := grid_map.cell_size
-	plane.size = Vector2(cell_size.x * 0.8, cell_size.z * 0.8)
-	_mesh.mesh = plane
-	_mesh.material_override = material
-	add_child(_mesh)
-
-	_label = Label3D.new()
-	_label.text = marker_name
-	_label.font_size = 48
-	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_label.no_depth_test = true
+	(_mesh.mesh as PlaneMesh).size = Vector2(cell_size.x * 0.8, cell_size.z * 0.8)
 	_label.position.y = cell_size.y * 0.75
-	add_child(_label)
 
 
 func place_at(pos: Vector3i) -> void:
