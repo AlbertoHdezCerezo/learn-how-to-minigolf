@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3]
 
-[ext_resource type="Script" path="res://scenes/gameplay/level_scene/level_scene.gd" id="1_script"]
+[ext_resource type="Script" path="res://scenes/gameplay/level/level.gd" id="1_script"]
 [ext_resource type="Script" uid="uid://c0v54s5no1mpw" path="res://scripts/resources/level_data.gd" id="2_level_data"]
 [ext_resource type="Script" uid="uid://bndn3q32l3bhh" path="res://scripts/resources/tile_placement.gd" id="3_tile_placement"]
 
