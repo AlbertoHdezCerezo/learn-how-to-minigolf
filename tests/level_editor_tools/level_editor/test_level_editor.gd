@@ -244,6 +244,54 @@ func test_erase_start_on_tile_sets_draw_start_to_tile_position() -> void:
 	assert_eq(draw_start, Vector3i(3, 0, 2), "Erase start on tile should use the tile position")
 
 
+# -- block_positions --
+
+func test_block_positions_with_zero_extra_levels_matches_rect_positions() -> void:
+	var rect := LevelEditor.rect_positions(Vector3i(0, 0, 0), Vector3i(2, 0, 2))
+	var block := LevelEditor.block_positions(Vector3i(0, 0, 0), Vector3i(2, 0, 2), 0)
+	assert_eq(block.size(), rect.size(), "block_positions with 0 extra levels should match rect_positions count")
+
+
+func test_block_positions_with_positive_levels_adds_layers_above() -> void:
+	var block := LevelEditor.block_positions(Vector3i(0, 0, 0), Vector3i(1, 0, 1), 2)
+	# 2x2 XZ * 3 levels (0, 1, 2) = 12
+	assert_eq(block.size(), 12, "2x2 rect with 2 extra levels should produce 12 positions")
+	assert_has(block, Vector3i(0, 0, 0), "Should contain level 0")
+	assert_has(block, Vector3i(0, 1, 0), "Should contain level 1")
+	assert_has(block, Vector3i(0, 2, 0), "Should contain level 2")
+
+
+func test_block_positions_with_negative_levels_adds_layers_below() -> void:
+	var block := LevelEditor.block_positions(Vector3i(0, 2, 0), Vector3i(0, 2, 0), -2)
+	# 1x1 XZ * 3 levels (0, 1, 2) = 3
+	assert_eq(block.size(), 3, "1x1 rect with -2 extra levels should produce 3 positions")
+	assert_has(block, Vector3i(0, 2, 0), "Should contain starting level 2")
+	assert_has(block, Vector3i(0, 1, 0), "Should contain level 1")
+	assert_has(block, Vector3i(0, 0, 0), "Should contain level 0")
+
+
+func test_block_positions_covers_full_3d_volume() -> void:
+	var block := LevelEditor.block_positions(Vector3i(0, 0, 0), Vector3i(1, 0, 1), 1)
+	# 2x2 XZ * 2 levels = 8
+	assert_eq(block.size(), 8, "2x2x2 block should have 8 positions")
+	for y: int in range(2):
+		for x: int in range(2):
+			for z: int in range(2):
+				assert_has(block, Vector3i(x, y, z), "Should contain (%d,%d,%d)" % [x, y, z])
+
+
+# -- Vertical drag state --
+
+func test_reset_draw_state_clears_vertical_levels() -> void:
+	editor._vertical_levels = 3
+	editor._vertical_accumulator = 2.5
+	editor._draw_end = Vector3i(1, 0, 1)
+	editor._reset_draw_state()
+	assert_eq(editor._vertical_levels, 0, "vertical_levels should reset to 0")
+	assert_eq(editor._vertical_accumulator, 0.0, "vertical_accumulator should reset to 0")
+	assert_null(editor._draw_end, "draw_end should reset to null")
+
+
 # -- Drag threshold --
 
 func test_drag_threshold_is_five_pixels() -> void:
