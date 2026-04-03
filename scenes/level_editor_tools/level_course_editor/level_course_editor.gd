@@ -5,6 +5,7 @@ extends Node3D
 signal level_loaded(level_data: LevelData)
 
 const CELL_SIZE := Vector3(2, 2, 2)
+const TILE_MARKER_SCENE_PATH := "res://scenes/level_editor_tools/level_course_editor/tile_marker/tile_marker.tscn"
 const START_MARKER_MATERIAL_PATH := "res://resources/materials/start_marker_material.tres"
 const GOAL_MARKER_MATERIAL_PATH := "res://resources/materials/goal_marker_material.tres"
 
@@ -43,10 +44,8 @@ func _ready() -> void:
 	add_child(_grid_raycast)
 	_tile_cursor.setup(grid_map)
 
-	_start_marker = TileMarker.new(grid_map, "Start", load(START_MARKER_MATERIAL_PATH))
-	add_child(_start_marker)
-	_goal_marker = TileMarker.new(grid_map, "Goal", load(GOAL_MARKER_MATERIAL_PATH))
-	add_child(_goal_marker)
+	_start_marker = _create_marker("Start", load(START_MARKER_MATERIAL_PATH))
+	_goal_marker = _create_marker("Goal", load(GOAL_MARKER_MATERIAL_PATH))
 
 
 # -- Public API --
@@ -149,6 +148,15 @@ func clear_level() -> void:
 func _get_grid_orientation() -> int:
 	var rot_basis := Basis(Vector3.UP, deg_to_rad(rotation_angle))
 	return grid_map.get_orthogonal_index_from_basis(rot_basis)
+
+
+func _create_marker(marker_name: String, mat: StandardMaterial3D) -> TileMarker:
+	var marker: TileMarker = load(TILE_MARKER_SCENE_PATH).instantiate()
+	marker.marker_name = marker_name
+	marker.material = mat
+	add_child(marker)
+	marker.setup(grid_map)
+	return marker
 
 
 func _hide_markers_at(positions: Array[Vector3i]) -> void:
