@@ -181,3 +181,49 @@ func test_load_level_restores_start_and_hole_positions() -> void:
 	editor.load_level("res://resources/levels/test_course_editor_positions.tres")
 	assert_eq(editor.start_position, Vector3i(1, 0, 2), "Start position should be restored after load")
 	assert_eq(editor.hole_position, Vector3i(5, 0, 5), "Hole position should be restored after load")
+
+
+# -- Undo --
+
+func test_undo_restores_previous_tile_state_after_put() -> void:
+	editor.current_item = 0
+	editor.put_tiles([Vector3i(0, 0, 0)] as Array[Vector3i])
+	editor.put_tiles([Vector3i(1, 0, 0)] as Array[Vector3i])
+	editor.undo()
+	assert_eq(editor.grid_map.get_cell_item(Vector3i(1, 0, 0)), GridMap.INVALID_CELL_ITEM, "Undone tile should be removed")
+	assert_eq(editor.grid_map.get_cell_item(Vector3i(0, 0, 0)), 0, "Previous tile should still exist after undo")
+
+
+func test_undo_restores_previous_tile_state_after_erase() -> void:
+	editor.current_item = 0
+	editor.put_tiles([Vector3i(0, 0, 0)] as Array[Vector3i])
+	editor.erase_tiles([Vector3i(0, 0, 0)] as Array[Vector3i])
+	editor.undo()
+	assert_eq(editor.grid_map.get_cell_item(Vector3i(0, 0, 0)), 0, "Erased tile should be restored after undo")
+
+
+func test_undo_does_nothing_when_stack_is_empty() -> void:
+	editor.undo()
+	assert_eq(editor.grid_map.get_used_cells().size(), 0, "Undo on empty stack should leave grid unchanged")
+
+
+func test_undo_supports_multiple_steps() -> void:
+	editor.current_item = 0
+	editor.put_tiles([Vector3i(0, 0, 0)] as Array[Vector3i])
+	editor.put_tiles([Vector3i(1, 0, 0)] as Array[Vector3i])
+	editor.put_tiles([Vector3i(2, 0, 0)] as Array[Vector3i])
+	editor.undo()
+	editor.undo()
+	assert_eq(editor.grid_map.get_used_cells().size(), 1, "Two undos should leave only the first tile")
+	assert_eq(editor.grid_map.get_cell_item(Vector3i(0, 0, 0)), 0, "First tile should remain after two undos")
+
+
+func test_undo_stack_is_limited_to_max_steps() -> void:
+	editor.current_item = 0
+	for i: int in range(7):
+		editor.put_tiles([Vector3i(i, 0, 0)] as Array[Vector3i])
+	# 7 put_tiles = 7 snapshots, but max is 5, so only 5 undos possible
+	for i: int in range(6):
+		editor.undo()
+	# After 5 undos we should have 2 tiles (first 2 placements), 6th undo does nothing
+	assert_eq(editor.grid_map.get_used_cells().size(), 2, "Undo stack should be limited to %d steps" % LevelCourseEditor.MAX_UNDO_STEPS)

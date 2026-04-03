@@ -224,6 +224,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		elif event.keycode == KEY_G:
 			_course_editor.set_goal(_last_mouse_pos, _camera)
 			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_Z and event.meta_pressed:
+			_course_editor.undo()
+			get_viewport().set_input_as_handled()
 
 
 # -- Geometry helpers --
