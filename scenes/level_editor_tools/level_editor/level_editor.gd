@@ -1,3 +1,4 @@
+class_name LevelEditor
 extends Node3D
 
 enum State { IDLE, DRAWING, ERASING, PANNING, ORBITING }
@@ -113,7 +114,7 @@ func _finish_drawing(release_pos: Vector2) -> void:
 		var hit := _course_editor.raycast(release_pos, _camera)
 		var draw_end: Vector3i = hit.adjacent if hit else _draw_start
 		draw_end.y = _draw_start.y
-		_course_editor.put_tiles(LevelCourseEditor.rect_positions(_draw_start, draw_end))
+		_course_editor.put_tiles(rect_positions(_draw_start, draw_end))
 
 
 func _finish_erasing(release_pos: Vector2) -> void:
@@ -125,7 +126,7 @@ func _finish_erasing(release_pos: Vector2) -> void:
 		var hit := _course_editor.raycast(release_pos, _camera)
 		var draw_end: Vector3i = hit.tile if hit else _draw_start
 		draw_end.y = _draw_start.y
-		_course_editor.erase_tiles(LevelCourseEditor.rect_positions(_draw_start, draw_end))
+		_course_editor.erase_tiles(rect_positions(_draw_start, draw_end))
 
 
 func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
@@ -144,7 +145,7 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 		if hit != null:
 			var current_pos: Vector3i = hit.adjacent
 			current_pos.y = _draw_start.y
-			_course_editor.show_tile_preview(LevelCourseEditor.rect_positions(_draw_start, current_pos))
+			_course_editor.show_tile_preview(rect_positions(_draw_start, current_pos))
 
 
 func _handle_pan_gesture(event: InputEventPanGesture) -> void:
@@ -170,6 +171,18 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		elif event.keycode == KEY_G:
 			_course_editor.set_goal(_last_mouse_pos, _camera)
 			get_viewport().set_input_as_handled()
+
+
+static func rect_positions(from: Vector3i, to: Vector3i) -> Array[Vector3i]:
+	var positions: Array[Vector3i] = []
+	var min_x := mini(from.x, to.x)
+	var max_x := maxi(from.x, to.x)
+	var min_z := mini(from.z, to.z)
+	var max_z := maxi(from.z, to.z)
+	for x: int in range(min_x, max_x + 1):
+		for z: int in range(min_z, max_z + 1):
+			positions.append(Vector3i(x, from.y, z))
+	return positions
 
 
 func _reset_camera() -> void:

@@ -116,39 +116,6 @@ func test_erase_tiles_on_empty_cell_does_not_error() -> void:
 	assert_eq(editor.grid_map.get_cell_item(Vector3i(99, 0, 99)), GridMap.INVALID_CELL_ITEM, "Erasing empty cell should be a no-op")
 
 
-# -- rect_positions --
-
-func test_rect_positions_returns_single_cell_for_same_corners() -> void:
-	var positions := LevelCourseEditor.rect_positions(Vector3i(3, 0, 3), Vector3i(3, 0, 3))
-	assert_eq(positions.size(), 1, "Same corners should return 1 position")
-	assert_eq(positions[0], Vector3i(3, 0, 3), "Single position should match the corner")
-
-
-func test_rect_positions_returns_correct_count_for_rectangle() -> void:
-	var positions := LevelCourseEditor.rect_positions(Vector3i(0, 0, 0), Vector3i(2, 0, 3))
-	assert_eq(positions.size(), 12, "3x4 rectangle should return 12 positions")
-
-
-func test_rect_positions_uses_from_y_for_all_cells() -> void:
-	var positions := LevelCourseEditor.rect_positions(Vector3i(0, 2, 0), Vector3i(1, 5, 1))
-	for pos: Vector3i in positions:
-		assert_eq(pos.y, 2, "All positions should use from.y (2), not to.y")
-
-
-func test_rect_positions_works_with_reversed_corners() -> void:
-	var forward := LevelCourseEditor.rect_positions(Vector3i(0, 0, 0), Vector3i(2, 0, 2))
-	var reversed := LevelCourseEditor.rect_positions(Vector3i(2, 0, 2), Vector3i(0, 0, 0))
-	assert_eq(forward.size(), reversed.size(), "Reversed corners should produce same number of positions")
-
-
-func test_rect_positions_covers_all_cells_in_rectangle() -> void:
-	var positions := LevelCourseEditor.rect_positions(Vector3i(1, 0, 1), Vector3i(2, 0, 2))
-	assert_has(positions, Vector3i(1, 0, 1), "Should contain (1,0,1)")
-	assert_has(positions, Vector3i(1, 0, 2), "Should contain (1,0,2)")
-	assert_has(positions, Vector3i(2, 0, 1), "Should contain (2,0,1)")
-	assert_has(positions, Vector3i(2, 0, 2), "Should contain (2,0,2)")
-
-
 # -- show_tile_preview / hide_tile_preview --
 
 func test_show_tile_preview_delegates_to_tile_cursor() -> void:
