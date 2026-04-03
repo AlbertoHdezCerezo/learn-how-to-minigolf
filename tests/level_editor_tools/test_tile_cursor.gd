@@ -32,16 +32,16 @@ func test_setup_starts_with_empty_preview_pool() -> void:
 
 # -- set_tile --
 
-func test_set_tile_stores_item_id() -> void:
-	cursor.set_tile(3)
-	assert_eq(cursor._current_item, 3, "set_tile should store the item ID")
+func test_setting_current_item_stores_item_id() -> void:
+	cursor.current_item = 3
+	assert_eq(cursor.current_item, 3, "current_item should store the item ID")
 
 
-# -- set_rotation_angle --
+# -- rotation_angle --
 
-func test_set_rotation_angle_stores_angle() -> void:
-	cursor.set_rotation_angle(90.0)
-	assert_eq(cursor._rotation_angle, 90.0, "set_rotation_angle should store the angle")
+func test_setting_rotation_angle_stores_angle() -> void:
+	cursor.rotation_angle = 90.0
+	assert_eq(cursor.rotation_angle, 90.0, "rotation_angle should store the angle")
 
 
 # -- show_at --
@@ -68,14 +68,14 @@ func test_show_at_positions_mesh_at_correct_grid_locations() -> void:
 
 
 func test_show_at_applies_rotation() -> void:
-	cursor.set_rotation_angle(90.0)
+	cursor.rotation_angle = 90.0
 	cursor.show_at([Vector3i(0, 0, 0)] as Array[Vector3i])
 	var expected_basis := Basis(Vector3.UP, deg_to_rad(90.0))
 	assert_almost_eq(cursor._preview_meshes[0].basis.x, expected_basis.x, Vector3(0.01, 0.01, 0.01), "Preview should have rotated basis")
 
 
 func test_show_at_applies_correct_mesh_from_library() -> void:
-	cursor.set_tile(1)
+	cursor.current_item = 1
 	cursor.show_at([Vector3i(0, 0, 0)] as Array[Vector3i])
 	var expected_mesh := mesh_library.get_item_mesh(1)
 	assert_eq(cursor._preview_meshes[0].mesh, expected_mesh, "Preview should use mesh from library for selected tile")

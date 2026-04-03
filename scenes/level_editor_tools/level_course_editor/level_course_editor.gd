@@ -40,12 +40,12 @@ func _ready() -> void:
 
 func select_tile(item_id: int) -> void:
 	_current_item = item_id
-	_tile_cursor.set_tile(item_id)
+	_tile_cursor.current_item = item_id
 
 
 func set_rotation_angle(angle: float) -> void:
 	_current_rotation_angle = angle
-	_tile_cursor.set_rotation_angle(angle)
+	_tile_cursor.rotation_angle = angle
 
 
 func set_floor(level: int) -> void:
