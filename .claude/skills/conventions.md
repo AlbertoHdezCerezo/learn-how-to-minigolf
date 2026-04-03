@@ -213,9 +213,9 @@ func test_color_emits() -> void:
 
 ---
 
-## 6. Property setters over set_* methods
+## 6. Public vars over get_*/set_* methods
 
-When a class needs to expose a mutable value, use a `var` with an optional setter — not a `set_*()` method. This keeps the API consistent with Godot's own nodes and allows natural assignment syntax.
+When a class needs to expose a value, use a public `var` (with an optional setter) — not `get_*()` or `set_*()` methods. GDScript vars are public by default, so getter/setter methods add unnecessary indirection.
 
 ### Why
 
@@ -243,14 +243,14 @@ cursor.rotation_angle = 90.0
 ```gdscript
 var _current_item: int = 0
 
+func get_current_item() -> int:
+    return _current_item
+
 func set_tile(item_id: int) -> void:
     _current_item = item_id
-
-func set_rotation_angle(angle: float) -> void:
-    _rotation_angle = angle
 ```
 
-- Do NOT write `set_*()` methods for simple property updates
+- Do NOT write `get_*()` or `set_*()` methods for simple property access
 - Do NOT prefix properties with `_` if they need to be accessed externally — use a public var instead
 
 ---

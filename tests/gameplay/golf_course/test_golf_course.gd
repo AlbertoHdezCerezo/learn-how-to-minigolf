@@ -3,7 +3,7 @@ extends GutTest
 const SCENE_PATH := "res://scenes/gameplay/golf_course/golf_course.tscn"
 
 var scene: PackedScene
-var course: Node3D
+var golf_course: Node3D
 var level: LevelData
 
 
@@ -22,9 +22,9 @@ func before_each() -> void:
 	level.add_tile(Vector3i(1, 0, 2), 0)
 	level.add_tile(Vector3i(3, 0, -1), 1)
 
-	course = scene.instantiate()
-	course.level = level
-	add_child_autofree(course)
+	golf_course = scene.instantiate()
+	golf_course.level = level
+	add_child_autofree(golf_course)
 
 
 # -- Scene loading --
@@ -34,48 +34,46 @@ func test_golf_course_scene_loads_successfully() -> void:
 
 
 func test_golf_course_scene_instantiates_without_error() -> void:
-	assert_not_null(course, "GolfCourse should instantiate into a valid node")
+	assert_not_null(golf_course, "GolfCourse should instantiate into a valid node")
 
 
 # -- GridMap behavior --
 
 func test_grid_map_is_available_when_level_is_set() -> void:
-	assert_not_null(course.get_grid_map(), "get_grid_map() should return a GridMap when level is set")
+	assert_not_null(golf_course.grid_map, "grid_map should be set when level is loaded")
 
 
 func test_grid_map_has_correct_number_of_cells() -> void:
-	var grid_map := course.get_grid_map()
-	assert_eq(grid_map.get_used_cells().size(), level.tiles.size(), "GridMap should have same number of cells as level tiles")
+	assert_eq(golf_course.grid_map.get_used_cells().size(), level.tiles.size(), "GridMap should have same number of cells as level tiles")
 
 
 func test_grid_map_uses_level_cell_size() -> void:
-	var grid_map := course.get_grid_map()
-	assert_eq(grid_map.cell_size, level.cell_size, "GridMap cell_size should match level cell_size")
+	assert_eq(golf_course.grid_map.cell_size, level.cell_size, "GridMap cell_size should match level cell_size")
 
 
 func test_course_container_is_available_when_level_is_set() -> void:
-	assert_not_null(course.get_course(), "get_course() should return a node when level is set")
+	assert_not_null(golf_course.course, "course should be set when level is loaded")
 
 
 # -- grid_to_world --
 
 func test_grid_to_world_converts_origin_correctly() -> void:
-	var result := course.grid_to_world(Vector3.ZERO)
+	var result := golf_course.grid_to_world(Vector3.ZERO)
 	assert_eq(result, Vector3(0, 1, 0), "grid_to_world(0,0,0) should return (0, cell_size.y/2, 0)")
 
 
 func test_grid_to_world_converts_positive_position_correctly() -> void:
-	var result := course.grid_to_world(Vector3(1, 0, 2))
+	var result := golf_course.grid_to_world(Vector3(1, 0, 2))
 	assert_eq(result, Vector3(2, 1, 4), "grid_to_world(1,0,2) with cell_size 2 should return (2, 1, 4)")
 
 
 func test_grid_to_world_converts_elevated_position_correctly() -> void:
-	var result := course.grid_to_world(Vector3(0, 2, 0))
+	var result := golf_course.grid_to_world(Vector3(0, 2, 0))
 	assert_eq(result, Vector3(0, 5, 0), "grid_to_world(0,2,0) should account for Y elevation plus half cell height")
 
 
 func test_grid_to_world_converts_negative_position_correctly() -> void:
-	var result := course.grid_to_world(Vector3(-1, 0, -3))
+	var result := golf_course.grid_to_world(Vector3(-1, 0, -3))
 	assert_eq(result, Vector3(-2, 1, -6), "grid_to_world(-1,0,-3) with cell_size 2 should return (-2, 1, -6)")
 
 

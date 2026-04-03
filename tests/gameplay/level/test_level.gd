@@ -40,60 +40,43 @@ func test_level_instantiates_without_error() -> void:
 # -- Ball placement --
 
 func test_ball_is_placed_at_start_position_x() -> void:
-	var ball := level_node.get_ball()
 	var expected_x: float = level.start_position.x * level.cell_size.x
-	assert_almost_eq(ball.global_position.x, expected_x, 0.01, "Ball X should match start_position converted to world coords")
+	assert_almost_eq(level_node.ball.global_position.x, expected_x, 0.01, "Ball X should match start_position converted to world coords")
 
 
 func test_ball_is_placed_at_start_position_z() -> void:
-	var ball := level_node.get_ball()
 	var expected_z: float = level.start_position.z * level.cell_size.z
-	assert_almost_eq(ball.global_position.z, expected_z, 0.01, "Ball Z should match start_position converted to world coords")
+	assert_almost_eq(level_node.ball.global_position.z, expected_z, 0.01, "Ball Z should match start_position converted to world coords")
 
 
 func test_ball_is_placed_on_top_of_tile() -> void:
-	var ball := level_node.get_ball()
 	var expected_y: float = level.start_position.y * level.cell_size.y + level.cell_size.y / 2.0 + 0.15
-	assert_almost_eq(ball.global_position.y, expected_y, 0.01, "Ball Y should be at tile surface plus ball radius")
+	assert_almost_eq(level_node.ball.global_position.y, expected_y, 0.01, "Ball Y should be at tile surface plus ball radius")
 
 
 # -- Hole trigger placement --
 
 func test_hole_trigger_is_placed_at_hole_position_x() -> void:
 	var expected_x: float = level.hole_position.x * level.cell_size.x
-	assert_almost_eq(level_node._hole_trigger.global_position.x, expected_x, 0.01, "HoleTrigger X should match hole_position converted to world coords")
+	assert_almost_eq(level_node.hole_trigger.global_position.x, expected_x, 0.01, "HoleTrigger X should match hole_position converted to world coords")
 
 
 func test_hole_trigger_is_placed_at_hole_position_z() -> void:
 	var expected_z: float = level.hole_position.z * level.cell_size.z
-	assert_almost_eq(level_node._hole_trigger.global_position.z, expected_z, 0.01, "HoleTrigger Z should match hole_position converted to world coords")
+	assert_almost_eq(level_node.hole_trigger.global_position.z, expected_z, 0.01, "HoleTrigger Z should match hole_position converted to world coords")
 
 
 # -- Initial state --
 
 func test_initial_shot_count_is_zero() -> void:
-	assert_eq(level_node.get_shot_count(), 0, "Initial shot count should be 0")
+	assert_eq(level_node.shot_count, 0, "Initial shot count should be 0")
 
 
 func test_initial_elapsed_time_is_zero() -> void:
-	assert_eq(level_node.get_elapsed_time(), 0.0, "Initial elapsed time should be 0.0")
-
-
-func test_timing_is_not_active_before_first_shot() -> void:
-	assert_false(level_node._timing_active, "Timing should not be active before first shot")
+	assert_eq(level_node.elapsed_time, 0.0, "Initial elapsed time should be 0.0")
 
 
 # -- Signals --
 
 func test_level_completed_signal_exists() -> void:
 	assert_has_signal(level_node, "level_completed", "Level should have a level_completed signal")
-
-
-# -- Getters return valid instances --
-
-func test_get_ball_returns_valid_instance() -> void:
-	assert_not_null(level_node.get_ball(), "get_ball() should return the ball instance")
-
-
-func test_get_golf_course_returns_valid_instance() -> void:
-	assert_not_null(level_node.get_golf_course(), "get_golf_course() should return the GolfCourse instance")
