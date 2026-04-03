@@ -11,9 +11,7 @@ const OVERLAY_SHADER_PATH := "res://shaders/tile_overlay.gdshader"
 @export var marker_name: String = "Marker":
 	set(value):
 		marker_name = value
-		if _label:
-			_label.text = value
-			_resize_viewport()
+		if _label: _label.text = value
 
 @export var overlay_color: Color = Color(0.2, 0.8, 0.2, 0.5):
 	set(value):
@@ -25,10 +23,7 @@ const OVERLAY_SHADER_PATH := "res://shaders/tile_overlay.gdshader"
 			(_mesh.material_override as StandardMaterial3D).transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 
 @onready var _mesh: MeshInstance3D = $Mesh
-@onready var _label: Label = $LabelViewport/Panel/Label
-@onready var _label_viewport: SubViewport = $LabelViewport
-@onready var _label_panel: PanelContainer = $LabelViewport/Panel
-@onready var _label_sprite: Sprite3D = $LabelSprite
+@onready var _label: Label3D = $Label
 
 var _grid_map: GridMap
 var _overlay_material: ShaderMaterial
@@ -37,19 +32,16 @@ var grid_position: Vector3i
 
 func _ready() -> void:
 	_label.text = marker_name
-	_resize_viewport()
 	_overlay_material = ShaderMaterial.new()
 	_overlay_material.shader = load(OVERLAY_SHADER_PATH)
 	_overlay_material.set_shader_parameter("overlay_color", overlay_color)
 
 	if Engine.is_editor_hint():
-		# Editor preview: show a flat colored plane
 		var mat := StandardMaterial3D.new()
 		mat.albedo_color = overlay_color
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		_mesh.material_override = mat
 	else:
-		# Runtime: hide the preview plane (overlay mesh created in place_at)
 		_mesh.visible = false
 
 
@@ -58,7 +50,7 @@ func setup(grid_map: GridMap) -> void:
 	visible = false
 	var cell_size := grid_map.cell_size
 	(_mesh.mesh as PlaneMesh).size = Vector2(cell_size.x * 0.8, cell_size.z * 0.8)
-	_label_sprite.position.y = cell_size.y * 0.75
+	_label.position.y = cell_size.y * 0.75
 
 
 func place_at(pos: Vector3i) -> void:
@@ -74,19 +66,7 @@ func remove() -> void:
 	visible = false
 
 
-func _resize_viewport() -> void:
-	## Resize the SubViewport and Panel to tightly fit the label text with padding.
-	if not _label or not _label_viewport or not _label_panel: return
-	var text_size := _label.get_theme_font("font").get_string_size(_label.text, HORIZONTAL_ALIGNMENT_CENTER, -1, _label.get_theme_font_size("font_size"))
-	var style: StyleBoxFlat = _label_panel.get_theme_stylebox("panel")
-	var padding := Vector2(style.content_margin_left + style.content_margin_right, style.content_margin_top + style.content_margin_bottom)
-	var size := Vector2i(ceili(text_size.x + padding.x), ceili(text_size.y + padding.y))
-	_label_viewport.size = size
-	_label_panel.size = Vector2(size)
-
-
 func _apply_overlay(pos: Vector3i) -> void:
-	## Copy the tile mesh from the GridMap and apply the overlay shader to it.
 	if Engine.is_editor_hint(): return
 	var item_id := _grid_map.get_cell_item(pos)
 	if item_id == GridMap.INVALID_CELL_ITEM:
