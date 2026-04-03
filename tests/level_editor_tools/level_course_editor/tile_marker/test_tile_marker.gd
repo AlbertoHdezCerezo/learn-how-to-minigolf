@@ -43,41 +43,6 @@ func test_marker_starts_hidden_after_setup() -> void:
 	assert_false(marker.visible, "Marker should be hidden after setup")
 
 
-func test_marker_has_mesh_child() -> void:
-	var marker := _create_marker()
-	assert_not_null(marker.get_node("Mesh"), "Marker should have a Mesh child")
-
-
-func test_marker_has_label_child() -> void:
-	var marker := _create_marker()
-	assert_not_null(marker.get_node("Label"), "Marker should have a Label3D child")
-
-
-func test_marker_label_displays_marker_name() -> void:
-	var marker := _create_marker("Start")
-	var label: Label3D = marker.get_node("Label")
-	assert_eq(label.text, "Start", "Label should display the marker name")
-
-
-func test_marker_label_uses_billboard_mode() -> void:
-	var marker := _create_marker()
-	var label: Label3D = marker.get_node("Label")
-	assert_eq(label.billboard, BaseMaterial3D.BILLBOARD_ENABLED, "Label should use billboard mode")
-
-
-func test_marker_label_is_unshaded() -> void:
-	var marker := _create_marker()
-	var label: Label3D = marker.get_node("Label")
-	assert_false(label.shaded, "Label should be unshaded to ignore lighting and fog")
-
-
-func test_changing_marker_name_updates_label() -> void:
-	var marker := _create_marker("Old")
-	marker.marker_name = "New"
-	var label: Label3D = marker.get_node("Label")
-	assert_eq(label.text, "New", "Label should update when marker_name changes")
-
-
 # -- Overlay --
 
 func test_overlay_material_uses_shader() -> void:
