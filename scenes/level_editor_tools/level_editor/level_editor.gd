@@ -75,19 +75,19 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			_sm.transit(State.ORBITING)
 		elif event.ctrl_pressed:
 			_sm.transit(State.ERASING)
-			_draw_start = _course_editor.get_grid_position(event.position, _camera)
+			var hit := _course_editor.raycast(event.position, _camera)
+			_draw_start = hit.tile if hit else null
 			_draw_screen_start = event.position
 		else:
 			_sm.transit(State.DRAWING)
-			_draw_start = _course_editor.get_grid_position(event.position, _camera)
+			var hit := _course_editor.raycast(event.position, _camera)
+			_draw_start = hit.adjacent if hit else null
 			_draw_screen_start = event.position
 
 	# -- Left button release --
 	elif event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
-		if _sm.is_in(State.DRAWING):
-			_finish_drawing(event.position)
-		elif _sm.is_in(State.ERASING):
-			_finish_erasing(event.position)
+		if _sm.is_in(State.DRAWING): _finish_drawing(event.position)
+		elif _sm.is_in(State.ERASING): _finish_erasing(event.position)
 		_course_editor.hide_tile_preview()
 		if not _sm.is_in(State.IDLE): _sm.transit(State.IDLE)
 		_draw_start = null
@@ -110,12 +110,10 @@ func _finish_drawing(release_pos: Vector2) -> void:
 	if is_click:
 		_course_editor.put_tiles([_draw_start] as Array[Vector3i])
 	else:
-		var draw_end: Variant = _course_editor.get_grid_position(release_pos, _camera)
-		if draw_end != null:
-			draw_end.y = _draw_start.y
-			_course_editor.put_tiles(LevelCourseEditor.rect_positions(_draw_start, draw_end))
-		else:
-			_course_editor.put_tiles([_draw_start] as Array[Vector3i])
+		var hit := _course_editor.raycast(release_pos, _camera)
+		var draw_end: Vector3i = hit.adjacent if hit else _draw_start
+		draw_end.y = _draw_start.y
+		_course_editor.put_tiles(LevelCourseEditor.rect_positions(_draw_start, draw_end))
 
 
 func _finish_erasing(release_pos: Vector2) -> void:
@@ -124,12 +122,10 @@ func _finish_erasing(release_pos: Vector2) -> void:
 	if is_click:
 		_course_editor.erase_tiles([_draw_start] as Array[Vector3i])
 	else:
-		var draw_end: Variant = _course_editor.get_grid_position(release_pos, _camera)
-		if draw_end != null:
-			draw_end.y = _draw_start.y
-			_course_editor.erase_tiles(LevelCourseEditor.rect_positions(_draw_start, draw_end))
-		else:
-			_course_editor.erase_tiles([_draw_start] as Array[Vector3i])
+		var hit := _course_editor.raycast(release_pos, _camera)
+		var draw_end: Vector3i = hit.tile if hit else _draw_start
+		draw_end.y = _draw_start.y
+		_course_editor.erase_tiles(LevelCourseEditor.rect_positions(_draw_start, draw_end))
 
 
 func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
@@ -144,8 +140,9 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	elif _sm.is_in(State.IDLE):
 		_course_editor.update_cursor(event.position, _camera)
 	elif (_sm.is_in(State.DRAWING) or _sm.is_in(State.ERASING)) and _draw_start != null:
-		var current_pos: Variant = _course_editor.get_grid_position(event.position, _camera)
-		if current_pos != null:
+		var hit := _course_editor.raycast(event.position, _camera)
+		if hit != null:
+			var current_pos: Vector3i = hit.adjacent
 			current_pos.y = _draw_start.y
 			_course_editor.show_tile_preview(LevelCourseEditor.rect_positions(_draw_start, current_pos))
 

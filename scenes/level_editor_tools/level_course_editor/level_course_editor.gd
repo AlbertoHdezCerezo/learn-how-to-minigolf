@@ -53,6 +53,11 @@ func set_floor(level: int) -> void:
 	_update_floor_plane()
 
 
+func raycast(screen_pos: Vector2, camera: Camera3D) -> GridRaycastHit:
+	## Casts a ray from screen coordinates and returns the hit result, or null.
+	return _grid_raycast.cast(screen_pos, camera, get_world_3d(), _current_floor)
+
+
 func put_tiles(positions: Array[Vector3i]) -> void:
 	## Place the current tile at each position with the current rotation.
 	var orientation := _get_grid_orientation()
@@ -79,33 +84,6 @@ static func rect_positions(from: Vector3i, to: Vector3i) -> Array[Vector3i]:
 	return positions
 
 
-func get_grid_position(screen_pos: Vector2, camera: Camera3D) -> Variant:
-	## Returns the grid position for placement based on what the ray hits.
-	## Floor hit: uses current floor level.
-	## Tile hit: top face -> tile level + 1, bottom face -> tile level - 1,
-	## side face -> same tile level.
-	var result := Raycast.from_screen(screen_pos, camera, get_world_3d())
-	if result.is_empty(): return null
-
-	if result.collider == _floor_plane:
-		var hit_local: Vector3 = grid_map.to_local(result.position)
-		var grid_pos: Vector3i = grid_map.local_to_map(hit_local)
-		grid_pos.y = _current_floor
-		return grid_pos
-
-	# Hit a tile — determine level based on which face was hit
-	var hit_pos: Vector3 = result.position - result.normal * 0.1
-	var hit_local: Vector3 = grid_map.to_local(hit_pos)
-	var tile_pos: Vector3i = grid_map.local_to_map(hit_local)
-	var normal: Vector3 = result.normal
-
-	if normal.y > 0.5: return Vector3i(tile_pos.x, tile_pos.y + 1, tile_pos.z)
-	if normal.y < -0.5: return Vector3i(tile_pos.x, tile_pos.y - 1, tile_pos.z)
-	# Side face — place adjacent tile at same level using the normal direction
-	var offset := Vector3i(roundi(normal.x), 0, roundi(normal.z))
-	return tile_pos + offset
-
-
 func show_tile_preview(positions: Array[Vector3i]) -> void:
 	_tile_cursor.show_at(positions)
 
@@ -115,24 +93,24 @@ func hide_tile_preview() -> void:
 
 
 func set_start(screen_pos: Vector2, camera: Camera3D) -> void:
-	var grid_pos: Variant = get_grid_position(screen_pos, camera)
-	if grid_pos == null: return
-	start_position = grid_pos
-	_place_marker(_start_marker, grid_pos)
-	print("Start set to: ", grid_pos)
+	var hit := raycast(screen_pos, camera)
+	if hit == null: return
+	start_position = hit.adjacent
+	_place_marker(_start_marker, hit.adjacent)
+	print("Start set to: ", hit.adjacent)
 
 
 func set_goal(screen_pos: Vector2, camera: Camera3D) -> void:
-	var grid_pos: Variant = get_grid_position(screen_pos, camera)
-	if grid_pos == null: return
-	hole_position = grid_pos
-	_place_marker(_goal_marker, grid_pos)
-	print("Goal set to: ", grid_pos)
+	var hit := raycast(screen_pos, camera)
+	if hit == null: return
+	hole_position = hit.adjacent
+	_place_marker(_goal_marker, hit.adjacent)
+	print("Goal set to: ", hit.adjacent)
 
 
 func update_cursor(screen_pos: Vector2, camera: Camera3D) -> void:
-	var grid_pos: Variant = get_grid_position(screen_pos, camera)
-	if grid_pos != null: show_tile_preview([grid_pos] as Array[Vector3i])
+	var hit := raycast(screen_pos, camera)
+	if hit != null: show_tile_preview([hit.adjacent] as Array[Vector3i])
 	else: hide_tile_preview()
 
 
