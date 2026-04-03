@@ -3,6 +3,9 @@ extends Node3D
 
 enum State { IDLE, DRAWING, ERASING, PANNING, ORBITING }
 
+const DRAG_THRESHOLD := 5.0  # pixels — below this it's a single click
+const VERTICAL_DRAG_SENSITIVITY := 0.02  # pixels to levels ratio
+
 @onready var _course_editor: LevelCourseEditor = $LevelCourseEditor
 @onready var _gameplay_camera: GameplayCamera = $GameplayCamera
 @onready var _camera: Camera3D = $GameplayCamera/Camera3D
@@ -15,9 +18,11 @@ var _atmosphere: Atmosphere
 var _sm: StateMachine
 
 var _draw_start: Variant = null  # Vector3i or null
+var _draw_end: Variant = null  # Vector3i or null — frozen XZ end when vertical dragging
 var _draw_screen_start: Vector2 = Vector2.ZERO
 var _last_mouse_pos: Vector2 = Vector2.ZERO
-const DRAG_THRESHOLD := 5.0  # pixels — below this it's a single click
+var _vertical_levels: int = 0  # extra levels above (positive) or below (negative)
+var _vertical_accumulator: float = 0.0  # sub-level mouse Y accumulator
 
 
 func _ready() -> void:
@@ -79,12 +84,14 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			var hit := _course_editor.raycast(event.position, _camera)
 			_draw_start = hit.adjacent if hit else null
 			_draw_screen_start = event.position
+			_reset_draw_state()
 
 	# -- Left button release --
 	elif event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
 		if _sm.is_in(State.DRAWING): _finish_drawing(event.position)
 		_course_editor.hide_tile_preview()
 		if not _sm.is_in(State.IDLE): _sm.transit(State.IDLE)
+		_reset_draw_state()
 		_draw_start = null
 
 	# -- Right button (erase) — also triggered by Ctrl+click on macOS --
@@ -93,11 +100,13 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 		var hit := _course_editor.raycast(event.position, _camera)
 		_draw_start = hit.tile if hit and not hit.is_floor else null
 		_draw_screen_start = event.position
+		_reset_draw_state()
 
 	elif event.button_index == MOUSE_BUTTON_RIGHT and not event.pressed:
 		if _sm.is_in(State.ERASING): _finish_erasing(event.position)
 		_course_editor.hide_tile_preview()
 		if not _sm.is_in(State.IDLE): _sm.transit(State.IDLE)
+		_reset_draw_state()
 		_draw_start = null
 
 	# -- Middle button --
@@ -118,10 +127,8 @@ func _finish_drawing(release_pos: Vector2) -> void:
 	if is_click:
 		_course_editor.put_tiles([_draw_start] as Array[Vector3i])
 	else:
-		var hit := _course_editor.raycast(release_pos, _camera)
-		var draw_end: Vector3i = hit.adjacent if hit else _draw_start
-		draw_end.y = _draw_start.y
-		_course_editor.put_tiles(rect_positions(_draw_start, draw_end))
+		var end := _get_draw_end(release_pos)
+		_course_editor.put_tiles(block_positions(_draw_start, end, _vertical_levels))
 
 
 func _finish_erasing(release_pos: Vector2) -> void:
@@ -130,10 +137,18 @@ func _finish_erasing(release_pos: Vector2) -> void:
 	if is_click:
 		_course_editor.erase_tiles([_draw_start] as Array[Vector3i])
 	else:
-		var hit := _course_editor.raycast(release_pos, _camera)
-		var draw_end: Vector3i = hit.adjacent if hit else _draw_start
-		draw_end.y = _draw_start.y
-		_course_editor.erase_tiles(rect_positions(_draw_start, draw_end))
+		var end := _get_draw_end(release_pos)
+		_course_editor.erase_tiles(block_positions(_draw_start, end, _vertical_levels))
+
+
+func _get_draw_end(release_pos: Vector2) -> Vector3i:
+	## Returns the XZ end position for the drag. If vertical dragging froze
+	## the end, use that; otherwise raycast the release position.
+	if _draw_end != null: return _draw_end
+	var hit := _course_editor.raycast(release_pos, _camera)
+	var end: Vector3i = hit.adjacent if hit else _draw_start
+	end.y = _draw_start.y
+	return end
 
 
 func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
@@ -148,11 +163,42 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	elif _sm.is_in(State.IDLE):
 		_course_editor.update_cursor(event.position, _camera)
 	elif (_sm.is_in(State.DRAWING) or _sm.is_in(State.ERASING)) and _draw_start != null:
+		if event.shift_pressed:
+			_handle_vertical_drag(event)
+		else:
+			_handle_horizontal_drag(event)
+
+
+func _handle_horizontal_drag(event: InputEventMouseMotion) -> void:
+	## Update the XZ rectangle preview during normal drag.
+	var hit := _course_editor.raycast(event.position, _camera)
+	if hit == null: return
+	var current_pos: Vector3i = hit.adjacent
+	current_pos.y = _draw_start.y
+	_draw_end = current_pos
+	_vertical_levels = 0
+	_vertical_accumulator = 0.0
+	_course_editor.show_tile_preview(rect_positions(_draw_start, current_pos))
+
+
+func _handle_vertical_drag(event: InputEventMouseMotion) -> void:
+	## Freeze XZ rectangle and adjust vertical levels based on mouse Y movement.
+	## Moving mouse up adds levels, moving down removes them.
+	if _draw_end == null:
 		var hit := _course_editor.raycast(event.position, _camera)
-		if hit != null:
-			var current_pos: Vector3i = hit.adjacent
-			current_pos.y = _draw_start.y
-			_course_editor.show_tile_preview(rect_positions(_draw_start, current_pos))
+		if hit == null: return
+		_draw_end = hit.adjacent
+		_draw_end.y = _draw_start.y
+
+	_vertical_accumulator -= event.relative.y * VERTICAL_DRAG_SENSITIVITY
+	_vertical_levels = roundi(_vertical_accumulator)
+	_course_editor.show_tile_preview(block_positions(_draw_start, _draw_end, _vertical_levels))
+
+
+func _reset_draw_state() -> void:
+	_draw_end = null
+	_vertical_levels = 0
+	_vertical_accumulator = 0.0
 
 
 func _handle_pan_gesture(event: InputEventPanGesture) -> void:
@@ -180,6 +226,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 
+# -- Geometry helpers --
+
 static func rect_positions(from: Vector3i, to: Vector3i) -> Array[Vector3i]:
 	var positions: Array[Vector3i] = []
 	var min_x := mini(from.x, to.x)
@@ -191,6 +239,25 @@ static func rect_positions(from: Vector3i, to: Vector3i) -> Array[Vector3i]:
 			positions.append(Vector3i(x, from.y, z))
 	return positions
 
+
+static func block_positions(from: Vector3i, to: Vector3i, extra_levels: int) -> Array[Vector3i]:
+	## Returns all grid cells in the XZ rectangle across multiple Y levels.
+	## extra_levels > 0: levels above from.y. extra_levels < 0: levels below.
+	var positions: Array[Vector3i] = []
+	var min_y := mini(from.y, from.y + extra_levels)
+	var max_y := maxi(from.y, from.y + extra_levels)
+	var min_x := mini(from.x, to.x)
+	var max_x := maxi(from.x, to.x)
+	var min_z := mini(from.z, to.z)
+	var max_z := maxi(from.z, to.z)
+	for y: int in range(min_y, max_y + 1):
+		for x: int in range(min_x, max_x + 1):
+			for z: int in range(min_z, max_z + 1):
+				positions.append(Vector3i(x, y, z))
+	return positions
+
+
+# -- Camera --
 
 func _reset_camera() -> void:
 	_gameplay_camera.global_position = Vector3.ZERO
