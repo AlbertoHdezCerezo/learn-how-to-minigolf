@@ -77,7 +77,7 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 		elif event.ctrl_pressed:
 			_sm.transit(State.ERASING)
 			var hit := _course_editor.raycast(event.position, _camera)
-			_draw_start = hit.tile if hit else null
+			_draw_start = hit.tile if hit and not hit.is_floor else null
 			_draw_screen_start = event.position
 		else:
 			_sm.transit(State.DRAWING)
@@ -124,7 +124,7 @@ func _finish_erasing(release_pos: Vector2) -> void:
 		_course_editor.erase_tiles([_draw_start] as Array[Vector3i])
 	else:
 		var hit := _course_editor.raycast(release_pos, _camera)
-		var draw_end: Vector3i = hit.tile if hit else _draw_start
+		var draw_end: Vector3i = hit.tile if hit and not hit.is_floor else _draw_start
 		draw_end.y = _draw_start.y
 		_course_editor.erase_tiles(rect_positions(_draw_start, draw_end))
 
