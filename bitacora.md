@@ -464,41 +464,44 @@ Three new test files, 31 tests total:
 
 ## chore: Refactor Level Editor
 
-> Date: 2026-04-02 ~15:00
+> Date: 2026-04-02 / 2026-04-03
 > Issue: #16 — https://github.com/AlbertoHdezCerezo/learn-how-to-minigolf/issues/16
 > Branch: chore-refactor-and-spec-coverage-level-editor
 
 ### What we did
 
-Comprehensively refactored the level editor across 7 scenes/scripts, extracted all inline materials to `.tres` resource files, unified the tile placement API from 4 methods down to 2, replaced the dual grid-position methods with a single face-normal-based approach, swapped the flat rectangle preview for actual tile mesh previews, introduced a StateMachine to manage editor input states, and added GUT specs for every editor component (GameplayCamera, TileCursor, CameraControlUI, TileLibrary, LevelData, LevelCourseEditor, LevelEditor).
+Comprehensively refactored the level editor across every scene and utility, ending with 250 GUT specs and several new features. The refactor touched GameplayCamera, TileCursor, CameraControlUI, TileLibrary, LevelData, LevelCourseEditor, LevelEditor, GridRaycast3D, and introduced TileMarker as a new scene. We also added Shift+drag vertical building for placing 3D blocks, a shader overlay system for tile markers, and cleaned up project conventions.
 
 ### Why
 
-The level editor had accumulated significant technical debt since it was first built. Materials were created inline in code (making them impossible to tweak in the Godot inspector), the tile API had four nearly-identical methods for what was really two operations, two separate grid position methods produced inconsistent results between drawing and erasing, and the input handling used four boolean flags that made the state flow hard to follow. Most critically, there were zero tests for any editor component — every change was a manual test-and-pray affair.
+The level editor had accumulated significant technical debt since it was first built. Materials were created inline in code, the tile API had four nearly-identical methods for what was really two operations, two separate grid position methods produced inconsistent results, and the input handling used four boolean flags. Most critically, there were zero tests for any editor component.
 
 ### How we implemented it
 
-We followed an incremental, dependency-ordered approach — starting with leaf nodes and working up to the main LevelEditor scene. This let us verify each change before building on it.
+We followed an incremental, dependency-ordered approach — starting with leaf nodes and working up to the main LevelEditor scene.
 
-**Materials extraction** was straightforward: we created `.tres` files in `resources/materials/` matching the exact properties of the inline `StandardMaterial3D` instances (albedo color, transparency, no_depth_test, cull_mode), then replaced the code with `load()` calls. This pattern was applied to the tile cursor, rect preview, start marker, and goal marker materials.
+**CameraControlUI** was a satisfying refactor — the existing `SliderWithInput` component (built in issue #13) replaced 3 pairs of manually-wired HSlider+SpinBox. The `bind()` method now directly sets camera properties instead of emitting intermediate signals.
 
-**CameraControlUI** was a satisfying refactor — the existing `SliderWithInput` component (built in issue #13) already handled the slider/spinbox synchronization internally, so we could replace 3 pairs of manually-wired HSlider+SpinBox with 3 SliderWithInput instances and delete all the sync boilerplate. The `bind()` method now directly sets camera properties instead of emitting intermediate signals.
+**The tile API unification** replaced `place_at`/`fill_rect`/`remove_at`/`erase_rect` with `put_tiles(positions)` and `erase_tiles(positions)`. Single-tile placement is just `put_tiles([pos])` — same code path, no special cases.
 
-**The tile API unification** replaced `place_at`/`fill_rect`/`remove_at`/`erase_rect` with `put_tiles(positions)` and `erase_tiles(positions)`. Single-tile placement is just `put_tiles([pos])` — same code path, no special cases. A `rect_positions()` static helper computes the cell array from two corners.
+**GridRaycast3D** was significantly reworked. It now extends `Node3D` and owns the floor plane internally (removed from the `.tscn`). The old separate `get_placement_position`/`get_removal_position`/`get_floor_position` methods were replaced by a single `cast()` that returns a `GridRaycast3D.Hit` inner class with both the occupied tile position and the adjacent empty cell, plus the surface normal and an `is_floor` flag. The caller decides which position to use. An `exclude_floor` parameter lets erase operations reach tiles below the current floor level.
 
-**The grid position unification** was the most impactful change. The old code had `get_smart_grid_pos` (used for placement start) and `get_floor_grid_pos` (used for drag end), which meant placement and drag used different level logic. The new `get_grid_position()` checks the hit normal: top face → tile level + 1, bottom face → tile level - 1, side face → adjacent cell at same level, floor → current floor level. This gives consistent behavior everywhere.
+**TileCursor** was promoted from a passive single-mesh preview to the owner of all tile preview rendering. It manages a pool of `MeshInstance3D` nodes for both single-cell cursors and multi-cell rectangle/block previews. The pool grows on demand inside the main `show_at()` loop — no separate allocation pass.
 
-**The multi-cell preview** replaces a flat transparent `PlaneMesh` with a pool of `MeshInstance3D` instances that show actual tile meshes at each target cell with the cursor material. The pool grows as needed and reuses instances, so dragging a large rectangle is efficient. The single-tile cursor also uses this system via `show_tile_preview([pos])`, eliminating the separate TileCursor node entirely.
+**TileMarker** is a new scene that replaced inline marker creation. It renders a shader overlay on the actual tile mesh geometry (not a flat plane) using `tile_overlay.gdshader` with `fog_disabled`. A `Label3D` with billboard mode and a thick black outline floats above the tile as a tooltip. The `@tool` annotation enables editor preview with a colored `PlaneMesh` fallback. Markers auto-hide when their tile is erased.
 
-**The StateMachine** replaced four boolean flags with an enum-driven state machine using the project's existing `StateMachine` class. States are IDLE, DRAWING, ERASING, PANNING, and ORBITING, with clear transition rules. The input handler reads much more clearly now — each state handles its own subset of events. We also changed erasing from right-click to ctrl+left-click, matching the issue's specification.
+**The StateMachine** replaced four boolean flags with an enum-driven state machine (IDLE, DRAWING, ERASING, PANNING, ORBITING). During playtesting we discovered that Ctrl+click on macOS is intercepted by the OS as a right-click, so we moved erasing to `MOUSE_BUTTON_RIGHT` instead.
 
-**Save/load delegation** to `LevelData` mirrors what we did with `Atmosphere` in issue #13: the resource class owns `load_from_file()` (static) and `populate_from_grid_map()`, so `LevelCourseEditor` just orchestrates.
+**Shift+drag vertical building** was the last major feature. During a drag, holding Shift freezes the XZ rectangle and converts mouse Y movement into vertical levels. A `block_positions()` helper expands `rect_positions` across multiple Y levels. This works for both placing and erasing.
+
+**Convention updates** codified three new rules: materials always as `.tres` resources, property vars with setters instead of `set_*()` methods, and test files mirroring the scene folder structure. All existing test files were reorganized accordingly.
 
 ### Key takeaways
 
-- **Unify before you test** — writing specs for the old 4-method tile API would have meant rewriting them all after the refactor. By doing the API unification first and writing specs after, we avoided double work. The exception is leaf nodes (like GameplayCamera) where specs-first makes sense because the API won't change.
-- **Object pools solve the preview problem elegantly** — instead of one flat plane or instantiating/freeing meshes each frame, a simple `Array[MeshInstance3D]` pool that grows-but-never-shrinks gives zero-allocation previews. The key insight: show visible meshes up to the needed count, hide the rest.
-- **State machines make input code reviewable** — the boolean flag version was correct but hard to verify by reading. With the StateMachine, you can look at the transition table and know exactly which states are reachable from where. The `_finish_drawing` and `_finish_erasing` extractions also make the release-handler logic scannable.
-- **Face normals are the natural level selector** — instead of two grid position methods with different Y-axis strategies, a single method that reads the hit normal (`normal.y > 0.5` → top, `< -0.5` → bottom, else → side) gives intuitive stacking behavior. Clicking the top of a tile places above it; clicking the side places next to it.
+- **Ctrl+click is right-click on macOS** — this bit us during playtesting. Godot receives the event as `MOUSE_BUTTON_RIGHT`, not `MOUSE_BUTTON_LEFT` with `ctrl_pressed`. When designing editor controls, always test on macOS if you plan to use Ctrl as a modifier.
+- **Let the raycast report, let the caller decide** — the original `GridRaycast3D` had separate methods for placement and removal, each encoding decision logic. Returning a single Hit object with both positions is simpler and more flexible. The caller knows whether it's placing or erasing.
+- **Object pools with inline growth** — instead of a separate `_ensure_pool_size()` pass, growing the pool inside the main iteration loop is cleaner. Each iteration either reuses an existing mesh or creates a new one, then configures it — single pass, no pre-allocation.
+- **Property vars over setter methods** — GDScript's setter syntax (`var x: set(v): ...`) is more idiomatic than `set_x()` methods. It keeps the API consistent with Godot's built-in nodes and allows natural `obj.x = value` assignment. Signals can connect via lambdas (`signal.connect(func(v): obj.x = v)`).
+- **Floor planes block raycasts from below** — the infinite `WorldBoundaryShape3D` floor plane prevents clicking tiles underneath it. Adding an `exclude_floor` option to the raycast was essential for erasing tiles built below the current floor level.
 
 ---
