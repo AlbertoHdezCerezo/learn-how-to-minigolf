@@ -29,8 +29,8 @@ var floor_level: int = 0:
 		if _grid_raycast: _grid_raycast.floor_level = value
 
 var _grid_raycast: GridRaycast3D
-var _start_marker: MeshInstance3D
-var _goal_marker: MeshInstance3D
+var _start_marker: TileMarker
+var _goal_marker: TileMarker
 var start_position: Vector3i = Vector3i.ZERO
 var hole_position: Vector3i = Vector3i.ZERO
 
@@ -42,8 +42,11 @@ func _ready() -> void:
 	_grid_raycast = GridRaycast3D.new(grid_map)
 	add_child(_grid_raycast)
 	_tile_cursor.setup(grid_map)
-	_start_marker = _create_marker(load(START_MARKER_MATERIAL_PATH))
-	_goal_marker = _create_marker(load(GOAL_MARKER_MATERIAL_PATH))
+
+	_start_marker = TileMarker.new(grid_map, "Start", load(START_MARKER_MATERIAL_PATH))
+	add_child(_start_marker)
+	_goal_marker = TileMarker.new(grid_map, "Goal", load(GOAL_MARKER_MATERIAL_PATH))
+	add_child(_goal_marker)
 
 
 # -- Public API --
@@ -61,6 +64,7 @@ func put_tiles(positions: Array[Vector3i]) -> void:
 func erase_tiles(positions: Array[Vector3i]) -> void:
 	for pos: Vector3i in positions:
 		grid_map.set_cell_item(pos, GridMap.INVALID_CELL_ITEM)
+	_hide_markers_at(positions)
 
 
 static func rect_positions(from: Vector3i, to: Vector3i) -> Array[Vector3i]:
@@ -87,16 +91,14 @@ func set_start(screen_pos: Vector2, camera: Camera3D) -> void:
 	var hit := raycast(screen_pos, camera)
 	if hit == null: return
 	start_position = hit.adjacent
-	_place_marker(_start_marker, hit.adjacent)
-	print("Start set to: ", hit.adjacent)
+	_start_marker.place_at(hit.adjacent)
 
 
 func set_goal(screen_pos: Vector2, camera: Camera3D) -> void:
 	var hit := raycast(screen_pos, camera)
 	if hit == null: return
 	hole_position = hit.adjacent
-	_place_marker(_goal_marker, hit.adjacent)
-	print("Goal set to: ", hit.adjacent)
+	_goal_marker.place_at(hit.adjacent)
 
 
 func update_cursor(screen_pos: Vector2, camera: Camera3D) -> void:
@@ -126,11 +128,11 @@ func load_level(level_path: String) -> void:
 
 	var sp := level_data.start_position
 	start_position = Vector3i(int(sp.x), int(sp.y), int(sp.z))
-	_place_marker(_start_marker, start_position)
+	_start_marker.place_at(start_position)
 
 	var hp := level_data.hole_position
 	hole_position = Vector3i(int(hp.x), int(hp.y), int(hp.z))
-	_place_marker(_goal_marker, hole_position)
+	_goal_marker.place_at(hole_position)
 
 	level_loaded.emit(level_data)
 	print("Level loaded: ", level_data.level_name)
@@ -138,6 +140,8 @@ func load_level(level_path: String) -> void:
 
 func clear_level() -> void:
 	grid_map.clear()
+	_start_marker.remove()
+	_goal_marker.remove()
 
 
 # -- Internal --
@@ -147,19 +151,7 @@ func _get_grid_orientation() -> int:
 	return grid_map.get_orthogonal_index_from_basis(rot_basis)
 
 
-func _create_marker(mat: StandardMaterial3D) -> MeshInstance3D:
-	var marker := MeshInstance3D.new()
-	var plane := PlaneMesh.new()
-	plane.size = Vector2(CELL_SIZE.x * 0.8, CELL_SIZE.z * 0.8)
-	marker.mesh = plane
-	marker.material_override = mat
-	marker.visible = false
-	add_child(marker)
-	return marker
-
-
-func _place_marker(marker: MeshInstance3D, grid_pos: Vector3i) -> void:
-	var world_pos := grid_map.map_to_local(grid_pos)
-	world_pos.y += CELL_SIZE.y / 2.0 + 0.03
-	marker.global_position = world_pos
-	marker.visible = true
+func _hide_markers_at(positions: Array[Vector3i]) -> void:
+	for pos: Vector3i in positions:
+		if _start_marker.visible and _start_marker.grid_position == pos: _start_marker.remove()
+		if _goal_marker.visible and _goal_marker.grid_position == pos: _goal_marker.remove()
