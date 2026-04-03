@@ -42,7 +42,7 @@ func _ready() -> void:
 	_golf_course.level = level
 	add_child(_golf_course)
 
-	var course_node := _golf_course.get_course()
+	var course_node: Node3D = _golf_course.get_course()
 
 	# Instantiate Ball at start position
 	var ball_scene: PackedScene = load(BALL_SCENE_PATH)
