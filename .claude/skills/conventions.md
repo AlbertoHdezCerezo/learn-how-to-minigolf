@@ -252,3 +252,39 @@ func set_rotation_angle(angle: float) -> void:
 
 - Do NOT write `set_*()` methods for simple property updates
 - Do NOT prefix properties with `_` if they need to be accessed externally — use a public var instead
+
+---
+
+## 7. Test file structure mirrors scene structure
+
+Test files live under `tests/` in a folder hierarchy that mirrors the scene they test under `scenes/`. The test file is named `test_<scene_name>.gd`.
+
+### Why
+
+Matching the scene folder structure makes it trivial to find the tests for any scene — just replace `scenes/` with `tests/` in the path. Tests that are all dumped flat in a category folder become hard to navigate as the project grows.
+
+### DO
+
+```
+scenes/level_editor_tools/camera_control_ui/camera_control_ui.gd
+tests/level_editor_tools/camera_control_ui/test_camera_control_ui.gd
+
+scenes/level_editor_tools/level_course_editor/tile_cursor/tile_cursor.gd
+tests/level_editor_tools/level_course_editor/tile_cursor/test_tile_cursor.gd
+
+scenes/gameplay/gameplay_camera/gameplay_camera.gd
+tests/gameplay/gameplay_camera/test_gameplay_camera.gd
+```
+
+### DON'T
+
+```
+scenes/level_editor_tools/camera_control_ui/camera_control_ui.gd
+tests/level_editor_tools/test_camera_control_ui.gd   # flat — doesn't mirror scene path
+
+scenes/level_editor_tools/level_course_editor/tile_cursor/tile_cursor.gd
+tests/level_editor_tools/test_tile_cursor.gd          # loses nesting context
+```
+
+- Do NOT flatten test files into a single category folder
+- Do NOT invent a different hierarchy for tests — mirror the scene path exactly
