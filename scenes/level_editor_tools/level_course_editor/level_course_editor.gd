@@ -66,18 +66,6 @@ func erase_tiles(positions: Array[Vector3i]) -> void:
 	_hide_markers_at(positions)
 
 
-static func rect_positions(from: Vector3i, to: Vector3i) -> Array[Vector3i]:
-	var positions: Array[Vector3i] = []
-	var min_x := mini(from.x, to.x)
-	var max_x := maxi(from.x, to.x)
-	var min_z := mini(from.z, to.z)
-	var max_z := maxi(from.z, to.z)
-	for x: int in range(min_x, max_x + 1):
-		for z: int in range(min_z, max_z + 1):
-			positions.append(Vector3i(x, from.y, z))
-	return positions
-
-
 func show_tile_preview(positions: Array[Vector3i]) -> void:
 	_tile_cursor.show_at(positions)
 
