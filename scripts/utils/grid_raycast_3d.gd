@@ -53,8 +53,10 @@ func _init(grid_map: GridMap) -> void:
 
 
 ## Casts a ray and returns a Hit, or null if nothing was hit.
-func cast(screen_pos: Vector2, camera: Camera3D, world: World3D) -> Hit:
-	var result := Raycast.from_screen(screen_pos, camera, world)
+## Set exclude_floor to true to ignore the floor plane (for erasing tiles below floor level).
+func cast(screen_pos: Vector2, camera: Camera3D, world: World3D, exclude_floor: bool = false) -> Hit:
+	var exclude: Array[RID] = [_floor_body.get_rid()] if exclude_floor else []
+	var result := Raycast.from_screen(screen_pos, camera, world, Raycast.DEFAULT_RAY_LENGTH, exclude)
 	if result.is_empty(): return null
 
 	var normal: Vector3 = result.normal

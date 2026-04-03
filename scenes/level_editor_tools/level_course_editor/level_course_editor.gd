@@ -50,8 +50,8 @@ func _ready() -> void:
 
 # -- Public API --
 
-func raycast(screen_pos: Vector2, camera: Camera3D) -> GridRaycast3D.Hit:
-	return _grid_raycast.cast(screen_pos, camera, get_world_3d())
+func raycast(screen_pos: Vector2, camera: Camera3D, exclude_floor: bool = false) -> GridRaycast3D.Hit:
+	return _grid_raycast.cast(screen_pos, camera, get_world_3d(), exclude_floor)
 
 
 func put_tiles(positions: Array[Vector3i]) -> void:

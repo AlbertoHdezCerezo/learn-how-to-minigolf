@@ -97,8 +97,8 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 	# -- Right button (erase) — also triggered by Ctrl+click on macOS --
 	elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 		_sm.transit(State.ERASING)
-		var hit := _course_editor.raycast(event.position, _camera)
-		_draw_start = hit.tile if hit and not hit.is_floor else null
+		var hit := _course_editor.raycast(event.position, _camera, true)
+		_draw_start = hit.tile if hit else null
 		_draw_screen_start = event.position
 		_reset_draw_state()
 
@@ -137,15 +137,15 @@ func _finish_erasing(release_pos: Vector2) -> void:
 	if is_click:
 		_course_editor.erase_tiles([_draw_start] as Array[Vector3i])
 	else:
-		var end := _get_draw_end(release_pos)
+		var end := _get_draw_end(release_pos, true)
 		_course_editor.erase_tiles(block_positions(_draw_start, end, _vertical_levels))
 
 
-func _get_draw_end(release_pos: Vector2) -> Vector3i:
+func _get_draw_end(release_pos: Vector2, exclude_floor: bool = false) -> Vector3i:
 	## Returns the XZ end position for the drag. If vertical dragging froze
 	## the end, use that; otherwise raycast the release position.
 	if _draw_end != null: return _draw_end
-	var hit := _course_editor.raycast(release_pos, _camera)
+	var hit := _course_editor.raycast(release_pos, _camera, exclude_floor)
 	var end: Vector3i = hit.adjacent if hit else _draw_start
 	end.y = _draw_start.y
 	return end
