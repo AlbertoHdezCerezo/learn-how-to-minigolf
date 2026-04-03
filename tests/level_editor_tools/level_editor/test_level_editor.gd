@@ -189,15 +189,34 @@ func test_atmosphere_is_initialized_on_ready() -> void:
 	assert_not_null(editor._atmosphere, "Atmosphere should be initialized after _ready")
 
 
-func test_on_atmosphere_changed_copies_values_to_bound_atmosphere() -> void:
+func test_on_atmosphere_changed_replaces_atmosphere_reference() -> void:
+	var original := editor._atmosphere
 	var new_atm := Atmosphere.new()
 	new_atm.fog_density = 0.123
-	new_atm.light_energy = 2.5
 
 	editor._on_atmosphere_changed(new_atm)
 
-	assert_almost_eq(editor._atmosphere.fog_density, 0.123, 0.001, "fog_density should be copied from new atmosphere")
-	assert_almost_eq(editor._atmosphere.light_energy, 2.5, 0.01, "light_energy should be copied from new atmosphere")
+	assert_eq(editor._atmosphere, new_atm, "Atmosphere reference should be replaced, not copied into")
+	assert_ne(editor._atmosphere, original, "Should no longer point to the original atmosphere")
+
+
+func test_on_atmosphere_changed_updates_atmosphere_display() -> void:
+	var new_atm := Atmosphere.new()
+	new_atm.fog_density = 0.09
+
+	editor._on_atmosphere_changed(new_atm)
+
+	assert_eq(editor._atmosphere_display.atmosphere, new_atm, "AtmosphereDisplay should use the new atmosphere")
+
+
+func test_on_atmosphere_changed_preserves_resource_path() -> void:
+	var new_atm := Atmosphere.new()
+	new_atm.resource_path = "res://resources/atmospheres/teal_sky.tres"
+	new_atm.fog_density = 0.05
+
+	editor._on_atmosphere_changed(new_atm)
+
+	assert_eq(editor._atmosphere.resource_path, "res://resources/atmospheres/teal_sky.tres", "Atmosphere resource_path should be preserved after change")
 
 
 # -- Erase logic --
