@@ -5,7 +5,6 @@ extends Node3D
 signal level_loaded(level_data: LevelData)
 
 const CELL_SIZE := Vector3(2, 2, 2)
-const FLOOR_Y_OFFSET := -0.5
 const START_MARKER_MATERIAL_PATH := "res://resources/materials/start_marker_material.tres"
 const GOAL_MARKER_MATERIAL_PATH := "res://resources/materials/goal_marker_material.tres"
 
@@ -13,12 +12,10 @@ const GOAL_MARKER_MATERIAL_PATH := "res://resources/materials/goal_marker_materi
 
 @onready var grid_map: GridMap = $GridMap
 @onready var _tile_cursor: TileCursor = $TileCursor
-@onready var _floor_plane: StaticBody3D = $FloorPlane
 
 var _grid_raycast: GridRaycast3D
 var _current_item: int = 0
 var _current_rotation_angle: float = 0.0
-var _current_floor: int = 0
 var _start_marker: MeshInstance3D
 var _goal_marker: MeshInstance3D
 var start_position: Vector3i = Vector3i.ZERO
@@ -29,9 +26,9 @@ func _ready() -> void:
 	grid_map.mesh_library = mesh_library
 	grid_map.cell_size = CELL_SIZE
 
-	_grid_raycast = GridRaycast3D.new(grid_map, _floor_plane)
+	_grid_raycast = GridRaycast3D.new(grid_map)
+	add_child(_grid_raycast)
 	_tile_cursor.setup(grid_map)
-	_update_floor_plane()
 	_start_marker = _create_marker(load(START_MARKER_MATERIAL_PATH))
 	_goal_marker = _create_marker(load(GOAL_MARKER_MATERIAL_PATH))
 
@@ -49,30 +46,25 @@ func set_rotation_angle(angle: float) -> void:
 
 
 func set_floor(level: int) -> void:
-	_current_floor = level
-	_update_floor_plane()
+	_grid_raycast.floor_level = level
 
 
 func raycast(screen_pos: Vector2, camera: Camera3D) -> GridRaycastHit:
-	## Casts a ray from screen coordinates and returns the hit result, or null.
-	return _grid_raycast.cast(screen_pos, camera, get_world_3d(), _current_floor)
+	return _grid_raycast.cast(screen_pos, camera, get_world_3d())
 
 
 func put_tiles(positions: Array[Vector3i]) -> void:
-	## Place the current tile at each position with the current rotation.
 	var orientation := _get_grid_orientation()
 	for pos: Vector3i in positions:
 		grid_map.set_cell_item(pos, _current_item, orientation)
 
 
 func erase_tiles(positions: Array[Vector3i]) -> void:
-	## Remove tiles at each position.
 	for pos: Vector3i in positions:
 		grid_map.set_cell_item(pos, GridMap.INVALID_CELL_ITEM)
 
 
 static func rect_positions(from: Vector3i, to: Vector3i) -> Array[Vector3i]:
-	## Returns all grid cells in the XZ rectangle at from.y.
 	var positions: Array[Vector3i] = []
 	var min_x := mini(from.x, to.x)
 	var max_x := maxi(from.x, to.x)
@@ -154,11 +146,6 @@ func clear_level() -> void:
 func _get_grid_orientation() -> int:
 	var rot_basis := Basis(Vector3.UP, deg_to_rad(_current_rotation_angle))
 	return grid_map.get_orthogonal_index_from_basis(rot_basis)
-
-
-func _update_floor_plane() -> void:
-	var y_pos := _current_floor * CELL_SIZE.y + FLOOR_Y_OFFSET
-	_floor_plane.position.y = y_pos
 
 
 func _create_marker(mat: StandardMaterial3D) -> MeshInstance3D:

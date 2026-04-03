@@ -58,17 +58,15 @@ func test_set_rotation_angle_affects_placed_tile_orientation() -> void:
 
 # -- set_floor --
 
-func test_set_floor_updates_floor_plane_position() -> void:
+func test_set_floor_updates_raycast_floor_level() -> void:
 	editor.set_floor(2)
-	var expected_y: float = 2 * LevelCourseEditor.CELL_SIZE.y + LevelCourseEditor.FLOOR_Y_OFFSET
-	var floor_plane: StaticBody3D = editor.get_node("FloorPlane")
-	assert_almost_eq(floor_plane.position.y, expected_y, 0.01, "Floor plane Y should update based on floor level and cell size")
+	assert_eq(editor._grid_raycast.floor_level, 2, "set_floor should update the raycast's floor_level")
 
 
-func test_set_floor_zero_positions_floor_at_negative_offset() -> void:
+func test_set_floor_zero_sets_raycast_floor_level_to_zero() -> void:
+	editor.set_floor(3)
 	editor.set_floor(0)
-	var floor_plane: StaticBody3D = editor.get_node("FloorPlane")
-	assert_almost_eq(floor_plane.position.y, LevelCourseEditor.FLOOR_Y_OFFSET, 0.01, "Floor 0 should position plane at FLOOR_Y_OFFSET")
+	assert_eq(editor._grid_raycast.floor_level, 0, "set_floor(0) should set raycast floor_level to 0")
 
 
 # -- put_tiles --
