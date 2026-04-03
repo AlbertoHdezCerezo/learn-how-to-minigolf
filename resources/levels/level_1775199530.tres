@@ -1,8 +1,0 @@
-[gd_resource type="Resource" script_class="LevelData" format=3]
-
-[ext_resource type="Script" path="res://scripts/resources/level_data.gd" id="1_6767k"]
-[ext_resource type="Script" path="res://scripts/resources/tile_placement.gd" id="2_ne38j"]
-
-[resource]
-script = ExtResource("1_6767k")
-level_name = "test_autosave"

@@ -1,6 +1,7 @@
 # Godot 4+ specific ignores
 .godot/
 .nomedia
+*.uid
 
 # Godot-specific ignores
 .import/
@@ -14,6 +15,12 @@ export_credentials.cfg
 .mono/
 data_*/
 mono_crash.*.json
+
+# OS files
+.DS_Store
+
+# IDE
+.idea/
 
 # Claude working documents (temporary, per-task)
 research.md
