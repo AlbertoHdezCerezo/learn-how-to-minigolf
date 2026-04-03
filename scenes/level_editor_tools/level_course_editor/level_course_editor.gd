@@ -76,16 +76,16 @@ func hide_tile_preview() -> void:
 
 func set_start(screen_pos: Vector2, camera: Camera3D) -> void:
 	var hit := raycast(screen_pos, camera)
-	if hit == null: return
-	start_position = hit.adjacent
-	_start_marker.place_at(hit.adjacent)
+	if hit == null or hit.is_floor: return
+	start_position = hit.tile
+	_start_marker.place_at(hit.tile)
 
 
 func set_goal(screen_pos: Vector2, camera: Camera3D) -> void:
 	var hit := raycast(screen_pos, camera)
-	if hit == null: return
-	hole_position = hit.adjacent
-	_goal_marker.place_at(hit.adjacent)
+	if hit == null or hit.is_floor: return
+	hole_position = hit.tile
+	_goal_marker.place_at(hit.tile)
 
 
 func update_cursor(screen_pos: Vector2, camera: Camera3D) -> void:
