@@ -288,3 +288,55 @@ tests/level_editor_tools/test_tile_cursor.gd          # loses nesting context
 
 - Do NOT flatten test files into a single category folder
 - Do NOT invent a different hierarchy for tests — mirror the scene path exactly
+
+---
+
+## 8. Test behavior, not composition
+
+Tests should verify what a scene **does**, not how it's internally composed. Don't test node types, child node existence, or scene tree structure.
+
+### Why
+
+Scene composition changes frequently during development. Tests that assert internal structure (node types, child counts, shape types) are brittle and break on innocent refactors, creating maintenance burden without catching real bugs.
+
+### DO
+
+```gdscript
+func test_ball_is_placed_at_start_position_x() -> void:
+    var ball := level_scene.get_ball()
+    var expected_x: float = level.start_position.x * level.cell_size.x
+    assert_almost_eq(ball.global_position.x, expected_x, 0.01, "Ball X should match start position")
+
+
+func test_initial_shot_count_is_zero() -> void:
+    assert_eq(level_scene.get_shot_count(), 0, "Initial shot count should be 0")
+
+
+func test_level_completed_signal_exists() -> void:
+    assert_has_signal(level_scene, "level_completed", "LevelScene should have a level_completed signal")
+```
+
+- Test behavior: placement, signals, state, method return values
+- Test public API: getters, exported properties, signal emission
+- Test correctness: coordinate conversion, value clamping, transitions
+
+### DON'T
+
+```gdscript
+func test_hole_trigger_is_area3d() -> void:
+    assert_is(trigger, Area3D, "Should be Area3D")
+
+
+func test_has_collision_shape_child() -> void:
+    var shape := trigger.get_node_or_null("CollisionShape3D")
+    assert_not_null(shape, "Should have CollisionShape3D")
+
+
+func test_collision_shape_uses_cylinder_shape() -> void:
+    var shape := trigger.get_node("CollisionShape3D")
+    assert_is(shape.shape, CylinderShape3D, "Should use CylinderShape3D")
+```
+
+- Do NOT test what type a node is (`assert_is(node, Area3D)`)
+- Do NOT test that specific child nodes exist by name
+- Do NOT test internal shape types, material types, or sub-resource details
