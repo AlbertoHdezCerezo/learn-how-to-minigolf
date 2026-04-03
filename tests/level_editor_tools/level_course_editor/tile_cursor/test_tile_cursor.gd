@@ -113,3 +113,20 @@ func test_hide_all_hides_all_preview_meshes() -> void:
 func test_hide_all_on_empty_pool_does_not_error() -> void:
 	cursor.hide_all()
 	assert_eq(cursor._preview_meshes.size(), 0, "hide_all on empty pool should be a no-op")
+
+
+# -- Changing current_item refreshes visible previews --
+
+func test_changing_current_item_updates_visible_preview_mesh() -> void:
+	cursor.current_item = 0
+	cursor.show_at([Vector3i(0, 0, 0)] as Array[Vector3i])
+	cursor.current_item = 1
+	var expected_mesh := mesh_library.get_item_mesh(1)
+	assert_eq(cursor._preview_meshes[0].mesh, expected_mesh, "Changing current_item should update the mesh of visible previews")
+
+
+func test_changing_rotation_angle_updates_visible_preview_basis() -> void:
+	cursor.show_at([Vector3i(0, 0, 0)] as Array[Vector3i])
+	cursor.rotation_angle = 90.0
+	var expected_basis := Basis(Vector3.UP, deg_to_rad(90.0))
+	assert_almost_eq(cursor._preview_meshes[0].basis.x, expected_basis.x, Vector3(0.01, 0.01, 0.01), "Changing rotation_angle should update the basis of visible previews")

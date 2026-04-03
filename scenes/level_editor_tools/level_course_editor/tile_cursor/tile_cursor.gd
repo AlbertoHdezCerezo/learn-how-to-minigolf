@@ -11,8 +11,15 @@ var _grid_map: GridMap
 var _material: StandardMaterial3D
 var _preview_meshes: Array[MeshInstance3D] = []
 
-var current_item: int = 0
-var rotation_angle: float = 0.0
+var current_item: int = 0:
+	set(value):
+		current_item = value
+		_refresh_visible()
+
+var rotation_angle: float = 0.0:
+	set(value):
+		rotation_angle = value
+		_refresh_visible()
 
 
 func setup(grid_map: GridMap) -> void:
@@ -45,3 +52,13 @@ func _draw_tile_preview(index: int, grid_pos: Vector3i) -> void:
 func hide_all() -> void:
 	for m: MeshInstance3D in _preview_meshes:
 		m.visible = false
+
+
+func _refresh_visible() -> void:
+	if not _grid_map or not _grid_map.mesh_library: return
+	var mesh: Mesh = _grid_map.mesh_library.get_item_mesh(current_item)
+	var basis := Basis(Vector3.UP, deg_to_rad(rotation_angle))
+	for m: MeshInstance3D in _preview_meshes:
+		if not m.visible: continue
+		m.mesh = mesh
+		m.basis = basis
