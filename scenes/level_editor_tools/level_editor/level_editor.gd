@@ -45,7 +45,7 @@ func _setup_state_machine() -> void:
 func _connect_editor_ui() -> void:
 	_ui.bind(_course_editor)
 	_ui.atmosphere_changed.connect(_on_atmosphere_changed)
-	_ui.save_requested.connect(func(name: String): _course_editor.save_level(name, _atmosphere))
+	_ui.save_requested.connect(_on_save_requested)
 	_course_editor.level_loaded.connect(_on_level_loaded)
 
 
@@ -277,6 +277,12 @@ func _toggle_ui() -> void:
 
 
 # -- UI signal handlers --
+
+func _on_save_requested(save_path: String) -> void:
+	_course_editor.save_level(save_path, _atmosphere)
+	var full_path := LevelData.SAVE_DIR + save_path + ".tres"
+	_ui.show_status("Saved: " + full_path)
+
 
 func _on_level_loaded(level_data: LevelData) -> void:
 	if level_data.atmosphere: _on_atmosphere_changed(level_data.atmosphere)

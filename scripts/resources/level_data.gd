@@ -58,6 +58,8 @@ func save_to_file(resource_name: String) -> Error:
 	if resource_name.is_empty():
 		resource_name = "level_%d" % Time.get_unix_time_from_system()
 	var path := SAVE_DIR + resource_name + ".tres"
+	var dir_path := path.get_base_dir()
+	if not DirAccess.dir_exists_absolute(dir_path): DirAccess.make_dir_recursive_absolute(dir_path)
 	return ResourceSaver.save(self, path)
 
 
