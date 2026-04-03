@@ -22,23 +22,24 @@ func setup(grid_map: GridMap) -> void:
 
 func show_at(positions: Array[Vector3i]) -> void:
 	## Show tile previews at each position. Creates new pool nodes on demand.
-	var current_mesh := _grid_map.mesh_library.get_item_mesh(current_item) if _grid_map.mesh_library else null
-	var rot_basis := Basis(Vector3.UP, deg_to_rad(rotation_angle))
-
 	for i: int in range(positions.size()):
-		if i >= _preview_meshes.size():
-			var m := MeshInstance3D.new()
-			m.material_override = _material
-			add_child(m)
-			_preview_meshes.append(m)
-		var m := _preview_meshes[i]
-		m.mesh = current_mesh
-		m.global_position = _grid_map.map_to_local(positions[i])
-		m.basis = rot_basis
-		m.visible = true
+		_draw_tile_preview(i, positions[i])
 
 	for i: int in range(positions.size(), _preview_meshes.size()):
 		_preview_meshes[i].visible = false
+
+
+func _draw_tile_preview(index: int, grid_pos: Vector3i) -> void:
+	if index >= _preview_meshes.size():
+		var m := MeshInstance3D.new()
+		m.material_override = _material
+		add_child(m)
+		_preview_meshes.append(m)
+	var m := _preview_meshes[index]
+	m.mesh = _grid_map.mesh_library.get_item_mesh(current_item) if _grid_map.mesh_library else null
+	m.global_position = _grid_map.map_to_local(grid_pos)
+	m.basis = Basis(Vector3.UP, deg_to_rad(rotation_angle))
+	m.visible = true
 
 
 func hide_all() -> void:
