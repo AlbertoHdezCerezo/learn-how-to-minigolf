@@ -279,9 +279,10 @@ func _toggle_ui() -> void:
 # -- UI signal handlers --
 
 func _on_save_requested(level_name: String, save_path: String) -> void:
-	var atmo_copy: Atmosphere = _atmosphere.duplicate()
-	atmo_copy.resource_path = ""
-	_course_editor.save_level(save_path, atmo_copy, level_name)
+	# Save atmosphere changes back to its file if it has one
+	if not _atmosphere.resource_path.is_empty():
+		ResourceSaver.save(_atmosphere, _atmosphere.resource_path)
+	_course_editor.save_level(save_path, _atmosphere, level_name)
 	var full_path := LevelData.SAVE_DIR + save_path + ".tres"
 	_ui.show_status("Saved: " + full_path)
 
@@ -292,16 +293,6 @@ func _on_level_loaded(level_data: LevelData) -> void:
 
 
 func _on_atmosphere_changed(atm: Atmosphere) -> void:
-	_atmosphere.first_color = atm.first_color
-	_atmosphere.second_color = atm.second_color
-	_atmosphere.gradient_position = atm.gradient_position
-	_atmosphere.gradient_size = atm.gradient_size
-	_atmosphere.angle = atm.angle
-	_atmosphere.fog_enabled = atm.fog_enabled
-	_atmosphere.fog_density = atm.fog_density
-	_atmosphere.fog_height_density = atm.fog_height_density
-	_atmosphere.fog_height = atm.fog_height
-	_atmosphere.light_yaw = atm.light_yaw
-	_atmosphere.light_pitch = atm.light_pitch
-	_atmosphere.light_energy = atm.light_energy
+	_atmosphere = atm
+	_atmosphere_display.atmosphere = _atmosphere
 	_atmosphere_ui.sync_from(_atmosphere)
