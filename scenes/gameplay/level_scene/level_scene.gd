@@ -13,10 +13,16 @@ var _golf_course: Node3D
 var _ball: RigidBody3D
 var _hole_trigger: Area3D
 var _shot_count: int = 0
+var _elapsed_time: float = 0.0
+var _timing_active: bool = false
 
 
 func get_shot_count() -> int:
 	return _shot_count
+
+
+func get_elapsed_time() -> float:
+	return _elapsed_time
 
 
 func get_ball() -> RigidBody3D:
@@ -51,10 +57,19 @@ func _ready() -> void:
 	_hole_trigger.global_position = _golf_course.grid_to_world(level.hole_position)
 
 	# Connect hole detection
-	_hole_trigger.ball_entered.connect(func(): level_completed.emit())
+	_hole_trigger.ball_entered.connect(func():
+		_timing_active = false
+		level_completed.emit()
+	)
 
-	# Track shots via ball state machine
+	# Track shots and start timer on first shot
 	var BallState = _ball.State
 	_ball.sm.state_changed.connect(func(from: int, to: int):
-		if to == BallState.MOVING: _shot_count += 1
+		if to == BallState.MOVING:
+			_shot_count += 1
+			if not _timing_active: _timing_active = true
 	)
+
+
+func _process(delta: float) -> void:
+	if _timing_active: _elapsed_time += delta

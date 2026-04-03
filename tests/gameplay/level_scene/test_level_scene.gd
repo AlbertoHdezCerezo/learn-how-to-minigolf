@@ -106,10 +106,24 @@ func test_level_completed_signal_exists() -> void:
 	assert_has_signal(level_scene, "level_completed", "LevelScene should have a level_completed signal")
 
 
+# -- Elapsed time --
+
+func test_initial_elapsed_time_is_zero() -> void:
+	assert_eq(level_scene.get_elapsed_time(), 0.0, "Initial elapsed time should be 0.0")
+
+
+func test_timing_is_not_active_before_first_shot() -> void:
+	assert_false(level_scene._timing_active, "Timing should not be active before first shot")
+
+
 # -- Getters --
 
 func test_get_shot_count_returns_zero_initially() -> void:
 	assert_eq(level_scene.get_shot_count(), 0, "get_shot_count() should return 0 initially")
+
+
+func test_get_elapsed_time_returns_zero_initially() -> void:
+	assert_eq(level_scene.get_elapsed_time(), 0.0, "get_elapsed_time() should return 0.0 initially")
 
 
 func test_get_ball_returns_ball_instance() -> void:
