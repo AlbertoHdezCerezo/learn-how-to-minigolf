@@ -4,9 +4,6 @@
 [ext_resource type="PackedScene" path="res://scenes/level_editor_tools/level_course_editor/tile_cursor/tile_cursor.tscn" id="2_tile_cursor"]
 [ext_resource type="MeshLibrary" path="res://resources/mesh_libraries/tile_library.tres" id="3_tile_library"]
 
-[sub_resource type="WorldBoundaryShape3D" id="WorldBoundary_floor"]
-plane = Plane(0, 1, 0, 0.5)
-
 [node name="LevelCourseEditor" type="Node3D"]
 script = ExtResource("1_script")
 mesh_library = ExtResource("3_tile_library")
@@ -14,9 +11,3 @@ mesh_library = ExtResource("3_tile_library")
 [node name="GridMap" type="GridMap" parent="."]
 
 [node name="TileCursor" parent="." instance=ExtResource("2_tile_cursor")]
-
-[node name="FloorPlane" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="FloorPlane"]
-shape = SubResource("WorldBoundary_floor")
