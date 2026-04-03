@@ -7,7 +7,7 @@ extends Node3D
 
 signal camera_changed
 
-@export var distance: float = 20.0:
+@export var distance: float = 100.0:
 	set(value):
 		distance = clampf(value, 5.0, 100.0)
 		_update_camera()
@@ -25,7 +25,7 @@ signal camera_changed
 		_update_camera()
 		camera_changed.emit()
 
-@export var orthographic_size: float = 15.0:
+@export var orthographic_size: float = 80.0:
 	set(value):
 		orthographic_size = clampf(value, 2.0, 100.0)
 		_update_camera()
