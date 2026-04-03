@@ -58,7 +58,7 @@ func get_placement_position(screen_pos: Vector2, camera: Camera3D, world: World3
 		grid_pos.y = floor_level
 		return grid_pos
 
-	return _get_adjacent_cell(result)
+	return _get_cell_at_offset(result, _cell_size.x * 0.5)
 
 
 ## Returns the grid cell on the floor plane only, ignoring existing tiles.
@@ -80,10 +80,9 @@ func get_floor_position(screen_pos: Vector2, camera: Camera3D, world: World3D, f
 func get_removal_position(screen_pos: Vector2, camera: Camera3D, world: World3D) -> Variant:
 	var exclude: Array[RID] = [_floor_collider.get_rid()]
 	var result := Raycast.from_screen(screen_pos, camera, world, Raycast.DEFAULT_RAY_LENGTH, exclude)
-
 	if result.is_empty(): return null
 
-	return _get_hit_cell(result)
+	return _get_cell_at_offset(result, -0.1)
 
 
 ## Returns true when the raycast hit the floor plane (empty space),
@@ -92,23 +91,10 @@ func _is_hovering_floor(result: Dictionary) -> bool:
 	return result.collider == _floor_collider
 
 
-## Returns the adjacent empty cell next to the hit surface.
-## Offsets outward along the hit normal by half a cell size,
-## so the returned position is the empty neighbor where a new tile would go.
-func _get_adjacent_cell(result: Dictionary) -> Vector3i:
-	var hit_pos: Vector3 = result.position
-	var hit_normal: Vector3 = result.normal
-	var place_world: Vector3 = hit_pos + hit_normal * (_cell_size.x * 0.5)
-	var hit_local: Vector3 = _grid_map.to_local(place_world)
-	return _grid_map.local_to_map(hit_local)
-
-
-## Returns the occupied cell that was hit.
-## Offsets slightly inward (against the normal) to ensure the correct cell
-## is identified even when the hit lands exactly on a cell boundary.
-func _get_hit_cell(result: Dictionary) -> Vector3i:
-	var hit_pos: Vector3 = result.position
-	var hit_normal: Vector3 = result.normal
-	var remove_world: Vector3 = hit_pos - hit_normal * 0.1
-	var hit_local: Vector3 = _grid_map.to_local(remove_world)
+## Returns the grid cell at a given offset along the hit normal.
+## Positive offset → outward (adjacent empty cell for placement).
+## Negative offset → inward (occupied cell for removal).
+func _get_cell_at_offset(result: Dictionary, offset: float) -> Vector3i:
+	var world_pos: Vector3 = result.position + result.normal * offset
+	var hit_local: Vector3 = _grid_map.to_local(world_pos)
 	return _grid_map.local_to_map(hit_local)
