@@ -1,8 +1,14 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://ehvi601q6tkf"]
 
-[ext_resource type="Script" path="res://scenes/gameplay/level/level.gd" id="1_script"]
-[ext_resource type="Resource" path="res://resources/levels/level_01.tres" id="2_level"]
+[ext_resource type="Script" uid="uid://crl8n6flmwrto" path="res://scenes/gameplay/level/level.gd" id="1_script"]
+[ext_resource type="Resource" uid="uid://bgefi1vxhifhd" path="res://resources/levels/test/test_level_01.tres" id="2_61b4m"]
+[ext_resource type="PackedScene" uid="uid://b21l0rotd3ovx" path="res://scenes/gameplay/golf_course/golf_course.tscn" id="2_golf_course"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/ball/ball.tscn" id="3_ball"]
 
-[node name="Level" type="Node3D"]
+[node name="Level" type="Node3D" unique_id=1978389885]
 script = ExtResource("1_script")
-level = ExtResource("2_level")
+level = ExtResource("2_61b4m")
+
+[node name="GolfCourse" parent="." unique_id=1598655211 instance=ExtResource("2_golf_course")]
+
+[node name="Ball" parent="." unique_id=1373729785 instance=ExtResource("3_ball")]

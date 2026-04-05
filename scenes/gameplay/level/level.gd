@@ -1,16 +1,18 @@
+@tool
 extends Node3D
 
 signal level_completed
 
-const GOLF_COURSE_SCENE_PATH := "res://scenes/gameplay/golf_course/golf_course.tscn"
-const BALL_SCENE_PATH := "res://scenes/gameplay/ball/ball.tscn"
 const HOLE_TRIGGER_SCENE_PATH := "res://scenes/gameplay/hole_trigger/hole_trigger.tscn"
-const BALL_RADIUS := 0.15
 
-@export var level: LevelData
+@export var level: LevelData:
+	set(value):
+		level = value
+		if is_node_ready(): _load_level()
 
-var golf_course: Node3D
-var ball: RigidBody3D
+@onready var golf_course: Node3D = $GolfCourse
+@onready var ball: RigidBody3D = $Ball
+
 var hole_trigger: Area3D
 var shot_count: int = 0
 var elapsed_time: float = 0.0
@@ -18,26 +20,23 @@ var _timing_active: bool = false
 
 
 func _ready() -> void:
-	if not level: return
+	if level: _load_level()
+	if not Engine.is_editor_hint(): _setup_gameplay()
 
-	# Instantiate GolfCourse
-	var course_scene: PackedScene = load(GOLF_COURSE_SCENE_PATH)
-	golf_course = course_scene.instantiate()
+
+func _load_level() -> void:
+	if not golf_course: return
 	golf_course.level = level
-	add_child(golf_course)
+	if ball and level: ball.global_position = golf_course.get_ball_start_position(ball)
 
-	var course_node: Node3D = golf_course.course
 
-	# Instantiate Ball at start position
-	var ball_scene: PackedScene = load(BALL_SCENE_PATH)
-	ball = ball_scene.instantiate()
-	course_node.add_child(ball)
-	ball.global_position = golf_course.grid_to_world(level.start_position) + Vector3(0, BALL_RADIUS, 0)
+func _setup_gameplay() -> void:
+	if not level: return
 
 	# Instantiate HoleTrigger at hole position
 	var trigger_scene: PackedScene = load(HOLE_TRIGGER_SCENE_PATH)
 	hole_trigger = trigger_scene.instantiate()
-	course_node.add_child(hole_trigger)
+	golf_course.course.add_child(hole_trigger)
 	hole_trigger.global_position = golf_course.grid_to_world(level.hole_position)
 
 	# Connect hole detection

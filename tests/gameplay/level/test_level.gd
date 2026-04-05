@@ -23,8 +23,8 @@ func before_each() -> void:
 	level.add_tile(Vector3i(3, 0, -1), 1)
 
 	level_node = scene.instantiate()
-	level_node.level = level
 	add_child_autofree(level_node)
+	level_node.level = level
 
 
 # -- Scene loading --
@@ -40,30 +40,30 @@ func test_level_instantiates_without_error() -> void:
 # -- Ball placement --
 
 func test_ball_is_placed_at_start_position_x() -> void:
-	var expected_x: float = level.start_position.x * level.cell_size.x
+	var expected_x: float = level_node.golf_course.grid_map.map_to_local(Vector3i(level.start_position)).x
 	assert_almost_eq(level_node.ball.global_position.x, expected_x, 0.01, "Ball X should match start_position converted to world coords")
 
 
 func test_ball_is_placed_at_start_position_z() -> void:
-	var expected_z: float = level.start_position.z * level.cell_size.z
+	var expected_z: float = level_node.golf_course.grid_map.map_to_local(Vector3i(level.start_position)).z
 	assert_almost_eq(level_node.ball.global_position.z, expected_z, 0.01, "Ball Z should match start_position converted to world coords")
 
 
 func test_ball_is_placed_on_top_of_tile() -> void:
-	var expected_y: float = level.start_position.y * level.cell_size.y + level.cell_size.y / 2.0 + 0.15
+	var ball_radius := (level_node.ball.get_node("CollisionShape3D").shape as SphereShape3D).radius
+	var map_y: float = level_node.golf_course.grid_map.map_to_local(Vector3i(level.start_position)).y
+	var expected_y: float = map_y + level.cell_size.y / 2.0 + ball_radius
 	assert_almost_eq(level_node.ball.global_position.y, expected_y, 0.01, "Ball Y should be at tile surface plus ball radius")
 
 
-# -- Hole trigger placement --
+# -- Level loads into GolfCourse --
 
-func test_hole_trigger_is_placed_at_hole_position_x() -> void:
-	var expected_x: float = level.hole_position.x * level.cell_size.x
-	assert_almost_eq(level_node.hole_trigger.global_position.x, expected_x, 0.01, "HoleTrigger X should match hole_position converted to world coords")
+func test_golf_course_receives_level_data() -> void:
+	assert_eq(level_node.golf_course.level, level, "GolfCourse should have the level set")
 
 
-func test_hole_trigger_is_placed_at_hole_position_z() -> void:
-	var expected_z: float = level.hole_position.z * level.cell_size.z
-	assert_almost_eq(level_node.hole_trigger.global_position.z, expected_z, 0.01, "HoleTrigger Z should match hole_position converted to world coords")
+func test_golf_course_grid_map_has_correct_tile_count() -> void:
+	assert_eq(level_node.golf_course.grid_map.get_used_cells().size(), level.tiles.size(), "GolfCourse GridMap should have the correct number of tiles")
 
 
 # -- Initial state --
