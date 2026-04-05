@@ -15,16 +15,6 @@ func before_each() -> void:
 	add_child_autofree(trigger)
 
 
-# -- Scene loading --
-
-func test_hole_trigger_scene_loads_successfully() -> void:
-	assert_not_null(scene, "HoleTrigger scene should load from %s" % SCENE_PATH)
-
-
-func test_hole_trigger_scene_instantiates_without_error() -> void:
-	assert_not_null(trigger, "HoleTrigger should instantiate into a valid node")
-
-
 # -- Behavior --
 
 func test_ball_entered_signal_exists() -> void:

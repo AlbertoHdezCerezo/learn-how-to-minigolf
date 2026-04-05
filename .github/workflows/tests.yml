@@ -42,4 +42,4 @@ jobs:
           check_name: GUT Test Report
           include_passed: true
           comment: true
-          detailed_summary: true
+          detailed_summary: false

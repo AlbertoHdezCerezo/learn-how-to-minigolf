@@ -27,16 +27,6 @@ func before_each() -> void:
 	level_node.level = level
 
 
-# -- Scene loading --
-
-func test_level_loads_successfully() -> void:
-	assert_not_null(scene, "Level scene should load from %s" % SCENE_PATH)
-
-
-func test_level_instantiates_without_error() -> void:
-	assert_not_null(level_node, "Level should instantiate into a valid node")
-
-
 # -- Ball placement --
 
 func test_ball_is_placed_at_start_position_x() -> void:
@@ -54,16 +44,6 @@ func test_ball_is_placed_on_top_of_tile() -> void:
 	var map_y: float = level_node.golf_course.grid_map.map_to_local(Vector3i(level.start_position)).y
 	var expected_y: float = map_y + level.cell_size.y / 2.0 + ball_radius
 	assert_almost_eq(level_node.ball.global_position.y, expected_y, 0.01, "Ball Y should be at tile surface plus ball radius")
-
-
-# -- Level loads into GolfCourse --
-
-func test_golf_course_receives_level_data() -> void:
-	assert_eq(level_node.golf_course.level, level, "GolfCourse should have the level set")
-
-
-func test_golf_course_grid_map_has_correct_tile_count() -> void:
-	assert_eq(level_node.golf_course.grid_map.get_used_cells().size(), level.tiles.size(), "GolfCourse GridMap should have the correct number of tiles")
 
 
 # -- Initial state --

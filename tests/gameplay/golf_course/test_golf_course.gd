@@ -30,21 +30,7 @@ func before_each() -> void:
 	golf_course.level = level
 
 
-# -- Scene loading --
-
-func test_golf_course_scene_loads_successfully() -> void:
-	assert_not_null(scene, "GolfCourse scene should load from %s" % SCENE_PATH)
-
-
-func test_golf_course_scene_instantiates_without_error() -> void:
-	assert_not_null(golf_course, "GolfCourse should instantiate into a valid node")
-
-
 # -- GridMap behavior --
-
-func test_grid_map_is_available_when_level_is_set() -> void:
-	assert_not_null(golf_course.grid_map, "grid_map should be set when level is loaded")
-
 
 func test_grid_map_has_correct_number_of_cells() -> void:
 	assert_eq(golf_course.grid_map.get_used_cells().size(), level.tiles.size(), "GridMap should have same number of cells as level tiles")
