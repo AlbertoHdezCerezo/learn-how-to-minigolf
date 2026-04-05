@@ -10,6 +10,7 @@ enum State { IDLE, MOVING, RECOVERING_FROM_MOVEMENT }
 @export var stop_frames_required: int = 20
 
 @onready var sm := StateMachine.new(self)
+@onready var radius: float = ($CollisionShape3D.shape as SphereShape3D).radius
 var _still_frames: int = 0
 
 @onready var _ball_ui: Node3D = $BallUI
